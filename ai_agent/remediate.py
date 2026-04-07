@@ -74,21 +74,31 @@ Error log:
 
 
 def apply_fix(file_path, original_code, fixed_code):
-    with open(file_path, 'r') as f:
+    # agent runs from ai_agent/ so go one level up to project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full_path = os.path.join(project_root, file_path)
+
+    print(f"AI Agent: Opening file at {full_path}")
+
+    if not os.path.exists(full_path):
+        print(f"AI Agent: File not found at {full_path}")
+        return False
+
+    with open(full_path, 'r') as f:
         content = f.read()
 
     if original_code not in content:
-        print(f"AI Agent: Could not find the exact line to fix in {file_path}")
+        print(f"AI Agent: Could not find the exact line to fix in {full_path}")
+        print(f"AI Agent: Looking for: {repr(original_code)}")
         return False
 
     new_content = content.replace(original_code, fixed_code, 1)
 
-    with open(file_path, 'w') as f:
+    with open(full_path, 'w') as f:
         f.write(new_content)
 
-    print(f"AI Agent: Fixed {file_path}")
+    print(f"AI Agent: Fixed {full_path}")
     return True
-
 
 def git_commit_fix(file_path, root_cause):
     repo_url = subprocess.run(
@@ -108,7 +118,9 @@ def git_commit_fix(file_path, root_cause):
 
     subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"])
     subprocess.run(["git", "config", "user.name", "AI-Remediation-Bot"])
-    subprocess.run(["git", "add", file_path])
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full_path = os.path.join(project_root, file_path)
+    subprocess.run(["git", "add", full_path])
 
     result = subprocess.run(
         ["git", "commit", "-m", f"AI-Fix: {root_cause[:72]}"],
