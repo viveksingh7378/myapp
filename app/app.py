@@ -7,6 +7,10 @@ items = [
     {"id": 2, "name": "item-two"},
 ]
 
+@app.route("/blog")
+def blog():
+    return render_template("blog.html")
+
 
 @app.route("/", methods=["GET"])
 def index():
