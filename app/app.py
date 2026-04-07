@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-# Simple in-memory "database" for demo purposes
 items = [
     {"id": 1, "name": "item-one"},
     {"id": 2, "name": "item-two"},
@@ -15,6 +14,11 @@ def index():
         "message": "Myapp API is running",
         "endpoints": ["/health", "/items", "/items/<id>"]
     }), 200
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 
 @app.route("/items", methods=["GET"])
