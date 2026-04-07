@@ -52,7 +52,7 @@ JSON format:
 Error log:
 {error_context}"""
 
-    models_to_try = ["gemini-1.5-flash", "gemini-1.0-pro"]
+    models_to_try = ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash"]
 
     for model_name in models_to_try:
         try:
