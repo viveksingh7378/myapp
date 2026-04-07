@@ -26,10 +26,9 @@ def reset_retry():
 
 
 def call_gemini(error_context):
-    import google.generativeai as genai
+    from google import genai
 
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     prompt = f"""You are an expert Python developer working on a CI/CD pipeline.
 A test just failed. Analyze the error log below and return ONLY a JSON object.
@@ -37,7 +36,7 @@ A test just failed. Analyze the error log below and return ONLY a JSON object.
 Rules:
 - Find the exact file and line causing the error
 - Common errors: missing colon, wrong indentation, undefined variable, wrong import
-- Return ONLY raw JSON, no markdown, no explanation
+- Return ONLY raw JSON, no markdown, no explanation, no code fences
 
 JSON format:
 {{
@@ -51,7 +50,10 @@ JSON format:
 Error log:
 {error_context}"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt
+    )
     return response.text.strip()
 
 
@@ -98,18 +100,14 @@ def remediate(log_file_path):
 
     print(f"AI Agent: Attempt {retries + 1} of {MAX_RETRIES}")
 
-    # extract the error
     error_context = extract_error_context(log_file_path)
     print(f"AI Agent: Extracted error context ({len(error_context)} chars)")
 
-    # call Gemini
     print("AI Agent: Sending to Gemini for analysis...")
     raw_response = call_gemini(error_context)
     print(f"AI Agent: Raw response received:\n{raw_response}")
 
-    # parse JSON response
     try:
-        # strip markdown fences if Gemini added them
         clean = raw_response.replace("```json", "").replace("```", "").strip()
         fix = json.loads(clean)
     except json.JSONDecodeError as e:
@@ -120,18 +118,15 @@ def remediate(log_file_path):
     print(f"AI Agent: Root cause — {fix['root_cause']}")
     print(f"AI Agent: Confidence — {fix['confidence']}")
 
-    # skip if confidence is too low
     if fix['confidence'] < 0.75:
         print("AI Agent: Confidence too low, skipping auto-fix")
         sys.exit(1)
 
-    # apply the fix
     success = apply_fix(fix['file_path'], fix['original_code'], fix['fixed_code'])
     if not success:
         increment_retry()
         sys.exit(1)
 
-    # commit it
     committed = git_commit_fix(fix['file_path'], fix['root_cause'])
     if not committed:
         increment_retry()
