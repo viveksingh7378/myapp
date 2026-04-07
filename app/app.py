@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -32,6 +32,27 @@ def get_item(item_id):
     if item is None:
         return jsonify({"error": "not found"}), 404
     return jsonify(item), 200
+
+
+@app.route("/items", methods=["POST"])
+def create_item():
+    data = request.get_json()
+    if not data or "name" not in data:
+        return jsonify({"error": "name is required"}), 400
+    new_id = max(i["id"] for i in items) + 1 if items else 1
+    new_item = {"id": new_id, "name": data["name"]}
+    items.append(new_item)
+    return jsonify(new_item), 201
+
+
+@app.route("/items/<int:item_id>", methods=["DELETE"])
+def delete_item(item_id):
+    global items
+    item = next((i for i in items if i["id"] == item_id), None)
+    if item is None:
+        return jsonify({"error": "not found"}), 404
+    items = [i for i in items if i["id"] != item_id]
+    return jsonify({"deleted": item_id}), 200
 
 
 if __name__ == "__main__":

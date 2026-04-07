@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: myapp
-        image: vivek7378/myapp:f7bdf78
+        image: vivek7378/myapp:fixed
         ports:
         - containerPort: 5000
         resources:
