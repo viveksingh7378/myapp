@@ -1,15 +1,20 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
+import os
 
 app = Flask(__name__)
+
+# serve blog.html from the project root (one level up from app/)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 items = [
     {"id": 1, "name": "item-one"},
     {"id": 2, "name": "item-two"},
 ]
 
+
 @app.route("/blog")
 def blog():
-    return render_template("blog.html")
+    return send_from_directory(PROJECT_ROOT, "blog.html")
 
 
 @app.route("/", methods=["GET"])
