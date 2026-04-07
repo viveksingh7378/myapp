@@ -1,107 +1,148 @@
-import sys
 import os
+import sys
 import json
 import subprocess
-from google import genai
+from log_parser import extract_error_context, get_failed_test_file
 
 MAX_RETRIES = 2
-RETRY_COUNT_FILE = ".ai_retry_count"
+RETRY_FILE = ".ai_retry_count"
 
 
 def get_retry_count():
-    if os.path.exists(RETRY_COUNT_FILE):
-        return int(open(RETRY_COUNT_FILE).read().strip())
+    if os.path.exists(RETRY_FILE):
+        return int(open(RETRY_FILE).read().strip())
     return 0
 
 
 def increment_retry():
     count = get_retry_count() + 1
-    open(RETRY_COUNT_FILE, 'w').write(str(count))
+    open(RETRY_FILE, 'w').write(str(count))
     return count
 
 
 def reset_retry():
-    if os.path.exists(RETRY_COUNT_FILE):
-        os.remove(RETRY_COUNT_FILE)
+    if os.path.exists(RETRY_FILE):
+        os.remove(RETRY_FILE)
 
 
-def analyze_and_fix(log_file_path):
-    retries = get_retry_count()
-    if retries >= MAX_RETRIES:
-        print("AI Agent: Max retries reached. Notifying human.")
-        reset_retry()
-        sys.exit(1)
+def call_gemini(error_context):
+    import google.generativeai as genai
 
-    with open(log_file_path, 'r') as f:
-        logs = f.read()
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
-    error_context = "\n".join(logs.splitlines()[-80:])
+    prompt = f"""You are an expert Python developer working on a CI/CD pipeline.
+A test just failed. Analyze the error log below and return ONLY a JSON object.
 
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+Rules:
+- Find the exact file and line causing the error
+- Common errors: missing colon, wrong indentation, undefined variable, wrong import
+- Return ONLY raw JSON, no markdown, no explanation
 
-    prompt = f"""You are an expert Python developer.
-A CI/CD pipeline test failed. Analyze this error log and respond ONLY with valid JSON.
-No explanation, no markdown, no backticks — pure JSON only.
-
+JSON format:
 {{
   "root_cause": "one sentence explanation",
-  "file_path": "relative path to file to fix",
-  "original_code": "exact broken code string",
-  "fixed_code": "corrected code string",
+  "file_path": "relative path like app/app.py",
+  "original_code": "the exact broken line as it appears in the file",
+  "fixed_code": "the corrected line",
   "confidence": 0.95
 }}
 
 Error log:
 {error_context}"""
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-lite",
-        contents=prompt
-    )
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
-    raw = response.text.strip()
 
-    # Clean up in case Gemini wraps in backticks
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip()
-
-    fix = json.loads(raw)
-    print(f"AI Root Cause: {fix['root_cause']}")
-    print(f"Confidence: {fix['confidence']}")
-
-    if fix["confidence"] < 0.8:
-        print("Confidence too low — skipping auto-fix.")
-        sys.exit(1)
-
-    # Apply the fix
-    with open(fix["file_path"], 'r') as f:
+def apply_fix(file_path, original_code, fixed_code):
+    with open(file_path, 'r') as f:
         content = f.read()
 
-    if fix["original_code"] not in content:
-        print("Could not locate the broken code in file — skipping.")
-        sys.exit(1)
+    if original_code not in content:
+        print(f"AI Agent: Could not find the exact line to fix in {file_path}")
+        return False
 
-    content = content.replace(fix["original_code"], fix["fixed_code"])
+    new_content = content.replace(original_code, fixed_code, 1)
 
-    with open(fix["file_path"], 'w') as f:
-        f.write(content)
+    with open(file_path, 'w') as f:
+        f.write(new_content)
 
-    # Git commit the fix
+    print(f"AI Agent: Fixed {file_path}")
+    return True
+
+
+def git_commit_fix(file_path, root_cause):
     subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"])
     subprocess.run(["git", "config", "user.name", "AI-Remediation-Bot"])
-    subprocess.run(["git", "add", fix["file_path"]])
-    subprocess.run(["git", "commit", "-m", f"AI-Fix: {fix['root_cause'][:60]}"])
-    subprocess.run(["git", "push"])
+    subprocess.run(["git", "add", file_path])
+    result = subprocess.run(
+        ["git", "commit", "-m", f"AI-Fix: {root_cause[:72]}"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        subprocess.run(["git", "push"])
+        print("AI Agent: Fix committed and pushed successfully")
+        return True
+    else:
+        print(f"AI Agent: Git commit failed — {result.stderr}")
+        return False
+
+
+def remediate(log_file_path):
+    retries = get_retry_count()
+    if retries >= MAX_RETRIES:
+        print(f"AI Agent: Max retries ({MAX_RETRIES}) reached. Human intervention needed.")
+        reset_retry()
+        sys.exit(1)
+
+    print(f"AI Agent: Attempt {retries + 1} of {MAX_RETRIES}")
+
+    # extract the error
+    error_context = extract_error_context(log_file_path)
+    print(f"AI Agent: Extracted error context ({len(error_context)} chars)")
+
+    # call Gemini
+    print("AI Agent: Sending to Gemini for analysis...")
+    raw_response = call_gemini(error_context)
+    print(f"AI Agent: Raw response received:\n{raw_response}")
+
+    # parse JSON response
+    try:
+        # strip markdown fences if Gemini added them
+        clean = raw_response.replace("```json", "").replace("```", "").strip()
+        fix = json.loads(clean)
+    except json.JSONDecodeError as e:
+        print(f"AI Agent: Failed to parse response as JSON — {e}")
+        increment_retry()
+        sys.exit(1)
+
+    print(f"AI Agent: Root cause — {fix['root_cause']}")
+    print(f"AI Agent: Confidence — {fix['confidence']}")
+
+    # skip if confidence is too low
+    if fix['confidence'] < 0.75:
+        print("AI Agent: Confidence too low, skipping auto-fix")
+        sys.exit(1)
+
+    # apply the fix
+    success = apply_fix(fix['file_path'], fix['original_code'], fix['fixed_code'])
+    if not success:
+        increment_retry()
+        sys.exit(1)
+
+    # commit it
+    committed = git_commit_fix(fix['file_path'], fix['root_cause'])
+    if not committed:
+        increment_retry()
+        sys.exit(1)
 
     increment_retry()
-    print("AI fix applied and pushed to repo.")
+    print("AI Agent: Self-healing complete. Pipeline will retrigger.")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 remediate.py <log_file>")
+        print("Usage: python remediate.py <log_file>")
         sys.exit(1)
-    analyze_and_fix(sys.argv[1])
+    remediate(sys.argv[1])

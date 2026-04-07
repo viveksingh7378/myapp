@@ -1,23 +1,27 @@
-def extract_errors(log_text, tail=80):
-    """Extract the most relevant lines from a pytest log."""
-    lines = log_text.splitlines()
+import re
 
-    # Grab lines with errors/failures
-    relevant = [
-        line for line in lines
-        if any(k in line for k in ["FAILED", "ERROR", "assert", "Exception", "Traceback"])
-    ]
+def extract_error_context(log_file_path, lines=60):
+    with open(log_file_path, 'r') as f:
+        all_lines = f.readlines()
 
-    # Also include last N lines for context
-    last_lines = lines[-tail:]
+    # find the line where the error starts
+    error_start = 0
+    for i, line in enumerate(all_lines):
+        if any(keyword in line for keyword in ['FAILED', 'ERROR', 'error', 'Exception', 'SyntaxError']):
+            error_start = max(0, i - 5)
+            break
 
-    combined = relevant + last_lines
-    # Deduplicate while preserving order
-    seen = set()
-    result = []
-    for line in combined:
-        if line not in seen:
-            seen.add(line)
-            result.append(line)
+    # return 60 lines from that point
+    relevant = all_lines[error_start: error_start + lines]
+    return "".join(relevant)
 
-    return "\n".join(result)
+
+def get_failed_test_file(log_file_path):
+    with open(log_file_path, 'r') as f:
+        content = f.read()
+
+    # extract which file failed e.g. "app/app.py", "tests/test_app.py"
+    match = re.search(r'([\w/]+\.py)', content)
+    if match:
+        return match.group(1)
+    return None
