@@ -1,0 +1,9 @@
+VALIDATOR FOUND 5 ERROR(S)
+
+ERROR: /Users/viveksingh/Desktop/Project/myapp/blog.html: Missing required tag '<html'
+ERROR: /Users/viveksingh/Desktop/Project/myapp/blog.html: Missing required tag '<head>'
+ERROR: /Users/viveksingh/Desktop/Project/myapp/blog.html: Unexpected closing tag </style> — open tags: []
+ERROR: /Users/viveksingh/Desktop/Project/myapp/blog.html: Unexpected closing tag </head> — open tags: []
+ERROR: /Users/viveksingh/Desktop/Project/myapp/blog.html: Unexpected closing tag </html> — open tags: []
+
+FAILED

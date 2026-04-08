@@ -1,10 +1,10 @@
 <!DOCTYPE html>
  lang="en">
-<head>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Self-Healing CI/CD Pipeline | DevOps Blog</title>
-  <style>
+
     :root {
       --bg: #0d1117;
       --surface: #161b22;
@@ -220,6 +220,7 @@
     .badge.blue { color: var(--accent); border-color: #1f6feb; }
     .badge.yellow { color: var(--yellow); border-color: #9e6a03; }
     .badge.orange { color: var(--orange); border-color: #bd561d; }
+    .badge.purple { color: var(--accent4); border-color: #6e40c9; }
 
     @media (max-width: 768px) {
       .sidebar { display: none; }
@@ -244,6 +245,7 @@
     <a href="#ai-agent">AI Agent</a>
     <a href="#deploy">Deploy</a>
     <a href="#devguide">Dev Guide</a>
+    <a href="#universal">Universal Fix</a>
   </div>
   <span class="nav-badge">✦ Updated</span>
 </nav>
@@ -764,9 +766,129 @@
         <p>⚡ <strong>Quick command reference:</strong><br/>
         Run tests locally: <code>pytest tests/ --tb=short</code><br/>
         Lint check: <code>flake8 app/ tests/ --max-line-length=100</code><br/>
+        Validate all files: <code>python3 ai_agent/validator.py</code><br/>
         Docker build: <code>docker build -t vivek7378/myapp:dev .</code><br/>
         Run Flask locally: <code>python app/app.py</code> → <code>http://localhost:5000</code>
         </p>
+      </div>
+    </section>
+
+    <!-- 07 UNIVERSAL VALIDATOR -->
+    <section class="section" id="universal">
+      <h2><span class="section-num">07 /</span> Universal Auto-Fix — Any Language, Any Error</h2>
+      <p>
+        The AI agent has been upgraded from Python-only to a <strong>universal self-healing system</strong>. Now when you make a mistake in <em>any</em> file — HTML, JavaScript, CSS, JSON, or Python — the pipeline detects it, calls Gemini, and pushes the fix automatically.
+      </p>
+
+      <!-- Language cards -->
+      <div class="guide-grid">
+        <div class="guide-card">
+          <div class="guide-card-icon">🐍</div>
+          <h4>Python <code>.py</code></h4>
+          <p>Runs <code>python3 -m py_compile</code> on every file. Catches missing colons, wrong indentation, undefined variables, bad imports.</p>
+          <span class="file-path">app/app.py · tests/</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-icon">🌐</div>
+          <h4>HTML <code>.html</code></h4>
+          <p>Checks for missing <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code> tags, unclosed tags, and wrong nesting.</p>
+          <span class="file-path">blog.html · templates/</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-icon">📜</div>
+          <h4>JavaScript <code>.js</code></h4>
+          <p>Runs <code>node --check</code> to catch syntax errors: missing brackets, semicolons, undefined references.</p>
+          <span class="file-path">Any .js file</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-icon">🎨</div>
+          <h4>CSS <code>.css</code></h4>
+          <p>Checks for mismatched <code>{</code> and <code>}</code> braces which cause entire stylesheets to silently break.</p>
+          <span class="file-path">Any .css file</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-icon">📋</div>
+          <h4>JSON <code>.json</code></h4>
+          <p>Uses Python's <code>json.load()</code> to catch trailing commas, unquoted keys, and malformed structures.</p>
+          <span class="file-path">Any .json file</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-icon">➕</div>
+          <h4>Add more languages</h4>
+          <p>Add a new <code>validate_xxx(filepath)</code> function and register it in <code>VALIDATORS</code> dict with the file extension.</p>
+          <span class="file-path">ai_agent/validator.py</span>
+        </div>
+      </div>
+
+      <h3>How It Works — Step by Step</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>You make a mistake in any file</h4>
+            <p>For example: you delete <code>&lt;html&gt;</code> from <code>blog.html</code>, or remove a <code>:</code> from a Python function, or add a mismatched brace in CSS.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>You push to GitHub → Jenkins triggers</h4>
+            <p>Any commit to <code>main</code> starts the pipeline. The first real stage is now <strong>Universal Validate</strong>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4><code>validator.py</code> scans every file</h4>
+            <p>It walks the whole project, skipping <code>venv/</code> and caches, and runs the right checker for each file type. All errors go into <code>validation_output.txt</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h4>Jenkins detects FAILED in the output</h4>
+            <p>If <code>validation_output.txt</code> contains <code>FAILED</code> or <code>ERROR</code>, Jenkins calls the AI agent with that log file.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h4>Gemini analyzes the error in any language</h4>
+            <p>The updated prompt tells Gemini the error could be Python, HTML, JS, CSS, or JSON — and to return the exact broken text and the fix as a JSON object.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <h4>Fix applied, committed, pushed — pipeline reruns</h4>
+            <p>The agent patches the exact file, commits as <strong>AI-Remediation-Bot</strong>, and pushes. Jenkins re-triggers automatically on the new commit.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Example — Deleting <code>&lt;html&gt;</code> from blog.html</h3>
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>validation_output.txt — what validator.py writes</span></div>
+        <pre>VALIDATOR FOUND 1 ERROR(S)
+
+ERROR: blog.html: Missing required tag '&lt;html'
+
+FAILED</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span>Gemini response — what the AI agent receives back</span></div>
+        <pre>{
+  <span class="str">"root_cause"</span>:    <span class="str">"blog.html is missing the opening &lt;html&gt; tag"</span>,
+  <span class="str">"file_path"</span>:     <span class="str">"blog.html"</span>,
+  <span class="str">"language"</span>:      <span class="str">"html"</span>,
+  <span class="str">"original_code"</span>: <span class="str">"&lt;!DOCTYPE html&gt;\n lang=\"en\"&gt;"</span>,
+  <span class="str">"fixed_code"</span>:    <span class="str">"&lt;!DOCTYPE html&gt;\n&lt;html lang=\"en\"&gt;"</span>,
+  <span class="str">"confidence"</span>:    <span class="num">0.98</span>
+}</pre>
+      </div>
+
+      <div class="info-box green">
+        <p>✅ <strong>What changed from before:</strong> Previously only Python pytest failures triggered the AI agent. Now the <strong>Universal Validate</strong> stage runs first and catches broken HTML, JS, CSS, and JSON too — before tests even run. Your original goal of "fix any error in any language" is now fully wired into the pipeline.</p>
       </div>
     </section>
 
@@ -783,6 +905,7 @@
     <span class="badge blue">Kubernetes Ready</span>
     <span class="badge orange">Flake8 Linting</span>
     <span class="badge green">Full CRUD API</span>
+    <span class="badge purple">Universal Validator</span>
   </div>
   <div style="margin-top:1rem; color: var(--text-muted); font-size: 0.75rem;">
     Self-healing · Full CRUD · Containerised · Security scanned · AI-remediated · Linted

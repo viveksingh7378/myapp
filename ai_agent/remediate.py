@@ -32,20 +32,30 @@ def call_gemini(error_context):
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    prompt = f"""You are an expert Python developer working on a CI/CD pipeline.
-A test just failed. Analyze the error log below and return ONLY a JSON object.
+    prompt = f"""You are an expert software engineer working on a CI/CD pipeline.
+A code validation or test just failed. The error may be in ANY file type:
+Python (.py), HTML (.html), JavaScript (.js), CSS (.css), JSON (.json), or others.
+
+Analyze the error log below and return ONLY a JSON object.
 
 Rules:
-- Find the exact file and line causing the error
-- Common errors: missing colon, wrong indentation, undefined variable, wrong import
+- Identify the exact file and the exact broken content
+- For Python: missing colon, wrong indentation, undefined variable, wrong import
+- For HTML: missing tags like <html>, </body>, unclosed tags, wrong nesting
+- For JavaScript: missing semicolons, unclosed brackets, undefined variables
+- For CSS: mismatched braces, invalid property values
+- For JSON: missing commas, trailing commas, unquoted keys
+- The "original_code" must be the EXACT text as it appears in the file (no leading spaces unless they are truly in the file)
+- The "fixed_code" must be the corrected version of ONLY that content
 - Return ONLY raw JSON, no markdown, no explanation, no code fences
 
 JSON format:
 {{
-  "root_cause": "one sentence explanation",
-  "file_path": "relative path like app/app.py",
-  "original_code": "the exact broken line as it appears in the file",
-  "fixed_code": "the corrected line",
+  "root_cause": "one sentence explanation of what is wrong and in which file",
+  "file_path": "relative path like app/app.py or blog.html",
+  "language": "python|html|javascript|css|json",
+  "original_code": "the exact broken text as it appears in the file",
+  "fixed_code": "the corrected version",
   "confidence": 0.95
 }}
 
