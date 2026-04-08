@@ -139,7 +139,15 @@ def call_gemini_analyze(prompt):
     from google.genai import errors as genai_errors
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
+
+    # Ordered by capability; includes multiple fallbacks across model families
+    models = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+    ]
 
     for model_name in models:
         for attempt in range(3):
@@ -147,30 +155,33 @@ def call_gemini_analyze(prompt):
                 print(f"  Trying {model_name} (attempt {attempt + 1})...")
                 response = client.models.generate_content(
                     model=model_name, contents=prompt)
+                print(f"  ✓ Got response from {model_name}")
                 return response.text.strip()
 
             except genai_errors.ClientError as e:
                 err = str(e)
                 if "429" in err or "RESOURCE_EXHAUSTED" in err:
-                    wait = 10 * (attempt + 1)
-                    print(f"  {model_name} rate-limited — waiting {wait}s...")
+                    # Rate-limit: wait longer — free tier resets per minute
+                    wait = 60 if attempt == 0 else 90
+                    print(f"  {model_name} rate-limited — waiting {wait}s then trying next model...")
                     time.sleep(wait)
-                    break
+                    break  # move to next model after wait
                 else:
-                    print(f"  {model_name} client error: {e}")
+                    print(f"  {model_name} client error: {e} — skipping")
                     break
 
             except genai_errors.ServerError as e:
-                wait = 15 * (attempt + 1)
+                # 503 server overload — retry same model with backoff
+                wait = 20 * (attempt + 1)
                 print(f"  {model_name} server error (attempt {attempt+1}/3): {e}")
                 if attempt < 2:
                     print(f"  Retrying in {wait}s...")
                     time.sleep(wait)
                 else:
-                    print(f"  {model_name} gave up — trying next model...")
+                    print(f"  {model_name} unavailable after 3 attempts — trying next model...")
 
             except Exception as e:
-                print(f"  {model_name} unexpected error: {e}")
+                print(f"  {model_name} unexpected error: {e} — skipping")
                 break
 
     return None

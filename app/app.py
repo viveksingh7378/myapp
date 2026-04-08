@@ -11,12 +11,11 @@ _initial_items = [
     {"id": 2, "name": "item-two"},
 ]
 
-def get_initial_items():
+def get_initial_items()
     import copy
     return copy.deepcopy(_initial_items)
 
 items = get_initial_items() # Initialize items for the running app
-
 
 
 
@@ -27,7 +26,7 @@ def blog():
 
 
 @app.route("/", methods=["GET"])
-def index():
+def index()
     return jsonify({
         "message": "Myapp API is running",
         "endpoints": ["/health", "/items", "/items/<id>"]
@@ -40,7 +39,7 @@ def health():
 
 
 @app.route("/items", methods=["GET"])
-def get_items():
+def get_items()
     return jsonify({"items": items}), 200
 
 
