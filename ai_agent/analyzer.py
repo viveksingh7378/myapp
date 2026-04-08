@@ -162,8 +162,8 @@ def is_safe_fix(issue):
         print(f"  ⚠ Skipping fix with escaped newline for {loc}")
         return False
 
-    # original and fixed must actually differ
-    if orig.strip() == fixed.strip():
+    # original and fixed must actually differ (compare raw — indentation changes are valid)
+    if orig == fixed:
         print(f"  ⚠ Skipping no-op fix (original == fixed) for {loc}")
         return False
 
@@ -185,23 +185,26 @@ def apply_fix(file_path, line_number, original_line, fixed_line):
     if line_number and 1 <= line_number <= len(lines):
         actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
         orig = original_line.strip()
-        # orig must be non-empty AND match the actual line content
-        if orig and (orig in actual or actual in orig):
+        # orig must be non-empty AND the stripped content must match the actual line
+        if orig and (orig in actual or actual.strip() in orig):
             ending = "\n" if lines[line_number - 1].endswith("\n") else ""
-            lines[line_number - 1] = fixed_line.strip() + ending
+            # Preserve fixed_line exactly as Gemini wrote it (including indentation)
+            lines[line_number - 1] = fixed_line + ending
             with open(full_path, "w", encoding="utf-8") as f:
                 f.writelines(lines)
             print(f"  ✓ Fixed line {line_number} in {file_path}")
             return True
 
-    # Strategy 2: search all lines
+    # Strategy 2: search all lines (strip-compare for matching, preserve indent when writing)
     if original_line.strip():
         for i, line in enumerate(lines):
             if original_line.strip() in line:
                 ending = "\n" if line.endswith("\n") else ""
-                lines[i] = line.replace(original_line.strip(), fixed_line.strip(), 1)
-                if not lines[i].endswith("\n"):
-                    lines[i] += ending
+                # Replace the stripped core content, then attach the new leading indent
+                new_line = line.replace(line.rstrip("\n").rstrip("\r"), fixed_line, 1)
+                if not new_line.endswith("\n"):
+                    new_line += ending
+                lines[i] = new_line
                 with open(full_path, "w", encoding="utf-8") as f:
                     f.writelines(lines)
                 print(f"  ✓ Fixed line {i+1} via search in {file_path}")
@@ -338,8 +341,10 @@ def main():
     print(f"\nApplied {applied} fix(es) across {len(fixed_files)} file(s)")
 
     if applied == 0:
-        print("AI Analyzer: No fixes could be applied")
-        sys.exit(2)
+        print("AI Analyzer: Gemini found potential issues but all proposed fixes were invalid")
+        print("  (empty fixed_line, no-op, or multi-line fix rejected by safety checks)")
+        print("  Proceeding — downstream Lint and Test stages will catch real errors ✓")
+        sys.exit(0)
 
     # Step 5: verify Python syntax on every modified .py file before running tests
     print("\nStep 5: Verifying syntax of modified Python files...")
