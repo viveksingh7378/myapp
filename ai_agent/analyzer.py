@@ -19,7 +19,7 @@ SKIP_DIRS = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
 SKIP_FILES = {"analysis_output.txt", "validation_output.txt",
               "test_output.txt", "lint_output.txt", "trivy-report.json"}
 ANALYZE_EXTS = {".py", ".html", ".htm", ".js", ".css", ".json"}
-MAX_FILE_CHARS = 8000
+MAX_FILE_CHARS = 60000  # large enough for all project files; only trim if truly huge
 
 
 # ── Collect source files ──────────────────────────────────────────
@@ -139,15 +139,34 @@ def call_gemini_analyze(prompt):
 # ── Validate a fix before applying ───────────────────────────────
 
 def is_safe_fix(issue):
-    """Reject any fix that tries to insert multiple lines — single line only."""
+    """Reject any fix that is unsafe: multi-line, empty, or line-deleting."""
     orig = issue.get("original_line", "")
     fixed = issue.get("fixed_line", "")
+    loc = f"{issue['file_path']} line {issue.get('line_number')}"
+
+    # original_line must actually identify a real line
+    if not orig.strip():
+        print(f"  ⚠ Skipping fix with empty original_line for {loc}")
+        return False
+
+    # fixed_line must not be empty — we never delete lines
+    if not fixed.strip():
+        print(f"  ⚠ Skipping fix with empty fixed_line (would delete line) for {loc}")
+        return False
+
+    # no newlines in either side — truly single-line only
     if "\n" in orig or "\n" in fixed:
-        print(f"  ⚠ Skipping multi-line fix for {issue['file_path']} line {issue.get('line_number')}")
+        print(f"  ⚠ Skipping multi-line fix for {loc}")
         return False
     if "\\n" in orig or "\\n" in fixed:
-        print(f"  ⚠ Skipping fix with escaped newline for {issue['file_path']} line {issue.get('line_number')}")
+        print(f"  ⚠ Skipping fix with escaped newline for {loc}")
         return False
+
+    # original and fixed must actually differ
+    if orig.strip() == fixed.strip():
+        print(f"  ⚠ Skipping no-op fix (original == fixed) for {loc}")
+        return False
+
     return True
 
 
@@ -166,7 +185,8 @@ def apply_fix(file_path, line_number, original_line, fixed_line):
     if line_number and 1 <= line_number <= len(lines):
         actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
         orig = original_line.strip()
-        if orig == "" or orig in actual or actual in orig:
+        # orig must be non-empty AND match the actual line content
+        if orig and (orig in actual or actual in orig):
             ending = "\n" if lines[line_number - 1].endswith("\n") else ""
             lines[line_number - 1] = fixed_line.strip() + ending
             with open(full_path, "w", encoding="utf-8") as f:
@@ -319,6 +339,27 @@ def main():
 
     if applied == 0:
         print("AI Analyzer: No fixes could be applied")
+        sys.exit(2)
+
+    # Step 5: verify Python syntax on every modified .py file before running tests
+    print("\nStep 5: Verifying syntax of modified Python files...")
+    syntax_ok = True
+    for fp in fixed_files:
+        if not fp.endswith(".py"):
+            continue
+        full_path = os.path.join(PROJECT_ROOT, fp)
+        result = subprocess.run(
+            [sys.executable, "-m", "py_compile", full_path],
+            capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            print(f"  ✗ {fp} has a syntax error after fix: {result.stderr.strip()}")
+            syntax_ok = False
+        else:
+            print(f"  ✓ {fp} syntax OK")
+
+    if not syntax_ok:
+        print("\nAI Analyzer: Fix introduced a syntax error — NOT running tests, NOT pushing")
         sys.exit(2)
 
     # Step 7: run tests — ONLY push if tests pass
