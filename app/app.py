@@ -26,7 +26,7 @@ def blog():
 
 
 @app.route("/", methods=["GET"])
-def index()
+def index():
     return jsonify({
         "message": "Myapp API is running",
         "endpoints": ["/health", "/items", "/items/<id>"]
