@@ -31,8 +31,8 @@ def get_failed_test_file(log_file_path):
 
 def extract_broken_files(log_file_path):
     """
-    Extract ALL broken file paths from any error log — any language.
-    Handles both validator.py output and pytest output.
+    Extract broken file paths from any error log — any language.
+    Priority: validator.py format first (most precise), then pytest format.
     Returns a list of relative file paths like ['blog.html', 'app/app.py']
     """
     with open(log_file_path, 'r') as f:
@@ -40,24 +40,29 @@ def extract_broken_files(log_file_path):
 
     found = []
 
-    # Pattern 1: validator.py format  →  "ERROR: blog.html: ..."
-    for match in re.finditer(r'(?:ERROR|SyntaxError):\s+([\w./\-]+\.\w+):', content):
+    # Priority 1: validator.py format  →  "ERROR: /abs/path/blog.html: ..."
+    # or "ERROR: blog.html: ..."  — strip absolute path to get relative
+    for match in re.finditer(
+        r'(?:ERROR|SyntaxError):\s+(?:[^\s:]+/)?'
+        r'([\w][\w./\-]*\.(?:py|html|htm|js|css|json|yaml|yml)):', content
+    ):
         path = match.group(1)
-        if path not in found:
-            found.append(path)
-
-    # Pattern 2: pytest format  →  "File /abs/path/app/app.py, line N"
-    for match in re.finditer(r'File "?([^":\n]+\.(?:py|html|js|css|json))"?', content):
-        path = match.group(1)
-        # strip absolute prefix to get relative path
-        rel = re.sub(r'^.+/myapp/', '', path)
-        if rel not in found:
+        # keep only the filename / short relative path
+        # e.g. strip leading "workspace/myapp-pipeline/" prefixes
+        rel = re.sub(r'^.*(?:myapp[-_]?pipeline/|myapp/)', '', path)
+        if rel and rel not in found:
             found.append(rel)
 
-    # Pattern 3: plain filename  →  "app/app.py"
-    for match in re.finditer(r'([\w]+(?:/[\w]+)*\.(?:py|html|js|css|json))', content):
+    if found:
+        return found
+
+    # Priority 2: pytest format  →  File "/abs/path/app/app.py", line N
+    for match in re.finditer(
+        r'File "([^"]+\.(?:py|html|js|css|json))"', content
+    ):
         path = match.group(1)
-        if path not in found:
-            found.append(path)
+        rel = re.sub(r'^.*(?:myapp[-_]?pipeline/|myapp/)', '', path)
+        if rel and rel not in found:
+            found.append(rel)
 
     return found
