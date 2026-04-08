@@ -129,7 +129,7 @@ JSON format — return ALL fixes in one response:
 # ── Apply a single fix by line number (with fallbacks) ───────────
 
 def apply_single_fix(lines, line_number, original_line, fixed_line, file_path):
-    total_lines = len(lines)
+    # total_lines = len(lines)
 # Stage all fixed files
     # Strategy 1: exact line number
     if line_number and 1 <= line_number <= total_lines:
