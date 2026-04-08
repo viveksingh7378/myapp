@@ -104,7 +104,7 @@ If errors found:
       "line_number": 42,
       "original_line": "exact single line from the file",
       "fixed_line": "corrected single line",
-      "description": "one sentence: what syntax error this fixes",
+"description": "one sentence: what syntax error this fixes",
       "severity": "error"
     }}
   ]

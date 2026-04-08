@@ -84,7 +84,7 @@ def validate_html(filepath):
 
     except Exception as e:
 errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}")
-
+errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}")
     return errors
 
 

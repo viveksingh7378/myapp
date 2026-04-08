@@ -18,7 +18,7 @@ def get_retry_count():
     return 0
 
 
-def reset_retry() # Reset retry count on successful remediation:
+def reset_retry(): # Reset retry count on successful remediation:
     count = get_retry_count() + 1
     open(RETRY_FILE, 'w').write(str(count))
     return count
@@ -130,7 +130,7 @@ JSON format — return ALL fixes in one response:
 
 def apply_single_fix(lines, line_number, original_line, fixed_line, file_path):
     total_lines = len(lines)
-
+# Stage all fixed files
     # Strategy 1: exact line number
     if line_number and 1 <= line_number <= total_lines:
         actual = lines[line_number - 1].rstrip('\n').rstrip('\r')

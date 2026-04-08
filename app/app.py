@@ -16,9 +16,9 @@ def get_initial_items():
     return copy.deepcopy(_initial_items)
 
 items = get_initial_items() # Initialize items for the running app
-    {"id": 1, "name": "item-one"},
-    {"id": 2, "name": "item-two"},
-]
+
+
+
 
 
 @app.route("/blog")
