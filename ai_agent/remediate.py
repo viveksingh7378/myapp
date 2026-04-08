@@ -52,10 +52,8 @@ def call_gemini(error_context, file_path=None, file_content=None):
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    # Build the file context block if we have the real file
     file_block = ""
     if file_path and file_content:
-        # number every line so Gemini can reference exact line numbers
         numbered = "\n".join(
             f"{i+1:4d} | {line}"
             for i, line in enumerate(file_content.splitlines())
@@ -76,25 +74,35 @@ Python, HTML, JavaScript, CSS, JSON, YAML, or others.
 ERROR LOG:
 {error_context}
 
-Your job: find the exact broken line and return the fix as a JSON object.
+Your job: find ALL broken lines and return ALL fixes as a JSON object.
 
 Rules:
 - Use the actual file content above — do NOT guess
-- Return the EXACT line number (1-indexed) of the broken line
-- "original_line" must be copied exactly from the file (including indentation)
-- "fixed_line" must be the corrected version of ONLY that line
-- If multiple lines need fixing, fix the most critical one first
+- Return EXACT line numbers (1-indexed) for every broken line
+- "original_line" must be copied exactly from the numbered file content above
+- "fixed_line" must be the corrected replacement for that line
+- For INSERTIONS (missing tag on a blank/wrong line): set original_line to what is currently on that line (even if empty "")
+- For DELETIONS (extra wrong line): set fixed_line to ""
 - Return ONLY raw JSON — no markdown, no code fences, no explanation
 
-JSON format:
+JSON format — return ALL fixes in one response:
 {{
-  "root_cause": "one sentence: what is wrong and in which file",
+  "root_cause": "one sentence summary of the overall problem",
   "file_path": "relative path e.g. blog.html or app/app.py",
-  "language": "python|html|javascript|css|json|yaml|other",
-  "line_number": 42,
-  "original_line": "the exact broken line copied from the file above",
-  "fixed_line": "the corrected version of that line",
-  "confidence": 0.95
+  "language": "python|html|javascript|css|json|other",
+  "confidence": 0.95,
+  "fixes": [
+    {{
+      "line_number": 2,
+      "original_line": "the exact text on that line (copy from numbered content above)",
+      "fixed_line": "the corrected version"
+    }},
+    {{
+      "line_number": 5,
+      "original_line": "",
+      "fixed_line": "<head>"
+    }}
+  ]
 }}"""
 
     models_to_try = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite"]
@@ -118,11 +126,51 @@ JSON format:
     raise Exception("AI Agent: All models exhausted — quota exceeded on all")
 
 
-# ── Apply fix by line number (reliable) ──────────────────────────
+# ── Apply a single fix by line number (with fallbacks) ───────────
 
-def apply_fix(file_path, line_number, original_line, fixed_line):
+def apply_single_fix(lines, line_number, original_line, fixed_line, file_path):
+    total_lines = len(lines)
+
+    # Strategy 1: exact line number
+    if line_number and 1 <= line_number <= total_lines:
+        actual = lines[line_number - 1].rstrip('\n').rstrip('\r')
+        orig_stripped = original_line.strip()
+        # match if original is empty (insertion) or content overlaps
+        if orig_stripped == '' or orig_stripped in actual or actual in orig_stripped:
+            ending = '\n' if lines[line_number - 1].endswith('\n') else ''
+            if fixed_line.strip() == '':
+                # deletion — remove the line entirely
+                lines.pop(line_number - 1)
+            else:
+                lines[line_number - 1] = fixed_line.strip() + ending
+            print(f"  ✓ Fixed line {line_number}: {repr(original_line.strip())} → {repr(fixed_line.strip())}")
+            return True
+        else:
+            print(f"  ⚠ Line {line_number} mismatch — expected {repr(orig_stripped)}, got {repr(actual)}")
+
+    # Strategy 2: search all lines
+    if original_line.strip():
+        for i, line in enumerate(lines):
+            if original_line.strip() in line:
+                ending = '\n' if line.endswith('\n') else ''
+                if fixed_line.strip() == '':
+                    lines.pop(i)
+                else:
+                    lines[i] = line.replace(original_line.strip(), fixed_line.strip(), 1)
+                    if not lines[i].endswith('\n'):
+                        lines[i] += ending
+                print(f"  ✓ Fixed line {i+1} via search: {repr(original_line.strip())} → {repr(fixed_line.strip())}")
+                return True
+
+    print(f"  ✗ Could not locate: {repr(original_line.strip())}")
+    return False
+
+
+# ── Apply ALL fixes to a file in one pass ────────────────────────
+
+def apply_all_fixes(file_path, fixes_list):
     full_path = os.path.join(PROJECT_ROOT, file_path)
-    print(f"AI Agent: Opening {full_path}")
+    print(f"AI Agent: Applying {len(fixes_list)} fix(es) to {full_path}")
 
     if not os.path.exists(full_path):
         print(f"AI Agent: File not found — {full_path}")
@@ -131,66 +179,37 @@ def apply_fix(file_path, line_number, original_line, fixed_line):
     with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
         lines = f.readlines()
 
-    total_lines = len(lines)
+    # Sort fixes in reverse line order so line numbers stay valid after edits
+    sorted_fixes = sorted(fixes_list, key=lambda x: x.get('line_number', 0), reverse=True)
 
-    # ── Strategy 1: replace by exact line number ──────────────────
-    if line_number and 1 <= line_number <= total_lines:
-        actual = lines[line_number - 1].rstrip('\n')
-        # confirm the line roughly matches what Gemini said
-        if original_line.strip() in actual or actual.strip() in original_line.strip():
-            # preserve original line ending
-            ending = '\n' if lines[line_number - 1].endswith('\n') else ''
-            lines[line_number - 1] = fixed_line + ending
-            print(f"AI Agent: Fixed line {line_number} in {file_path}")
-            with open(full_path, 'w', encoding='utf-8') as f:
-                f.writelines(lines)
-            return True
-        else:
-            print(f"AI Agent: Line {line_number} content mismatch — trying search fallback")
-            print(f"  Expected: {repr(original_line.strip())}")
-            print(f"  Got:      {repr(actual.strip())}")
+    applied = 0
+    for fix in sorted_fixes:
+        ok = apply_single_fix(
+            lines,
+            fix.get('line_number'),
+            fix.get('original_line', fix.get('original_code', '')),
+            fix.get('fixed_line', fix.get('fixed_code', '')),
+            file_path
+        )
+        if ok:
+            applied += 1
 
-    # ── Strategy 2: search every line for the broken content ──────
-    print("AI Agent: Searching all lines for the broken content...")
-    for i, line in enumerate(lines):
-        if original_line.strip() and original_line.strip() in line:
-            ending = '\n' if line.endswith('\n') else ''
-            lines[i] = line.replace(original_line.strip(), fixed_line.strip(), 1) + (
-                '' if line.endswith('\n') else ''
-            )
-            # make sure we keep the newline
-            if not lines[i].endswith('\n'):
-                lines[i] += ending
-            print(f"AI Agent: Fixed at line {i+1} via search in {file_path}")
-            with open(full_path, 'w', encoding='utf-8') as f:
-                f.writelines(lines)
-            return True
+    with open(full_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
 
-    # ── Strategy 3: whole-file string replace (last resort) ───────
-    print("AI Agent: Trying whole-file string replace as last resort...")
-    content = "".join(lines)
-    if original_line.strip() in content:
-        content = content.replace(original_line.strip(), fixed_line.strip(), 1)
-        with open(full_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        print(f"AI Agent: Fixed via whole-file replace in {file_path}")
-        return True
-
-    print(f"AI Agent: Could not locate the broken content in {file_path}")
-    print(f"  Looking for: {repr(original_line)}")
-    return False
+    print(f"AI Agent: Applied {applied}/{len(fixes_list)} fixes to {file_path}")
+    return applied > 0
 
 
 # ── Git commit and push ───────────────────────────────────────────
 
-def git_commit_fix(file_path, root_cause):
+def git_commit_and_push(file_paths, root_cause):
     repo_url = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True, text=True
     ).stdout.strip()
 
     github_token = os.environ.get("GITHUB_TOKEN", "")
-
     if github_token and "github.com" in repo_url:
         authed_url = repo_url.replace("https://", f"https://{github_token}@")
         subprocess.run(["git", "remote", "set-url", "origin", authed_url])
@@ -198,8 +217,10 @@ def git_commit_fix(file_path, root_cause):
     subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"])
     subprocess.run(["git", "config", "user.name", "AI-Remediation-Bot"])
 
-    full_path = os.path.join(PROJECT_ROOT, file_path)
-    subprocess.run(["git", "add", full_path])
+    # stage all fixed files
+    for fp in file_paths:
+        full_path = os.path.join(PROJECT_ROOT, fp)
+        subprocess.run(["git", "add", full_path])
 
     result = subprocess.run(
         ["git", "commit", "-m", f"AI-Fix: {root_cause[:72]}"],
@@ -233,25 +254,23 @@ def remediate(log_file_path):
 
     print(f"AI Agent: Attempt {retries + 1} of {MAX_RETRIES}")
 
-    # 1. Extract error context from the log
+    # 1. Extract error context
     error_context = extract_error_context(log_file_path)
     print(f"AI Agent: Extracted error context ({len(error_context)} chars)")
 
-    # 2. Find which file(s) are broken
+    # 2. Find broken files
     broken_files = extract_broken_files(log_file_path)
     print(f"AI Agent: Broken files detected: {broken_files}")
 
-    # 3. Read the actual content of the first broken file
+    # 3. Read the first broken file's actual content
     file_path = broken_files[0] if broken_files else None
-    file_content = None
-    if file_path:
-        file_content = read_broken_file(file_path)
-        if file_content:
-            print(f"AI Agent: Read {len(file_content)} chars from {file_path}")
-        else:
-            print(f"AI Agent: Warning — could not read {file_path}, Gemini will work from error log only")
+    file_content = read_broken_file(file_path) if file_path else None
+    if file_content:
+        print(f"AI Agent: Read {len(file_content)} chars from {file_path}")
+    elif file_path:
+        print(f"AI Agent: Warning — could not read {file_path}")
 
-    # 4. Call Gemini with error + real file content
+    # 4. Call Gemini — now asks for ALL fixes in one shot
     print("AI Agent: Sending to Gemini for analysis...")
     raw_response = call_gemini(error_context, file_path, file_content)
     print(f"AI Agent: Raw response:\n{raw_response}")
@@ -265,32 +284,36 @@ def remediate(log_file_path):
         increment_retry()
         sys.exit(1)
 
-    print(f"AI Agent: Root cause  — {fix['root_cause']}")
-    print(f"AI Agent: File        — {fix['file_path']}")
-    print(f"AI Agent: Line        — {fix.get('line_number', 'N/A')}")
-    print(f"AI Agent: Confidence  — {fix['confidence']}")
+    print(f"AI Agent: Root cause — {fix['root_cause']}")
+    print(f"AI Agent: File       — {fix['file_path']}")
+    print(f"AI Agent: Confidence — {fix['confidence']}")
 
-    # 6. Skip if confidence too low
     if fix['confidence'] < 0.75:
         print("AI Agent: Confidence too low — skipping auto-fix")
         increment_retry()
         sys.exit(1)
 
-    # 7. Apply fix using line number + fallback strategies
-    success = apply_fix(
-        fix['file_path'],
-        fix.get('line_number'),
-        fix.get('original_line', fix.get('original_code', '')),
-        fix.get('fixed_line', fix.get('fixed_code', ''))
-    )
+    # 6. Apply ALL fixes in one pass
+    fixes_list = fix.get('fixes')
+
+    # backwards-compat: single fix format
+    if not fixes_list:
+        fixes_list = [{
+            'line_number': fix.get('line_number'),
+            'original_line': fix.get('original_line', fix.get('original_code', '')),
+            'fixed_line': fix.get('fixed_line', fix.get('fixed_code', ''))
+        }]
+
+    print(f"AI Agent: Applying {len(fixes_list)} fix(es)...")
+    success = apply_all_fixes(fix['file_path'], fixes_list)
 
     if not success:
-        print("AI Agent: All fix strategies failed")
+        print("AI Agent: Failed to apply fixes")
         increment_retry()
         sys.exit(1)
 
-    # 8. Commit and push to GitHub
-    committed = git_commit_fix(fix['file_path'], fix['root_cause'])
+    # 7. Commit and push all changes in one commit
+    committed = git_commit_and_push([fix['file_path']], fix['root_cause'])
     if not committed:
         increment_retry()
         sys.exit(1)

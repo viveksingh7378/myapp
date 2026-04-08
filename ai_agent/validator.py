@@ -57,18 +57,21 @@ def validate_html(filepath):
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             content = f.read()
 
-        # check for DOCTYPE
-        if "<!doctype" not in content.lower() and "<html" not in content.lower():
-            errors.append(f"ERROR: {filepath}: Missing <!DOCTYPE html> or <html> tag")
+        # Check required root tags first — if any are missing,
+        # report only those and skip structural checks to avoid
+        # cascading errors caused by the same root problem.
+        required = ["<html", "<head>", "<body>"]
+        missing = [t for t in required if t not in content.lower()]
 
-        # check for basic required tags
-        for tag in ["<html", "<head>", "<body>"]:
-            if tag not in content.lower():
+        if missing:
+            for tag in missing:
                 errors.append(
                     f"ERROR: {filepath}: Missing required tag '{tag}'"
                 )
+            # don't run structural checks — all other errors are cascading
+            return errors
 
-        # structural parse
+        # Only run structural parse when root tags are present
         parser = StrictHTMLParser()
         try:
             parser.feed(content)
