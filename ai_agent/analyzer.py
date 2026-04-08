@@ -1,8 +1,11 @@
 """
 AI Code Analyzer — powered by Google Gemini
 
-Gemini reads every source file and finds syntax errors itself.
-It applies single-line fixes, runs tests to verify, then pushes ONLY if tests pass.
+Gemini reads every source file, finds syntax errors, and fixes them.
+Supports three fix actions:
+  replace      — overwrite an existing broken line
+  insert_before — insert a new line before an anchor line
+  insert_after  — insert a new line after an anchor line
 """
 
 import os
@@ -15,11 +18,11 @@ from collections import defaultdict
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANALYSIS_LOG = os.path.join(PROJECT_ROOT, "analysis_output.txt")
 
-SKIP_DIRS = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
+SKIP_DIRS  = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
 SKIP_FILES = {"analysis_output.txt", "validation_output.txt",
               "test_output.txt", "lint_output.txt", "trivy-report.json"}
 ANALYZE_EXTS = {".py", ".html", ".htm", ".js", ".css", ".json"}
-MAX_FILE_CHARS = 60000  # large enough for all project files; only trim if truly huge
+MAX_FILE_CHARS = 60000
 
 
 # ── Collect source files ──────────────────────────────────────────
@@ -36,14 +39,14 @@ def collect_files():
             if ext not in ANALYZE_EXTS:
                 continue
             full_path = os.path.join(dirpath, filename)
-            rel_path = os.path.relpath(full_path, PROJECT_ROOT)
+            rel_path  = os.path.relpath(full_path, PROJECT_ROOT)
             try:
                 with open(full_path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
                 if len(content) > MAX_FILE_CHARS:
                     half = MAX_FILE_CHARS // 2
                     content = (content[:half]
-                               + f"\n... [truncated] ...\n"
+                               + "\n... [file truncated — middle omitted] ...\n"
                                + content[-half:])
                 files[rel_path] = content
             except Exception as e:
@@ -60,51 +63,68 @@ def build_prompt(files_dict):
                              for i, line in enumerate(content.splitlines()))
         file_sections += f"\n{'='*60}\nFILE: {rel_path}\n{'='*60}\n{numbered}\n"
 
-    prompt = f"""You are a CI/CD pipeline repair agent. Your ONLY job is to find
-SYNTAX ERRORS that would cause the code to crash or fail to import.
+    prompt = f"""You are a CI/CD self-healing agent. Analyze every file below and find
+ALL syntax errors that would cause the code to fail, crash, or render incorrectly.
 
 Project files:
 {file_sections}
 
-STRICT RULES — follow exactly:
+════════════════════════════════════════
+WHAT TO FIND — errors in ANY language:
 
-1. ONLY report syntax errors that BREAK execution:
-   - Python: missing colon after def/if/for/class, wrong indentation, missing import, undefined name
-   - HTML: missing required tags (<html>, <head>, <body>), unclosed tags
-   - CSS: mismatched braces
-   - JSON: invalid syntax (trailing commas, unquoted keys)
+Python  : missing colon (def/if/for/class), wrong indentation, unclosed bracket,
+          undefined name used as function, invalid syntax
+HTML    : missing required tags (<html>, <head>, <body>, <style>, <script>),
+          tag written as <lang="en"> instead of <html lang="en">,
+          unclosed tags, malformed tag names
+CSS     : unclosed braces {{ }}, missing semicolons on property values
+JavaScript: missing semicolons, unclosed brackets/braces, undefined variables
+JSON    : trailing commas, unquoted keys, mismatched brackets
 
-2. DO NOT report or fix:
-   - Code style, formatting, or naming preferences
-   - Architecture improvements, race conditions, thread safety
-   - Logic that works but could be improved
-   - Anything needing more than one line to fix
+WHAT NOT TO REPORT:
+  - Code style, naming, or formatting preferences
+  - Logic improvements or refactoring
+  - Warnings that don't break execution
 
-3. EVERY fix must be a SINGLE LINE change:
-   - original_line = copy ONE line exactly as it appears in the file (character for character)
-   - fixed_line = the corrected version of only that one line
-   - NEVER put \\n inside original_line or fixed_line
-   - NEVER suggest replacing a single line with multiple lines
+════════════════════════════════════════
+THREE FIX ACTIONS — use the right one:
 
-4. original_line must EXACTLY match the file content (copy it directly from the numbered listing)
+1. "replace"       — a line EXISTS but is broken; overwrite it with the fix
+   Example: <lang="en">  →  replace with  <html lang="en">
 
-Return ONLY raw JSON, no markdown, no code fences.
+2. "insert_before" — a required line is COMPLETELY MISSING; insert the new line
+                     BEFORE the anchor_line you specify
+   Example: <style> tag is missing before `:root {{`
 
-If no syntax errors found:
+3. "insert_after"  — a required line is COMPLETELY MISSING; insert the new line
+                     AFTER the anchor_line you specify
+   Example: <head> tag is missing after `<html lang="en">`
+
+RULES FOR ALL ACTIONS:
+  • anchor_line / original_line must be copied EXACTLY from the file (character for character)
+  • fixed_line must be a SINGLE line — never put \\n inside it
+  • fixed_line must not be empty
+  • For "replace": original_line and fixed_line must differ
+
+════════════════════════════════════════
+Return ONLY raw JSON — no markdown, no code fences.
+
+If no errors found:
 {{"status": "clean", "message": "No syntax errors found", "issues": []}}
 
 If errors found:
 {{
   "status": "issues_found",
-  "summary": "one sentence describing the syntax errors found",
+  "summary": "one sentence describing all errors found",
   "issues": [
     {{
-      "file_path": "relative/path.py",
-      "language": "python|html|css|json",
+      "file_path": "relative/path/to/file",
+      "language": "python|html|css|javascript|json",
       "line_number": 42,
-      "original_line": "exact single line from the file",
-      "fixed_line": "corrected single line",
-"description": "one sentence: what syntax error this fixes",
+      "action": "replace|insert_before|insert_after",
+      "original_line": "exact line from file (anchor for insert, broken line for replace)",
+      "fixed_line": "the corrected or new single line",
+      "description": "one sentence: what syntax error this fixes",
       "severity": "error"
     }}
   ]
@@ -122,70 +142,71 @@ def call_gemini_analyze(prompt):
     models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
 
     for model_name in models:
-        # retry each model up to 3 times for transient server errors
         for attempt in range(3):
             try:
                 print(f"  Trying {model_name} (attempt {attempt + 1})...")
-                response = client.models.generate_content(model=model_name, contents=prompt)
+                response = client.models.generate_content(
+                    model=model_name, contents=prompt)
                 return response.text.strip()
 
             except genai_errors.ClientError as e:
                 err = str(e)
                 if "429" in err or "RESOURCE_EXHAUSTED" in err:
                     wait = 10 * (attempt + 1)
-                    print(f"  {model_name} rate-limited — waiting {wait}s before next model...")
+                    print(f"  {model_name} rate-limited — waiting {wait}s...")
                     time.sleep(wait)
-                    break  # move to next model
+                    break
                 else:
                     print(f"  {model_name} client error: {e}")
-                    break  # move to next model
+                    break
 
             except genai_errors.ServerError as e:
-                # 503 / 500 — transient server overload, retry with backoff
                 wait = 15 * (attempt + 1)
-                print(f"  {model_name} server error (attempt {attempt + 1}/3): {e}")
+                print(f"  {model_name} server error (attempt {attempt+1}/3): {e}")
                 if attempt < 2:
                     print(f"  Retrying in {wait}s...")
                     time.sleep(wait)
                 else:
-                    print(f"  {model_name} gave up after 3 attempts — trying next model...")
+                    print(f"  {model_name} gave up — trying next model...")
 
             except Exception as e:
                 print(f"  {model_name} unexpected error: {e}")
-                break  # move to next model
+                break
 
-    return None  # all models failed — caller handles None gracefully
+    return None
 
 
 # ── Validate a fix before applying ───────────────────────────────
 
 def is_safe_fix(issue):
-    """Reject any fix that is unsafe: multi-line, empty, or line-deleting."""
-    orig = issue.get("original_line", "")
-    fixed = issue.get("fixed_line", "")
-    loc = f"{issue['file_path']} line {issue.get('line_number')}"
+    action      = issue.get("action", "replace")
+    orig        = issue.get("original_line", "")
+    fixed       = issue.get("fixed_line", "")
+    loc         = f"{issue.get('file_path')} line {issue.get('line_number')}"
 
-    # original_line must actually identify a real line
+    # anchor/original must not be empty — we need it to locate the insertion point
     if not orig.strip():
-        print(f"  ⚠ Skipping fix with empty original_line for {loc}")
+        print(f"  ⚠ Skipping — empty original_line/anchor for {loc}")
         return False
 
-    # fixed_line must not be empty — we never delete lines
+    # fixed_line must have content — never delete or insert a blank line
     if not fixed.strip():
-        print(f"  ⚠ Skipping fix with empty fixed_line (would delete line) for {loc}")
+        print(f"  ⚠ Skipping — empty fixed_line for {loc}")
         return False
 
-    # no newlines in either side — truly single-line only
-    if "\n" in orig or "\n" in fixed:
-        print(f"  ⚠ Skipping multi-line fix for {loc}")
-        return False
-    if "\\n" in orig or "\\n" in fixed:
-        print(f"  ⚠ Skipping fix with escaped newline for {loc}")
+    # no real newlines ever
+    for val, label in [(orig, "original_line"), (fixed, "fixed_line")]:
+        if "\n" in val or "\\n" in val:
+            print(f"  ⚠ Skipping — {label} contains newline for {loc}")
+            return False
+
+    # for replace: the two lines must actually differ
+    if action == "replace" and orig == fixed:
+        print(f"  ⚠ Skipping no-op replace (original == fixed) for {loc}")
         return False
 
-    # original and fixed must actually differ (compare raw — indentation changes are valid)
-    if orig == fixed:
-        print(f"  ⚠ Skipping no-op fix (original == fixed) for {loc}")
+    if action not in ("replace", "insert_before", "insert_after"):
+        print(f"  ⚠ Unknown action '{action}' for {loc}")
         return False
 
     return True
@@ -193,7 +214,13 @@ def is_safe_fix(issue):
 
 # ── Apply a single fix ────────────────────────────────────────────
 
-def apply_fix(file_path, line_number, original_line, fixed_line):
+def apply_fix(issue):
+    file_path   = issue["file_path"]
+    action      = issue.get("action", "replace")
+    line_number = issue.get("line_number")
+    original    = issue.get("original_line", "")
+    fixed       = issue.get("fixed_line", "")
+
     full_path = os.path.join(PROJECT_ROOT, file_path)
     if not os.path.exists(full_path):
         print(f"  ✗ File not found: {full_path}")
@@ -202,37 +229,74 @@ def apply_fix(file_path, line_number, original_line, fixed_line):
     with open(full_path, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
-    # Strategy 1: exact line number match
-    if line_number and 1 <= line_number <= len(lines):
-        actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
-        orig = original_line.strip()
-        # orig must be non-empty AND the stripped content must match the actual line
-        if orig and (orig in actual or actual.strip() in orig):
-            ending = "\n" if lines[line_number - 1].endswith("\n") else ""
-            # Preserve fixed_line exactly as Gemini wrote it (including indentation)
-            lines[line_number - 1] = fixed_line + ending
-            with open(full_path, "w", encoding="utf-8") as f:
-                f.writelines(lines)
-            print(f"  ✓ Fixed line {line_number} in {file_path}")
-            return True
+    # ── REPLACE ──────────────────────────────────────────────────
+    if action == "replace":
+        # Strategy 1: use line number hint
+        if line_number and 1 <= line_number <= len(lines):
+            actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
+            if original.strip() and (original.strip() in actual
+                                     or actual.strip() in original.strip()):
+                ending = "\n" if lines[line_number - 1].endswith("\n") else ""
+                lines[line_number - 1] = fixed + ending
+                _write(full_path, lines)
+                print(f"  ✓ [replace] line {line_number} in {file_path}")
+                return True
 
-    # Strategy 2: search all lines (strip-compare for matching, preserve indent when writing)
-    if original_line.strip():
+        # Strategy 2: search whole file
         for i, line in enumerate(lines):
-            if original_line.strip() in line:
-                ending = "\n" if line.endswith("\n") else ""
-                # Replace the stripped core content, then attach the new leading indent
-                new_line = line.replace(line.rstrip("\n").rstrip("\r"), fixed_line, 1)
+            if original.strip() in line:
+                ending  = "\n" if line.endswith("\n") else ""
+                new_line = line.replace(line.rstrip("\n\r"), fixed, 1)
                 if not new_line.endswith("\n"):
                     new_line += ending
                 lines[i] = new_line
-                with open(full_path, "w", encoding="utf-8") as f:
-                    f.writelines(lines)
-                print(f"  ✓ Fixed line {i+1} via search in {file_path}")
+                _write(full_path, lines)
+                print(f"  ✓ [replace] found at line {i+1} in {file_path}")
                 return True
 
-    print(f"  ✗ Could not locate: {repr(original_line)} in {file_path}")
+        print(f"  ✗ [replace] could not find: {repr(original)} in {file_path}")
+        return False
+
+    # ── INSERT_BEFORE / INSERT_AFTER ─────────────────────────────
+    if action in ("insert_before", "insert_after"):
+        anchor = original.strip()
+        target_idx = None
+
+        # prefer line number hint first
+        if line_number and 1 <= line_number <= len(lines):
+            actual = lines[line_number - 1].rstrip("\n\r")
+            if anchor in actual or actual.strip() in anchor:
+                target_idx = line_number - 1
+
+        # fallback: search whole file
+        if target_idx is None:
+            for i, line in enumerate(lines):
+                if anchor in line:
+                    target_idx = i
+                    break
+
+        if target_idx is None:
+            print(f"  ✗ [{action}] anchor not found: {repr(original)} in {file_path}")
+            return False
+
+        # detect indentation from anchor line for consistency
+        anchor_line = lines[target_idx]
+        indent = len(anchor_line) - len(anchor_line.lstrip())
+        new_line = " " * indent + fixed.strip() + "\n"
+
+        insert_idx = target_idx if action == "insert_before" else target_idx + 1
+        lines.insert(insert_idx, new_line)
+        _write(full_path, lines)
+        verb = "before" if action == "insert_before" else "after"
+        print(f"  ✓ [{action}] inserted '{fixed.strip()}' {verb} line {target_idx+1} in {file_path}")
+        return True
+
     return False
+
+
+def _write(path, lines):
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
 
 
 # ── Run pytest ────────────────────────────────────────────────────
@@ -262,21 +326,25 @@ def git_commit_and_push(fixed_files, summary):
 
     github_token = os.environ.get("GITHUB_TOKEN", "")
     if github_token and "github.com" in repo_url:
-        authed_url = repo_url.replace("https://", f"https://{github_token}@")
-        subprocess.run(["git", "remote", "set-url", "origin", authed_url], cwd=PROJECT_ROOT)
+        authed = repo_url.replace("https://", f"https://{github_token}@")
+        subprocess.run(["git", "remote", "set-url", "origin", authed],
+                       cwd=PROJECT_ROOT)
 
-    subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"], cwd=PROJECT_ROOT)
-    subprocess.run(["git", "config", "user.name", "AI-Remediation-Bot"], cwd=PROJECT_ROOT)
+    subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"],
+                   cwd=PROJECT_ROOT)
+    subprocess.run(["git", "config", "user.name",  "AI-Remediation-Bot"],
+                   cwd=PROJECT_ROOT)
 
     for fp in fixed_files:
-        subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)], cwd=PROJECT_ROOT)
+        subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)],
+                       cwd=PROJECT_ROOT)
 
     result = subprocess.run(
         ["git", "commit", "-m", f"AI-Fix: {summary[:72]}"],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     )
     if result.returncode != 0:
-        print(f"AI Analyzer: Git commit failed — {result.stderr}")
+        print(f"AI Analyzer: git commit failed — {result.stderr}")
         return False
 
     push = subprocess.run(
@@ -305,112 +373,102 @@ def main():
         print(f"  → {path} ({len(files[path])} chars)")
     print(f"  Total: {len(files)} files")
 
-    # Step 2: send to Gemini
+    # Step 2: build prompt and call Gemini
     print("\nStep 2: Sending all files to Gemini for analysis...")
     prompt = build_prompt(files)
-    raw = call_gemini_analyze(prompt)
+    raw    = call_gemini_analyze(prompt)
 
-    # All Gemini models unavailable — skip analysis, let pipeline continue
     if raw is None:
-        print("\nAI Analyzer: All Gemini models unavailable (server overload/quota).")
-        print("Skipping analysis — Lint and Test stages will catch any errors ✓")
+        print("\nAI Analyzer: All Gemini models unavailable — skipping analysis.")
+        print("Lint and Test stages will catch any errors ✓")
         sys.exit(0)
 
     print(f"\nStep 3: Gemini response:\n{raw}\n")
 
-    # Step 3: parse response
+    # Step 3: parse JSON
     try:
-        clean = raw.replace("```json", "").replace("```", "").strip()
+        clean    = raw.replace("```json", "").replace("```", "").strip()
         analysis = json.loads(clean)
     except json.JSONDecodeError as e:
         print(f"AI Analyzer: Could not parse Gemini response — {e}")
-        print("Skipping analysis — Lint and Test stages will catch any errors ✓")
+        print("Skipping — Lint and Test stages will catch any errors ✓")
         sys.exit(0)
 
     with open(ANALYSIS_LOG, "w") as f:
         f.write(json.dumps(analysis, indent=2))
 
-    # Step 4: check if clean
     if analysis.get("status") == "clean" or not analysis.get("issues"):
-        print("AI Analyzer: Gemini found NO syntax errors — all files look correct ✓")
+        print("AI Analyzer: No syntax errors found — all files are clean ✓")
         sys.exit(0)
 
-    # Step 5: report issues
-    issues = analysis["issues"]
-    errors = [i for i in issues if i.get("severity") == "error"]
-    print(f"AI Analyzer: Gemini found {len(errors)} error(s)")
+    # Step 4: report and filter issues
+    issues = [i for i in analysis.get("issues", [])
+              if i.get("severity") == "error"]
+    print(f"AI Analyzer: Gemini found {len(issues)} error(s)")
     print(f"Summary: {analysis.get('summary', '')}\n")
     for issue in issues:
+        action = issue.get("action", "replace")
         print(f"  [{issue.get('severity','?').upper()}] {issue['file_path']} "
-              f"line {issue.get('line_number','?')}: {issue['description']}")
+              f"line {issue.get('line_number','?')} [{action}]: {issue['description']}")
 
-    # Step 6: apply only SAFE single-line fixes (errors only, skip warnings)
+    # Step 5: apply fixes — process each file in reverse line order
     print("\nStep 4: Applying fixes...")
     fixed_files = set()
     applied = 0
 
     by_file = defaultdict(list)
     for issue in issues:
-        if issue.get("severity") == "error" and is_safe_fix(issue):
+        if is_safe_fix(issue):
             by_file[issue["file_path"]].append(issue)
 
     for file_path, file_issues in by_file.items():
-        # apply in reverse line order so earlier fixes don't shift later line numbers
-        for issue in sorted(file_issues, key=lambda x: x.get("line_number", 0), reverse=True):
-            ok = apply_fix(
-                issue["file_path"],
-                issue.get("line_number"),
-                issue.get("original_line", ""),
-                issue.get("fixed_line", "")
-            )
-            if ok:
-                fixed_files.add(issue["file_path"])
+        # reverse order: insertions/replacements at higher line numbers first
+        # so that earlier line numbers are not shifted
+        for issue in sorted(file_issues,
+                            key=lambda x: x.get("line_number", 0),
+                            reverse=True):
+            if apply_fix(issue):
+                fixed_files.add(file_path)
                 applied += 1
 
     print(f"\nApplied {applied} fix(es) across {len(fixed_files)} file(s)")
 
     if applied == 0:
-        print("AI Analyzer: Gemini found potential issues but all proposed fixes were invalid")
-        print("  (empty fixed_line, no-op, or multi-line fix rejected by safety checks)")
-        print("  Proceeding — downstream Lint and Test stages will catch real errors ✓")
+        print("AI Analyzer: No valid fixes could be applied.")
+        print("Lint and Test stages will catch real errors ✓")
         sys.exit(0)
 
-    # Step 5: verify Python syntax on every modified .py file before running tests
-    print("\nStep 5: Verifying syntax of modified Python files...")
+    # Step 6: verify Python files compile cleanly
+    print("\nStep 5: Verifying Python syntax on modified files...")
     syntax_ok = True
     for fp in fixed_files:
         if not fp.endswith(".py"):
             continue
         full_path = os.path.join(PROJECT_ROOT, fp)
-        result = subprocess.run(
-            [sys.executable, "-m", "py_compile", full_path],
-            capture_output=True, text=True
-        )
-        if result.returncode != 0:
-            print(f"  ✗ {fp} has a syntax error after fix: {result.stderr.strip()}")
+        r = subprocess.run([sys.executable, "-m", "py_compile", full_path],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            print(f"  ✗ {fp}: syntax error after fix — {r.stderr.strip()}")
             syntax_ok = False
         else:
-            print(f"  ✓ {fp} syntax OK")
+            print(f"  ✓ {fp}: syntax OK")
 
     if not syntax_ok:
-        print("\nAI Analyzer: Fix introduced a syntax error — NOT running tests, NOT pushing")
+        print("\nAI Analyzer: A fix introduced a syntax error — NOT pushing.")
         sys.exit(2)
 
-    # Step 7: run tests — ONLY push if tests pass
-    tests_pass = run_tests()
-
-    if not tests_pass:
-        print("\nAI Analyzer: Tests still failing after fixes — NOT pushing to GitHub")
-        print("Human intervention required to review the remaining errors.")
+    # Step 7: run tests
+    if not run_tests():
+        print("\nAI Analyzer: Tests still failing — NOT pushing to GitHub.")
         sys.exit(2)
 
-    # Step 8: push only after tests pass
-    summary = analysis.get("summary", "fixed syntax errors detected by Gemini")
+    # Step 8: commit and push
+    summary   = analysis.get("summary", "fixed syntax errors detected by Gemini")
     committed = git_commit_and_push(list(fixed_files), summary)
 
     if committed:
-        print("\nAI Analyzer: Self-healing complete ✓ — pipeline will retrigger")
-        sys.exit(1)   # exit 1 = fixed & pushed, Jenkins should retrigger
+        print("\nAI Analyzer: Self-healing complete ✓")
+        sys.exit(1)
     else:
         print("\nAI Analyzer: Push failed")
         sys.exit(2)
