@@ -39,7 +39,7 @@ def health():
 
 
 @app.route("/items", methods=["GET"])
-def get_items()
+def get_items():
     return jsonify({"items": items}), 200
 
 
