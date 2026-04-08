@@ -11,7 +11,7 @@ _initial_items = [
     {"id": 2, "name": "item-two"},
 ]
 
-def get_initial_items()
+def get_initial_items():
     import copy
     return copy.deepcopy(_initial_items)
 
