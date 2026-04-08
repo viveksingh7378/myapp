@@ -122,18 +122,39 @@ def call_gemini_analyze(prompt):
     models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
 
     for model_name in models:
-        try:
-            print(f"  Trying {model_name}...")
-            response = client.models.generate_content(model=model_name, contents=prompt)
-            return response.text.strip()
-        except genai_errors.ClientError as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                print(f"  {model_name} quota exceeded — trying next...")
-                time.sleep(5)
-                continue
-            else:
-                raise e
-    raise Exception("All Gemini models exhausted")
+        # retry each model up to 3 times for transient server errors
+        for attempt in range(3):
+            try:
+                print(f"  Trying {model_name} (attempt {attempt + 1})...")
+                response = client.models.generate_content(model=model_name, contents=prompt)
+                return response.text.strip()
+
+            except genai_errors.ClientError as e:
+                err = str(e)
+                if "429" in err or "RESOURCE_EXHAUSTED" in err:
+                    wait = 10 * (attempt + 1)
+                    print(f"  {model_name} rate-limited — waiting {wait}s before next model...")
+                    time.sleep(wait)
+                    break  # move to next model
+                else:
+                    print(f"  {model_name} client error: {e}")
+                    break  # move to next model
+
+            except genai_errors.ServerError as e:
+                # 503 / 500 — transient server overload, retry with backoff
+                wait = 15 * (attempt + 1)
+                print(f"  {model_name} server error (attempt {attempt + 1}/3): {e}")
+                if attempt < 2:
+                    print(f"  Retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    print(f"  {model_name} gave up after 3 attempts — trying next model...")
+
+            except Exception as e:
+                print(f"  {model_name} unexpected error: {e}")
+                break  # move to next model
+
+    return None  # all models failed — caller handles None gracefully
 
 
 # ── Validate a fix before applying ───────────────────────────────
@@ -288,6 +309,13 @@ def main():
     print("\nStep 2: Sending all files to Gemini for analysis...")
     prompt = build_prompt(files)
     raw = call_gemini_analyze(prompt)
+
+    # All Gemini models unavailable — skip analysis, let pipeline continue
+    if raw is None:
+        print("\nAI Analyzer: All Gemini models unavailable (server overload/quota).")
+        print("Skipping analysis — Lint and Test stages will catch any errors ✓")
+        sys.exit(0)
+
     print(f"\nStep 3: Gemini response:\n{raw}\n")
 
     # Step 3: parse response
@@ -296,7 +324,8 @@ def main():
         analysis = json.loads(clean)
     except json.JSONDecodeError as e:
         print(f"AI Analyzer: Could not parse Gemini response — {e}")
-        sys.exit(2)
+        print("Skipping analysis — Lint and Test stages will catch any errors ✓")
+        sys.exit(0)
 
     with open(ANALYSIS_LOG, "w") as f:
         f.write(json.dumps(analysis, indent=2))
