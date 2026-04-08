@@ -18,7 +18,7 @@ def get_retry_count():
     return 0
 
 
-def increment_retry():
+def reset_retry() # Reset retry count on successful remediation:
     count = get_retry_count() + 1
     open(RETRY_FILE, 'w').write(str(count))
     return count
@@ -263,6 +263,9 @@ def remediate(log_file_path):
     print(f"AI Agent: Broken files detected: {broken_files}")
 
     # 3. Read the first broken file's actual content
+    # WARNING: This agent is currently designed to fix only the first broken file found.
+    # For multi-file errors, it would need to iterate through broken_files
+    # and call Gemini for each, or Gemini's response format would need to support multiple files.
     file_path = broken_files[0] if broken_files else None
     file_content = read_broken_file(file_path) if file_path else None
     if file_content:

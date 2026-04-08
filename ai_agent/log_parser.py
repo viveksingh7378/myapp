@@ -49,7 +49,9 @@ def extract_broken_files(log_file_path):
         path = match.group(1)
         # keep only the filename / short relative path
         # e.g. strip leading "workspace/myapp-pipeline/" prefixes
-        rel = re.sub(r'^.*(?:myapp[-_]?pipeline/|myapp/)', '', path)
+# Make sure PROJECT_ROOT is available in this module, e.g., via import or parameter
+        PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        rel = os.path.relpath(path, PROJECT_ROOT)
         if rel and rel not in found:
             found.append(rel)
 
@@ -61,7 +63,9 @@ def extract_broken_files(log_file_path):
         r'File "([^"]+\.(?:py|html|js|css|json))"', content
     ):
         path = match.group(1)
-        rel = re.sub(r'^.*(?:myapp[-_]?pipeline/|myapp/)', '', path)
+# Make sure PROJECT_ROOT is available in this module, e.g., via import or parameter
+        PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        rel = os.path.relpath(path, PROJECT_ROOT)
         if rel and rel not in found:
             found.append(rel)
 

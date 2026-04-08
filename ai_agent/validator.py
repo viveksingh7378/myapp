@@ -40,14 +40,14 @@ class StrictHTMLParser(HTMLParser):
             self.open_tags.pop()
         else:
             self.errors.append(
-                f"Unexpected closing tag </{tag}> — "
+f"Unexpected closing tag </{tag}> (line {self.get_current_lineno()}) — "
                 f"open tags: {self.open_tags}"
             )
 
     def get_errors(self):
         errors = list(self.errors)
         if self.open_tags:
-            errors.append(f"Unclosed tags at end of file: {self.open_tags}")
+            errors.append(f"Unclosed tags at end of file: {self.open_tags} (last seen on line {self.get_current_lineno()})")
         return errors
 
 
@@ -66,7 +66,7 @@ def validate_html(filepath):
         if missing:
             for tag in missing:
                 errors.append(
-                    f"ERROR: {filepath}: Missing required tag '{tag}'"
+                    f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Missing required tag '{tag}'"
                 )
             # don't run structural checks — all other errors are cascading
             return errors
@@ -75,13 +75,15 @@ def validate_html(filepath):
         parser = StrictHTMLParser()
         try:
             parser.feed(content)
+            # HTMLParser automatically handles line numbers for parse errors, but not custom logic
             for err in parser.get_errors():
-                errors.append(f"ERROR: {filepath}: {err}")
+                errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: {err}")
         except Exception as e:
+            errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: HTML parse error — {e}")
             errors.append(f"ERROR: {filepath}: HTML parse error — {e}")
 
     except Exception as e:
-        errors.append(f"ERROR: {filepath}: Could not read file — {e}")
+errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}")
 
     return errors
 
@@ -127,6 +129,9 @@ def validate_css(filepath):
     try:
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             content = f.read()
+# WARNING: This CSS validation is extremely naive and prone to false positives.
+        # It does not account for braces inside comments, strings, or valid CSS structures.
+        # A proper CSS parser/linter should be used for robust validation.
         opens = content.count("{")
         closes = content.count("}")
         if opens != closes:

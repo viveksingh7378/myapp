@@ -1,10 +1,11 @@
 import pytest
-from app.app import app
+from app.app import app, get_initial_items
 
 
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
+    app.items = get_initial_items() # Reset items for each test to ensure isolation
     with app.test_client() as client:
         yield client
 
