@@ -24,7 +24,7 @@ def reset_retry(): # Reset retry count on successful remediation:
     return count
 
 
-def reset_retry():
+def increment_retry(): # Increment retry count
     if os.path.exists(RETRY_FILE):
         os.remove(RETRY_FILE)
 
