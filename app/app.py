@@ -25,7 +25,7 @@ def blog():
     return send_from_directory(PROJECT_ROOT, "blog.html")
 
 
-@app.route("/", methods=[""])
+@app.route("/", methods=["GET"])
 def index():
     return jsonify({
         "message": "Myapp API is running",
