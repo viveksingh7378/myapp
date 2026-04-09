@@ -8,7 +8,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 _initial_items = [
     {"id": 1, "name": "item-one"},
-    {"id": 2, "name": "item-two"},
+{"id": 2, "name": "item-two"}
 ]
 
 def get_initial_items():
