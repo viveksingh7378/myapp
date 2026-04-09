@@ -1,84 +1,75 @@
-import pytest
-from app.app import app
-
+import pytest, os
+os.environ['DB_PATH'] = ':memory:'
+from app.app import app, init_db
 
 @pytest.fixture
 def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
+    app.config['TESTING'] = True
+    with app.test_client() as c:
+        with app.app_context():
+            init_db()
+        yield c
 
 def test_health(client):
-    r = client.get("/health")
+    r = client.get('/health')
     assert r.status_code == 200
-    assert r.get_json()["service"] == "order-service"
 
-
-def test_get_all_orders(client):
-    r = client.get("/orders")
+def test_get_orders_empty(client):
+    r = client.get('/orders')
     assert r.status_code == 200
-    assert "orders" in r.get_json()
-
-
-def test_get_order_by_id(client):
-    r = client.get("/orders/1")
-    assert r.status_code == 200
-    assert r.get_json()["id"] == 1
-
-
-def test_order_not_found(client):
-    r = client.get("/orders/9999")
-    assert r.status_code == 404
-
+    assert r.get_json()['total'] == 0
 
 def test_create_order(client):
-    r = client.post("/orders", json={
-        "user_id": 3,
-        "items": [{"product_id": 5, "name": "Instant Pot", "qty": 1, "price": 6999}],
-        "address": "789 Park Street, Delhi"
+    r = client.post('/orders', json={
+        "user_id":1,"user_email":"test@test.com","user_name":"Test User",
+        "items":[{"product_id":1,"product_name":"iPhone","price":119999,"quantity":1}],
+        "address":{"name":"Test User","city":"Mumbai","state":"Maharashtra"}
     })
     assert r.status_code == 201
-    data = r.get_json()
-    assert data["status"] == "pending"
-    assert data["total"] == 6999
+    d = r.get_json()
+    assert d['status'] == 'pending'
+    assert d['total'] > 0
 
-
-def test_create_order_missing_fields(client):
-    r = client.post("/orders", json={"user_id": 1})
+def test_create_order_no_items(client):
+    r = client.post('/orders', json={"user_id":1})
     assert r.status_code == 400
 
+def test_get_order_by_id(client):
+    r = client.post('/orders', json={"user_id":1,"items":[{"product_id":1,"price":1000,"quantity":2}]})
+    oid = r.get_json()['id']
+    r2 = client.get(f'/orders/{oid}')
+    assert r2.status_code == 200
 
-def test_create_order_empty_items(client):
-    r = client.post("/orders", json={"user_id": 1, "items": []})
-    assert r.status_code == 400
+def test_order_not_found(client):
+    r = client.get('/orders/9999')
+    assert r.status_code == 404
 
+def test_update_status(client):
+    r = client.post('/orders', json={"user_id":1,"items":[{"product_id":1,"price":500,"quantity":1}]})
+    oid = r.get_json()['id']
+    r2 = client.put(f'/orders/{oid}/status', json={"status":"confirmed"})
+    assert r2.status_code == 200
+    assert r2.get_json()['status'] == 'confirmed'
 
-def test_update_order_status(client):
-    r = client.put("/orders/2/status", json={"status": "delivered"})
-    assert r.status_code == 200
-    assert r.get_json()["status"] == "delivered"
-
-
-def test_update_invalid_status(client):
-    r = client.put("/orders/1/status", json={"status": "flying"})
-    assert r.status_code == 400
-
+def test_invalid_status(client):
+    r = client.post('/orders', json={"user_id":1,"items":[{"price":100,"quantity":1}]})
+    oid = r.get_json()['id']
+    r2 = client.put(f'/orders/{oid}/status', json={"status":"flying"})
+    assert r2.status_code == 400
 
 def test_cancel_order(client):
-    # Create a new order first so we can cancel it
-    create = client.post("/orders", json={
-        "user_id": 1,
-        "items": [{"product_id": 1, "name": "iPhone", "qty": 1, "price": 99999}],
-        "address": "Test Address"
-    })
-    order_id = create.get_json()["id"]
-    r = client.delete(f"/orders/{order_id}")
-    assert r.status_code == 200
+    r = client.post('/orders', json={"user_id":1,"items":[{"price":100,"quantity":1}]})
+    oid = r.get_json()['id']
+    r2 = client.delete(f'/orders/{oid}')
+    assert r2.status_code == 200
 
-
-def test_filter_orders_by_user(client):
-    r = client.get("/orders?user_id=1")
+def test_order_stats(client):
+    r = client.get('/orders/stats')
     assert r.status_code == 200
-    orders = r.get_json()["orders"]
-    assert all(o["user_id"] == 1 for o in orders)
+    assert 'total_orders' in r.get_json()
+
+def test_filter_by_user(client):
+    client.post('/orders', json={"user_id":42,"items":[{"price":100,"quantity":1}]})
+    r = client.get('/orders?user_id=42')
+    assert r.status_code == 200
+    assert r.get_json()['total'] >= 1

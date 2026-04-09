@@ -1,93 +1,162 @@
 from flask import Flask, jsonify, request
+import sqlite3, os, json
 from datetime import datetime
 
 app = Flask(__name__)
+DB_PATH = os.environ.get('DB_PATH', '/tmp/orders.db')
 
-orders = [
-    {"id": 1, "user_id": 1, "items": [{"product_id": 1, "name": "iPhone 15 Pro", "qty": 1, "price": 99999}],
-     "total": 99999, "status": "delivered", "address": "123 MG Road, Mumbai",
-     "created_at": "2024-01-15T10:30:00", "payment_id": 1},
-    {"id": 2, "user_id": 2, "items": [{"product_id": 3, "name": "Nike Air Max 270", "qty": 2, "price": 8999}],
-     "total": 17998, "status": "shipped", "address": "456 Brigade Road, Bangalore",
-     "created_at": "2024-01-20T14:00:00", "payment_id": 2},
-]
+@app.after_request
+def add_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
 
-next_id = len(orders) + 1
-VALID_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def options_handler(path=''):
+    return '', 200
 
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-@app.route("/health")
+def init_db():
+    conn = get_db()
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER DEFAULT 0,
+            user_email TEXT DEFAULT '',
+            user_name TEXT DEFAULT '',
+            items TEXT DEFAULT '[]',
+            subtotal REAL DEFAULT 0,
+            discount REAL DEFAULT 0,
+            tax REAL DEFAULT 0,
+            total REAL DEFAULT 0,
+            address TEXT DEFAULT '{}',
+            status TEXT DEFAULT 'pending',
+            payment_id TEXT DEFAULT '',
+            payment_method TEXT DEFAULT '',
+            created_at TEXT DEFAULT ''
+        );
+    ''')
+    conn.commit(); conn.close()
+
+VALID_STATUSES = ['pending','confirmed','processing','shipped','out_for_delivery','delivered','cancelled','returned']
+
+def row_to_dict(row):
+    d = dict(row)
+    try: d['items'] = json.loads(d.get('items','[]'))
+    except: d['items'] = []
+    try: d['address'] = json.loads(d.get('address','{}'))
+    except: d['address'] = {}
+    return d
+
+@app.route('/health')
 def health():
-    return jsonify({"status": "ok", "service": "order-service"}), 200
+    return jsonify({"status":"ok","service":"order-service","db":"sqlite"}), 200
 
-
-@app.route("/orders", methods=["GET"])
+@app.route('/orders', methods=['GET'])
 def get_orders():
-    user_id = request.args.get("user_id", type=int)
-    status  = request.args.get("status")
-    result  = orders
+    user_id = request.args.get('user_id', type=int)
+    status = request.args.get('status','')
+    sql = 'SELECT * FROM orders WHERE 1=1'
+    params = []
     if user_id:
-        result = [o for o in result if o["user_id"] == user_id]
+        sql += ' AND user_id=?'; params.append(user_id)
     if status:
-        result = [o for o in result if o["status"] == status]
-    return jsonify({"orders": result, "total": len(result)}), 200
+        sql += ' AND status=?'; params.append(status)
+    sql += ' ORDER BY id DESC'
+    conn = get_db()
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+    return jsonify({"orders":[row_to_dict(r) for r in rows],"total":len(rows)}), 200
 
+@app.route('/orders/<int:oid>', methods=['GET'])
+def get_order(oid):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM orders WHERE id=?',(oid,)).fetchone()
+    conn.close()
+    if not row: return jsonify({"error":"Order not found"}), 404
+    return jsonify(row_to_dict(row)), 200
 
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def get_order(order_id):
-    order = next((o for o in orders if o["id"] == order_id), None)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
-    return jsonify(order), 200
-
-
-@app.route("/orders", methods=["POST"])
+@app.route('/orders', methods=['POST'])
 def create_order():
-    global next_id
-    data = request.get_json()
-    if not data or "user_id" not in data or "items" not in data:
-        return jsonify({"error": "user_id and items are required"}), 400
-    if not data["items"]:
-        return jsonify({"error": "Order must have at least one item"}), 400
-    total = sum(item.get("price", 0) * item.get("qty", 1) for item in data["items"])
-    order = {
-        "id": next_id,
-        "user_id": data["user_id"],
-        "items": data["items"],
-        "total": total,
-        "status": "pending",
-        "address": data.get("address", ""),
-        "created_at": datetime.utcnow().isoformat(),
-        "payment_id": None,
-    }
-    orders.append(order)
-    next_id += 1
-    return jsonify(order), 201
-
-
-@app.route("/orders/<int:order_id>/status", methods=["PUT"])
-def update_status(order_id):
-    order = next((o for o in orders if o["id"] == order_id), None)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
     data = request.get_json() or {}
-    new_status = data.get("status")
-    if not new_status or new_status not in VALID_STATUSES:
-        return jsonify({"error": f"status must be one of {VALID_STATUSES}"}), 400
-    order["status"] = new_status
-    return jsonify(order), 200
+    if not data.get('items'):
+        return jsonify({"error":"items are required"}), 400
+    items = data['items']
+    subtotal = sum(item.get('price',0) * item.get('quantity',1) for item in items)
+    discount = data.get('discount', 0)
+    tax = round((subtotal - discount) * 0.18, 2)
+    total = round(subtotal - discount + tax, 2)
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn = get_db()
+    cur = conn.execute('''INSERT INTO orders (user_id,user_email,user_name,items,subtotal,discount,tax,total,address,status,payment_method,created_at)
+                          VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+                       (data.get('user_id',0), data.get('user_email',''), data.get('user_name',''),
+                        json.dumps(items), subtotal, discount, tax, total,
+                        json.dumps(data.get('address',{})), 'pending',
+                        data.get('payment_method',''), now))
+    conn.commit()
+    row = conn.execute('SELECT * FROM orders WHERE id=?',(cur.lastrowid,)).fetchone()
+    conn.close()
+    return jsonify(row_to_dict(row)), 201
 
+@app.route('/orders/<int:oid>/status', methods=['PUT'])
+def update_status(oid):
+    data = request.get_json() or {}
+    status = data.get('status','')
+    if status not in VALID_STATUSES:
+        return jsonify({"error":f"Invalid status. Valid: {VALID_STATUSES}"}), 400
+    conn = get_db()
+    if not conn.execute('SELECT id FROM orders WHERE id=?',(oid,)).fetchone():
+        conn.close(); return jsonify({"error":"Order not found"}), 404
+    conn.execute('UPDATE orders SET status=? WHERE id=?',(status,oid))
+    conn.commit()
+    row = conn.execute('SELECT * FROM orders WHERE id=?',(oid,)).fetchone()
+    conn.close()
+    return jsonify(row_to_dict(row)), 200
 
-@app.route("/orders/<int:order_id>", methods=["DELETE"])
-def cancel_order(order_id):
-    order = next((o for o in orders if o["id"] == order_id), None)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
-    if order["status"] == "delivered":
-        return jsonify({"error": "Cannot cancel a delivered order"}), 400
-    order["status"] = "cancelled"
-    return jsonify({"message": "Order cancelled", "order_id": order_id}), 200
+@app.route('/orders/<int:oid>/payment', methods=['PUT'])
+def update_payment(oid):
+    data = request.get_json() or {}
+    conn = get_db()
+    if not conn.execute('SELECT id FROM orders WHERE id=?',(oid,)).fetchone():
+        conn.close(); return jsonify({"error":"Order not found"}), 404
+    conn.execute('UPDATE orders SET payment_id=?,status=? WHERE id=?',
+                 (data.get('payment_id',''), 'confirmed', oid))
+    conn.commit()
+    row = conn.execute('SELECT * FROM orders WHERE id=?',(oid,)).fetchone()
+    conn.close()
+    return jsonify(row_to_dict(row)), 200
 
+@app.route('/orders/<int:oid>', methods=['DELETE'])
+def cancel_order(oid):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM orders WHERE id=?',(oid,)).fetchone()
+    if not row:
+        conn.close(); return jsonify({"error":"Order not found"}), 404
+    if row['status'] == 'delivered':
+        conn.close(); return jsonify({"error":"Cannot cancel a delivered order"}), 400
+    conn.execute('UPDATE orders SET status=? WHERE id=?',('cancelled',oid))
+    conn.commit(); conn.close()
+    return jsonify({"cancelled":oid}), 200
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002)
+@app.route('/orders/stats', methods=['GET'])
+def order_stats():
+    conn = get_db()
+    total = conn.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
+    revenue = conn.execute('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","returned")').fetchone()[0]
+    by_status = conn.execute('SELECT status,COUNT(*) FROM orders GROUP BY status').fetchall()
+    today = conn.execute('SELECT COUNT(*) FROM orders WHERE date(created_at)=date("now")').fetchone()[0]
+    conn.close()
+    return jsonify({"total_orders":total,"total_revenue":round(revenue,2),"today_orders":today,
+                    "by_status":[{"status":r[0],"count":r[1]} for r in by_status]}), 200
+
+init_db()
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5002)

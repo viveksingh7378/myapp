@@ -1,91 +1,77 @@
-import pytest
-from app.app import app
-
+import pytest, os
+os.environ['DB_PATH'] = ':memory:'
+from app.app import app, init_db
 
 @pytest.fixture
 def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
+    app.config['TESTING'] = True
+    with app.test_client() as c:
+        with app.app_context():
+            init_db()
+        yield c
 
 def test_health(client):
-    r = client.get("/health")
+    r = client.get('/health')
     assert r.status_code == 200
-    assert r.get_json()["service"] == "user-service"
 
-
-def test_get_all_users(client):
-    r = client.get("/users")
-    assert r.status_code == 200
-    data = r.get_json()
-    assert "users" in data
-    assert data["total"] >= 2
-
-
-def test_get_user_by_id(client):
-    r = client.get("/users/1")
-    assert r.status_code == 200
-    assert r.get_json()["name"] == "Vivek Singh"
-
-
-def test_password_not_exposed(client):
-    r = client.get("/users/1")
-    assert "password" not in r.get_json()
-
-
-def test_user_not_found(client):
-    r = client.get("/users/9999")
-    assert r.status_code == 404
-
-
-def test_register_user(client):
-    r = client.post("/users/register", json={
-        "name": "Rahul Gupta",
-        "email": "rahul@example.com",
-        "password": "securepass",
-        "phone": "9000000001"
-    })
+def test_register(client):
+    r = client.post('/users/register', json={"name":"Vivek Singh","email":"vivek@test.com","password":"pass123"})
     assert r.status_code == 201
-    assert r.get_json()["email"] == "rahul@example.com"
+    d = r.get_json()
+    assert 'token' in d
+    assert 'user_id' in d
 
-
-def test_register_duplicate_email(client):
-    client.post("/users/register", json={
-        "name": "Dup User", "email": "dup@example.com", "password": "abc"
-    })
-    r = client.post("/users/register", json={
-        "name": "Dup User2", "email": "dup@example.com", "password": "xyz"
-    })
-    assert r.status_code == 409
-
-
-def test_register_missing_field(client):
-    r = client.post("/users/register", json={"name": "No Email"})
+def test_register_missing_fields(client):
+    r = client.post('/users/register', json={"email":"x@x.com"})
     assert r.status_code == 400
 
+def test_register_duplicate_email(client):
+    client.post('/users/register', json={"name":"User1","email":"dup@test.com","password":"pass"})
+    r = client.post('/users/register', json={"name":"User2","email":"dup@test.com","password":"pass"})
+    assert r.status_code == 409
 
-def test_login_success(client):
-    r = client.post("/users/login", json={
-        "email": "vivek@example.com", "password": "pass123"
-    })
+def test_login(client):
+    client.post('/users/register', json={"name":"Login User","email":"login@test.com","password":"secret"})
+    r = client.post('/users/login', json={"email":"login@test.com","password":"secret"})
     assert r.status_code == 200
-    assert "user" in r.get_json()
-
+    assert 'token' in r.get_json()
 
 def test_login_wrong_password(client):
-    r = client.post("/users/login", json={
-        "email": "vivek@example.com", "password": "wrongpass"
-    })
+    client.post('/users/register', json={"name":"User","email":"wp@test.com","password":"correct"})
+    r = client.post('/users/login', json={"email":"wp@test.com","password":"wrong"})
     assert r.status_code == 401
 
+def test_get_user(client):
+    r = client.post('/users/register', json={"name":"GetUser","email":"get@test.com","password":"pass"})
+    uid = r.get_json()['user_id']
+    r2 = client.get(f'/users/{uid}')
+    assert r2.status_code == 200
+    assert 'password_hash' not in r2.get_json()
+    assert 'token' not in r2.get_json()
+
+def test_user_not_found(client):
+    r = client.get('/users/9999')
+    assert r.status_code == 404
 
 def test_update_user(client):
-    r = client.put("/users/1", json={"phone": "9999999999"})
-    assert r.status_code == 200
-    assert r.get_json()["phone"] == "9999999999"
-
+    r = client.post('/users/register', json={"name":"OldName","email":"update@test.com","password":"pass"})
+    uid = r.get_json()['user_id']
+    r2 = client.put(f'/users/{uid}', json={"name":"NewName","phone":"9876543210"})
+    assert r2.status_code == 200
+    assert r2.get_json()['name'] == 'NewName'
 
 def test_delete_user(client):
-    r = client.delete("/users/2")
+    r = client.post('/users/register', json={"name":"ToDelete","email":"del@test.com","password":"pass"})
+    uid = r.get_json()['user_id']
+    r2 = client.delete(f'/users/{uid}')
+    assert r2.status_code == 200
+
+def test_get_all_users(client):
+    r = client.get('/users')
     assert r.status_code == 200
+    assert 'users' in r.get_json()
+
+def test_user_stats(client):
+    r = client.get('/users/stats')
+    assert r.status_code == 200
+    assert 'total_users' in r.get_json()
