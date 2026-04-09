@@ -143,10 +143,10 @@ def call_gemini_analyze(prompt):
     # Ordered by capability; includes multiple fallbacks across model families
     models = [
         "gemini-2.5-flash",
+        "gemini-2.5-pro",
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b",
+        "gemini-2.0-flash-exp",
     ]
 
     for model_name in models:
