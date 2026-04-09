@@ -184,6 +184,71 @@ def call_gemini_analyze(prompt):
                 print(f"  {model_name} unexpected error: {e} — skipping")
                 break
 
+    # ── All Gemini models failed — try Ollama as local fallback ──
+    print("\n  All Gemini models unavailable — trying Ollama local fallback...")
+    return call_ollama_analyze(prompt)
+
+
+# ── Ollama local fallback ─────────────────────────────────────────
+
+def call_ollama_analyze(prompt):
+    """
+    Fallback: call a locally running Ollama model when all Gemini models fail.
+    Ollama must be running: `ollama serve`
+    Preferred models (install with `ollama pull <model>`):
+      ollama pull codellama        (best for code analysis)
+      ollama pull deepseek-coder   (great alternative)
+      ollama pull llama3           (general purpose fallback)
+    """
+    import urllib.request
+    import urllib.error
+
+    OLLAMA_URL = "http://localhost:11434/api/generate"
+
+    # Try these models in order — use whichever is installed
+    models = ["codellama", "deepseek-coder", "llama3", "mistral", "llama2"]
+
+    for model_name in models:
+        try:
+            print(f"  Trying Ollama model: {model_name}...")
+            payload = json.dumps({
+                "model": model_name,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.1,   # low temp = more deterministic JSON
+                    "num_predict": 4096,  # enough tokens for the full response
+                }
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                OLLAMA_URL,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            req.add_header("Connection", "keep-alive")
+
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                text = result.get("response", "").strip()
+                if text:
+                    print(f"  ✓ Got response from Ollama ({model_name})")
+                    return text
+                else:
+                    print(f"  {model_name} returned empty response — trying next...")
+
+        except urllib.error.URLError as e:
+            if "Connection refused" in str(e) or "Connection reset" in str(e):
+                print("  Ollama is not running on this machine.")
+                print("  To enable: install Ollama from https://ollama.com then run: ollama serve")
+                return None
+            print(f"  Ollama {model_name} error: {e} — trying next model...")
+
+        except Exception as e:
+            print(f"  Ollama {model_name} unexpected error: {e} — trying next model...")
+
+    print("  No Ollama models available. Install one with: ollama pull codellama")
     return None
 
 
