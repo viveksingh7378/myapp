@@ -18,7 +18,9 @@ def options_handler(path=''):
     return '', 200
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    # Support SQLite URI mode (e.g. file:mem?mode=memory&cache=shared)
+    use_uri = DB_PATH.startswith("file:")
+    conn = sqlite3.connect(DB_PATH, uri=use_uri)
     conn.row_factory = sqlite3.Row
     return conn
 

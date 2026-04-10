@@ -1,14 +1,27 @@
-import pytest, os
-os.environ['DB_PATH'] = ':memory:'
+import pytest, os, sqlite3
+
+# Use a named shared-memory SQLite URI so all connections within the same
+# process share the same in-memory database (fixes "no such table" errors).
+_DB_URI = 'file:paymentmem?mode=memory&cache=shared'
+os.environ['DB_PATH'] = _DB_URI
+
 from app.app import app, init_db
+
+# Module-level keeper connection: keeps the shared in-memory DB alive for the
+# entire test session.  Without this, the DB is destroyed between connections.
+_keeper = sqlite3.connect(_DB_URI, uri=True)
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    with app.app_context():
+        init_db()
     with app.test_client() as c:
-        with app.app_context():
-            init_db()
         yield c
+    # Wipe data between tests so tests stay independent
+    with sqlite3.connect(_DB_URI, uri=True) as cx:
+        cx.execute('DELETE FROM payments')
+        cx.commit()
 
 def test_health(client):
     r = client.get('/health')

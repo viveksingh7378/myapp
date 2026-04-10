@@ -277,13 +277,24 @@ def call_ollama_analyze(prompt):
     # Try these models in order — use whichever is installed
     models = ["codellama", "deepseek-coder", "llama3", "mistral", "llama2"]
 
+    # Force Ollama to return ONLY raw JSON — no narrative, no markdown
+    json_instruction = (
+        "CRITICAL INSTRUCTION: You must respond with ONLY raw JSON. "
+        "Do NOT write any explanation, introduction, commentary, or markdown. "
+        "Do NOT use code fences (``` or ```json). "
+        "Your ENTIRE response must start with { and end with }. "
+        "Any response that is not pure JSON will be rejected.\n\n"
+    )
+    ollama_prompt = json_instruction + prompt
+
     for model_name in models:
         try:
             print(f"  Trying Ollama model: {model_name}...")
             payload = json.dumps({
                 "model": model_name,
-                "prompt": prompt,
+                "prompt": ollama_prompt,
                 "stream": False,
+                "format": "json",          # Ollama native JSON mode (supported by most models)
                 "options": {
                     "temperature": 0.1,   # low temp = more deterministic JSON
                     "num_predict": 4096,  # enough tokens for the full response
@@ -671,6 +682,23 @@ def local_syntax_check():
                                     print(f"    First negative depth at line {ln_num}: {ln.strip()}")
                                     break
 
+                    # HTML structural checks — required skeleton tags
+                    html_lower = html_content.lower()
+                    struct_checks = [
+                        ("<!doctype html>",      "Missing <!DOCTYPE html> declaration"),
+                        ("<html",                "Missing <html> opening tag"),
+                        ("</html>",              "Missing </html> closing tag"),
+                        ("<head",                "Missing <head> opening tag"),
+                        ("</head>",              "Missing </head> closing tag"),
+                        ("<body",                "Missing <body> opening tag"),
+                        ("</body>",              "Missing </body> closing tag"),
+                    ]
+                    for needle, msg in struct_checks:
+                        if needle not in html_lower:
+                            findings.append({"file": rel_path, "tool": "html-structure",
+                                             "error": msg})
+                            print(f"  ✗ {rel_path}: {msg}")
+
                     # Inline JS check
                     js_blocks = _re.findall(r'<script[^>]*>(.*?)</script>',
                                             html_content, _re.DOTALL)
@@ -730,12 +758,31 @@ def main():
 
     print(f"\nStep 3: Gemini response:\n{raw}\n")
 
-    # Step 3: parse JSON
-    try:
-        clean    = raw.replace("```json", "").replace("```", "").strip()
-        analysis = json.loads(clean)
-    except json.JSONDecodeError as e:
-        print(f"AI Analyzer: Could not parse Gemini response — {e}")
+    # Step 3: parse JSON — strip markdown fences and extract JSON block
+    def extract_json(text):
+        """Strip markdown fences, then extract the outermost {...} JSON object."""
+        import re
+        # Remove ```json ... ``` or ``` ... ``` fences
+        text = re.sub(r"```(?:json)?\s*", "", text)
+        text = text.replace("```", "").strip()
+        # Try direct parse first
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        # Try to extract first {...} block (handles narrative text before/after JSON)
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                pass
+        return None
+
+    analysis = extract_json(raw)
+    if analysis is None:
+        print(f"AI Analyzer: Could not parse AI response as JSON.")
+        print(f"Raw response was:\n{raw[:500]}{'...' if len(raw) > 500 else ''}")
         print("Skipping — Lint and Test stages will catch any errors ✓")
         sys.exit(0)
 
