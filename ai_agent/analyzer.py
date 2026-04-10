@@ -22,13 +22,63 @@ SKIP_DIRS  = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
 SKIP_FILES = {"analysis_output.txt", "validation_output.txt",
               "test_output.txt", "lint_output.txt", "trivy-report.json"}
 ANALYZE_EXTS = {".py", ".html", ".htm", ".js", ".css", ".json"}
-MAX_FILE_CHARS = 60000
+
+# Max chars sent to AI per chunk — keep below Gemini's context limit
+MAX_CHUNK_CHARS = 80000
+# If a file exceeds this, split it into overlapping chunks so no line is missed
+CHUNK_OVERLAP   = 2000   # overlap between chunks to catch errors at split boundaries
 
 
-# ── Collect source files ──────────────────────────────────────────
+# ── Collect source files (with chunking for large files) ─────────
+
+def split_into_chunks(content, rel_path):
+    """
+    Split a large file into overlapping line-based chunks so no line is skipped.
+    Each chunk keeps a small overlap with the previous to catch errors at boundaries.
+    Returns list of (chunk_label, chunk_content) tuples.
+    """
+    lines = content.splitlines(keepends=True)
+    chunks = []
+    start_line = 0
+    chunk_idx  = 1
+
+    while start_line < len(lines):
+        chunk_lines = []
+        char_count  = 0
+        end_line    = start_line
+
+        while end_line < len(lines) and char_count < MAX_CHUNK_CHARS:
+            chunk_lines.append(lines[end_line])
+            char_count += len(lines[end_line])
+            end_line   += 1
+
+        label   = f"{rel_path} [chunk {chunk_idx}, lines {start_line+1}–{end_line}]"
+        chunks.append((label, rel_path, start_line + 1, "".join(chunk_lines)))
+
+        # Move forward, but keep CHUNK_OVERLAP chars of overlap
+        overlap_chars = 0
+        overlap_line  = end_line
+        while overlap_line > start_line and overlap_chars < CHUNK_OVERLAP:
+            overlap_line  -= 1
+            overlap_chars += len(lines[overlap_line])
+
+        start_line = max(end_line - max(1, end_line - overlap_line), end_line)
+        # If we didn't advance, force forward to avoid infinite loop
+        if start_line <= (chunk_idx - 1) * (end_line - start_line):
+            start_line = end_line
+        chunk_idx += 1
+
+    return chunks
+
 
 def collect_files():
-    files = {}
+    """
+    Collect all source files. Large files are split into chunks so the AI
+    sees every line — no more silent truncation in the middle of a file.
+    Returns dict: label → {"rel_path": ..., "line_start": ..., "content": ...}
+    """
+    file_map = {}
+
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
         dirnames[:] = [d for d in dirnames
                        if d not in SKIP_DIRS and not d.startswith(".")]
@@ -43,25 +93,44 @@ def collect_files():
             try:
                 with open(full_path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
-                if len(content) > MAX_FILE_CHARS:
-                    half = MAX_FILE_CHARS // 2
-                    content = (content[:half]
-                               + "\n... [file truncated — middle omitted] ...\n"
-                               + content[-half:])
-                files[rel_path] = content
+
+                if len(content) <= MAX_CHUNK_CHARS:
+                    # Small file — send as-is
+                    file_map[rel_path] = {
+                        "rel_path":   rel_path,
+                        "line_start": 1,
+                        "content":    content,
+                    }
+                else:
+                    # Large file — split into chunks (NO truncation)
+                    chunks = split_into_chunks(content, rel_path)
+                    print(f"  ⚡ Large file split into {len(chunks)} chunk(s): {rel_path}")
+                    for label, rp, line_start, chunk_content in chunks:
+                        file_map[label] = {
+                            "rel_path":   rp,
+                            "line_start": line_start,
+                            "content":    chunk_content,
+                        }
+
             except Exception as e:
                 print(f"  Warning: could not read {rel_path} — {e}")
-    return files
+
+    return file_map
 
 
 # ── Build Gemini prompt ───────────────────────────────────────────
 
 def build_prompt(files_dict):
     file_sections = ""
-    for rel_path, content in files_dict.items():
-        numbered = "\n".join(f"{i+1:4d} | {line}"
-                             for i, line in enumerate(content.splitlines()))
-        file_sections += f"\n{'='*60}\nFILE: {rel_path}\n{'='*60}\n{numbered}\n"
+    for label, meta in files_dict.items():
+        content    = meta["content"]
+        line_start = meta["line_start"]
+        # Number each line with its TRUE line number in the original file
+        numbered = "\n".join(
+            f"{line_start + i:4d} | {line}"
+            for i, line in enumerate(content.splitlines())
+        )
+        file_sections += f"\n{'='*60}\nFILE: {label}\n{'='*60}\n{numbered}\n"
 
     prompt = f"""You are a CI/CD self-healing agent. Analyze every file below and find
 ALL syntax errors that would cause the code to fail, crash, or render incorrectly.
@@ -526,18 +595,128 @@ def git_commit_and_push(fixed_files, summary):
 
 # ── Main ──────────────────────────────────────────────────────────
 
+def local_syntax_check():
+    """
+    Run fast local syntax checkers BEFORE calling the AI.
+    Catches Python/JS/CSS/HTML errors instantly without spending API quota.
+    Returns list of dicts: [{file, line, error}]
+    """
+    import re as _re
+    findings = []
+    print("\nPre-flight: Local syntax checks...")
+
+    for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
+        dirnames[:] = [d for d in dirnames
+                       if d not in SKIP_DIRS and not d.startswith(".")]
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()
+            full_path = os.path.join(dirpath, filename)
+            rel_path  = os.path.relpath(full_path, PROJECT_ROOT)
+
+            # ── Python: use py_compile ──────────────────────────
+            if ext == ".py":
+                r = subprocess.run(
+                    [sys.executable, "-m", "py_compile", full_path],
+                    capture_output=True, text=True
+                )
+                if r.returncode != 0:
+                    findings.append({"file": rel_path, "tool": "py_compile",
+                                     "error": r.stderr.strip()})
+                    print(f"  ✗ Python syntax error: {rel_path}")
+                    print(f"    {r.stderr.strip()}")
+
+            # ── JavaScript: use node --check ────────────────────
+            elif ext in (".js",):
+                r = subprocess.run(
+                    ["node", "--check", full_path],
+                    capture_output=True, text=True
+                )
+                if r.returncode != 0:
+                    findings.append({"file": rel_path, "tool": "node",
+                                     "error": r.stderr.strip()})
+                    print(f"  ✗ JS syntax error: {rel_path}")
+                    print(f"    {r.stderr.strip()}")
+
+            # ── HTML: check CSS brace balance + extract/check JS ─
+            elif ext in (".html", ".htm"):
+                try:
+                    with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+                        html_content = f.read()
+
+                    # CSS brace balance check
+                    css_blocks = _re.findall(r'<style[^>]*>(.*?)</style>',
+                                             html_content, _re.DOTALL)
+                    css_text = "".join(css_blocks)
+                    opens  = css_text.count("{")
+                    closes = css_text.count("}")
+                    if opens != closes:
+                        msg = (f"CSS brace mismatch: {opens} open vs {closes} close"
+                               f" (delta: {opens - closes:+d})")
+                        findings.append({"file": rel_path, "tool": "css-brace",
+                                         "error": msg})
+                        print(f"  ✗ {rel_path}: {msg}")
+
+                        # Pin down the line
+                        lines = html_content.splitlines()
+                        depth = 0
+                        in_style = False
+                        for ln_num, ln in enumerate(lines, 1):
+                            if "<style" in ln:  in_style = True
+                            if "</style>" in ln: in_style = False
+                            if in_style:
+                                for ch in ln:
+                                    if ch == "{": depth += 1
+                                    elif ch == "}": depth -= 1
+                                if depth < 0:
+                                    print(f"    First negative depth at line {ln_num}: {ln.strip()}")
+                                    break
+
+                    # Inline JS check
+                    js_blocks = _re.findall(r'<script[^>]*>(.*?)</script>',
+                                            html_content, _re.DOTALL)
+                    if js_blocks:
+                        js_tmp = "/tmp/_inline_js_check.js"
+                        with open(js_tmp, "w") as jf:
+                            jf.write("\n".join(js_blocks))
+                        r = subprocess.run(
+                            ["node", "--check", js_tmp],
+                            capture_output=True, text=True
+                        )
+                        if r.returncode != 0:
+                            findings.append({"file": rel_path, "tool": "node-inline-js",
+                                             "error": r.stderr.strip()})
+                            print(f"  ✗ Inline JS error in {rel_path}")
+                            print(f"    {r.stderr.strip()}")
+
+                except Exception as e:
+                    print(f"  Warning: could not check {rel_path} — {e}")
+
+    if not findings:
+        print("  ✓ All files passed local syntax checks")
+    else:
+        print(f"\n  Found {len(findings)} local syntax issue(s) — AI will also scan for fixes")
+    return findings
+
+
 def main():
     print("=" * 60)
     print("AI Code Analyzer — Powered by Google Gemini")
     print(f"Project root: {PROJECT_ROOT}")
     print("=" * 60)
 
+    # Step 0: fast local syntax checks (before calling AI)
+    local_findings = local_syntax_check()
+
     # Step 1: collect files
     print("\nStep 1: Collecting source files...")
     files = collect_files()
-    for path in files:
-        print(f"  → {path} ({len(files[path])} chars)")
-    print(f"  Total: {len(files)} files")
+    seen_files = set()
+    for label, meta in files.items():
+        rp = meta["rel_path"]
+        if rp not in seen_files:
+            print(f"  → {rp} ({len(meta['content'])} chars in this chunk)")
+            seen_files.add(rp)
+    print(f"  Total: {len(seen_files)} file(s), {len(files)} chunk(s) sent to AI")
 
     # Step 2: build prompt and call Gemini
     print("\nStep 2: Sending all files to Gemini for analysis...")
