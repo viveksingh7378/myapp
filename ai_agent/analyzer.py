@@ -209,14 +209,20 @@ def call_gemini_analyze(prompt):
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    # Ordered by capability; includes multiple fallbacks across model families
+    # Ordered by capability; includes multiple fallbacks across model families.
+    # gemini-2.0-flash-exp removed — returns 404 (model retired).
+    # gemini-1.5-flash / gemini-1.5-pro added as stable low-quota fallbacks.
     models = [
         "gemini-2.5-flash",
         "gemini-2.5-pro",
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
-        "gemini-2.0-flash-exp",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
     ]
+
+    # Track how many models hit 503 vs 429 vs hard errors
+    all_503 = []
 
     for model_name in models:
         for attempt in range(3):
@@ -230,11 +236,14 @@ def call_gemini_analyze(prompt):
             except genai_errors.ClientError as e:
                 err = str(e)
                 if "429" in err or "RESOURCE_EXHAUSTED" in err:
-                    # Rate-limit: wait longer — free tier resets per minute
-                    wait = 60 if attempt == 0 else 90
-                    print(f"  {model_name} rate-limited — waiting {wait}s then trying next model...")
-                    time.sleep(wait)
-                    break  # move to next model after wait
+                    # Rate-limit on free tier — skip to next model immediately
+                    # (the quota resets per-minute, not per-second, so waiting
+                    #  doesn't help much; try a different model family instead)
+                    print(f"  {model_name} rate-limited (429) — trying next model...")
+                    break
+                elif "404" in err or "NOT_FOUND" in err:
+                    print(f"  {model_name} not found (404) — skipping...")
+                    break
                 else:
                     print(f"  {model_name} client error: {e} — skipping")
                     break
@@ -248,10 +257,24 @@ def call_gemini_analyze(prompt):
                     time.sleep(wait)
                 else:
                     print(f"  {model_name} unavailable after 3 attempts — trying next model...")
+                    all_503.append(model_name)
 
             except Exception as e:
                 print(f"  {model_name} unexpected error: {e} — skipping")
                 break
+
+    # If EVERY model hit 503 (global Gemini outage), wait 2 min and retry once
+    if len(all_503) == len([m for m in models if m in all_503]):
+        print("\n  All models returned 503 — Gemini may be experiencing an outage.")
+        print("  Waiting 2 minutes before one final retry of gemini-2.5-flash...")
+        time.sleep(120)
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt)
+            print("  ✓ Got response from gemini-2.5-flash (outage retry)")
+            return response.text.strip()
+        except Exception as e:
+            print(f"  Outage retry failed: {e}")
 
     # ── All Gemini models failed — try Ollama as local fallback ──
     print("\n  All Gemini models unavailable — trying Ollama local fallback...")
@@ -287,48 +310,85 @@ def call_ollama_analyze(prompt):
     )
     ollama_prompt = json_instruction + prompt
 
+    # codellama on CPU can take 3-5 min for a large prompt — give it enough time.
+    # Other lighter models get a shorter timeout so we don't stall the pipeline.
+    TIMEOUTS = {
+        "codellama":      360,   # 6 min — large model, CPU-only Jenkins
+        "deepseek-coder": 300,   # 5 min
+        "llama3":         300,
+        "mistral":        240,
+        "llama2":         300,
+    }
+    DEFAULT_TIMEOUT = 240
+
     for model_name in models:
-        try:
-            print(f"  Trying Ollama model: {model_name}...")
-            payload = json.dumps({
-                "model": model_name,
-                "prompt": ollama_prompt,
-                "stream": False,
-                "format": "json",          # Ollama native JSON mode (supported by most models)
-                "options": {
-                    "temperature": 0.1,   # low temp = more deterministic JSON
-                    "num_predict": 4096,  # enough tokens for the full response
-                }
-            }).encode("utf-8")
+        timeout = TIMEOUTS.get(model_name, DEFAULT_TIMEOUT)
+        # codellama gets 2 attempts because it sometimes needs a warm-up on first call
+        max_attempts = 2 if model_name == "codellama" else 1
 
-            req = urllib.request.Request(
-                OLLAMA_URL,
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-            req.add_header("Connection", "keep-alive")
+        for attempt in range(max_attempts):
+            try:
+                attempt_label = f" (attempt {attempt+1}/{max_attempts})" if max_attempts > 1 else ""
+                print(f"  Trying Ollama model: {model_name}{attempt_label} (timeout={timeout}s)...")
+                payload = json.dumps({
+                    "model": model_name,
+                    "prompt": ollama_prompt,
+                    "stream": False,
+                    "format": "json",          # Ollama native JSON mode
+                    "options": {
+                        "temperature": 0.1,    # low temp = more deterministic JSON
+                        "num_predict": 2048,   # capped: JSON response doesn't need 4096 tokens
+                    }
+                }).encode("utf-8")
 
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                text = result.get("response", "").strip()
-                if text:
-                    print(f"  ✓ Got response from Ollama ({model_name})")
-                    return text
+                req = urllib.request.Request(
+                    OLLAMA_URL,
+                    data=payload,
+                    headers={"Content-Type": "application/json"},
+                    method="POST"
+                )
+                req.add_header("Connection", "keep-alive")
+
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    result = json.loads(resp.read().decode("utf-8"))
+                    text = result.get("response", "").strip()
+                    if text:
+                        print(f"  ✓ Got response from Ollama ({model_name})")
+                        return text
+                    else:
+                        print(f"  {model_name} returned empty response — trying next...")
+                break  # success or empty — don't retry
+
+            except urllib.error.URLError as e:
+                err_str = str(e)
+                if "Connection refused" in err_str or "Connection reset" in err_str:
+                    print("  Ollama is not running on this machine.")
+                    print("  To enable: install Ollama (https://ollama.com) then run: ollama serve")
+                    return None
+                if "404" in err_str or "Not Found" in err_str:
+                    print(f"  Ollama {model_name}: model not installed — trying next...")
+                    break  # model not installed, no point retrying
+                print(f"  Ollama {model_name} error: {e} — trying next model...")
+                break
+
+            except TimeoutError as e:
+                if attempt < max_attempts - 1:
+                    print(f"  Ollama {model_name} timed out after {timeout}s — retrying once...")
                 else:
-                    print(f"  {model_name} returned empty response — trying next...")
+                    print(f"  Ollama {model_name} timed out after {timeout}s — trying next model...")
 
-        except urllib.error.URLError as e:
-            if "Connection refused" in str(e) or "Connection reset" in str(e):
-                print("  Ollama is not running on this machine.")
-                print("  To enable: install Ollama from https://ollama.com then run: ollama serve")
-                return None
-            print(f"  Ollama {model_name} error: {e} — trying next model...")
+            except Exception as e:
+                err_str = str(e)
+                if "timed out" in err_str.lower():
+                    if attempt < max_attempts - 1:
+                        print(f"  Ollama {model_name} timed out — retrying once...")
+                    else:
+                        print(f"  Ollama {model_name} timed out — trying next model...")
+                else:
+                    print(f"  Ollama {model_name} unexpected error: {e} — trying next model...")
+                    break  # non-timeout error, move on
 
-        except Exception as e:
-            print(f"  Ollama {model_name} unexpected error: {e} — trying next model...")
-
-    print("  No Ollama models available. Install one with: ollama pull codellama")
+    print("  No Ollama models responded. Install one with: ollama pull codellama")
     return None
 
 
