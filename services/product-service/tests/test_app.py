@@ -22,6 +22,9 @@ def client():
     with sqlite3.connect(_DB_URI, uri=True) as cx:
         cx.execute('DELETE FROM products')
         cx.execute('DELETE FROM reviews')
+        # Reset AUTOINCREMENT counters so IDs start from 1 each test
+        cx.execute("DELETE FROM sqlite_sequence WHERE name='products'")
+        cx.execute("DELETE FROM sqlite_sequence WHERE name='reviews'")
         cx.commit()
 
 def test_health(client):

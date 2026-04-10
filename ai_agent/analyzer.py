@@ -943,9 +943,34 @@ def main():
         sys.exit(0)
 
     # Step 4: report and filter issues
-    issues = [i for i in analysis.get("issues", [])
-              if i.get("severity") == "error"]
-    print(f"AI Analyzer: Gemini found {len(issues)} error(s)")
+    # Build the set of real file paths that were actually sent to the AI.
+    # Any issue whose file_path is NOT in this set is a hallucination
+    # (Ollama in particular tends to invent plausible-looking but wrong paths).
+    real_paths = set()
+    for meta in files.values():
+        real_paths.add(meta["rel_path"])
+        # Also accept the label itself (e.g. "frontend/index.html [chunk 1]")
+        # by stripping the chunk suffix
+        real_paths.add(meta["rel_path"].split(" [")[0])
+
+    raw_issues = analysis.get("issues", [])
+    issues = []
+    hallucinated = []
+    for i in raw_issues:
+        if i.get("severity") != "error":
+            continue
+        fp = i.get("file_path", "")
+        if fp in real_paths:
+            issues.append(i)
+        else:
+            hallucinated.append(fp)
+
+    if hallucinated:
+        unique_hallucinated = sorted(set(hallucinated))
+        print(f"  ⚠ Ignoring {len(hallucinated)} issue(s) for non-existent paths "
+              f"(AI hallucination): {unique_hallucinated}")
+
+    print(f"AI Analyzer: Found {len(issues)} valid error(s) in real project files")
     print(f"Summary: {analysis.get('summary', '')}\n")
     for issue in issues:
         action = issue.get("action", "replace")
