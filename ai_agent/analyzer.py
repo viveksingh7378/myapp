@@ -291,6 +291,7 @@ def is_safe_fix(issue):
 # ── Apply a single fix ────────────────────────────────────────────
 
 def apply_fix(issue):
+    """Apply a fix and return the actual line number found, or False on failure."""
     file_path   = issue["file_path"]
     action      = issue.get("action", "replace")
     line_number = issue.get("line_number")
@@ -315,8 +316,8 @@ def apply_fix(issue):
                 ending = "\n" if lines[line_number - 1].endswith("\n") else ""
                 lines[line_number - 1] = fixed + ending
                 _write(full_path, lines)
-                print(f"  ✓ [replace] line {line_number} in {file_path}")
-                return True
+                print_fix_diff(issue, line_number)
+                return line_number
 
         # Strategy 2: search whole file
         for i, line in enumerate(lines):
@@ -327,8 +328,8 @@ def apply_fix(issue):
                     new_line += ending
                 lines[i] = new_line
                 _write(full_path, lines)
-                print(f"  ✓ [replace] found at line {i+1} in {file_path}")
-                return True
+                print_fix_diff(issue, i + 1)
+                return i + 1
 
         print(f"  ✗ [replace] could not find: {repr(original)} in {file_path}")
         return False
@@ -363,9 +364,8 @@ def apply_fix(issue):
         insert_idx = target_idx if action == "insert_before" else target_idx + 1
         lines.insert(insert_idx, new_line)
         _write(full_path, lines)
-        verb = "before" if action == "insert_before" else "after"
-        print(f"  ✓ [{action}] inserted '{fixed.strip()}' {verb} line {target_idx+1} in {file_path}")
-        return True
+        print_fix_diff(issue, target_idx + 1)
+        return target_idx + 1
 
     return False
 
@@ -373,6 +373,96 @@ def apply_fix(issue):
 def _write(path, lines):
     with open(path, "w", encoding="utf-8") as f:
         f.writelines(lines)
+
+
+# ── Pretty-print a single fix diff ───────────────────────────────
+
+def print_fix_diff(issue, line_found):
+    """Print a Jenkins-friendly before/after box for one fix."""
+    file_path   = issue.get("file_path", "?")
+    action      = issue.get("action", "replace")
+    description = issue.get("description", "")
+    original    = issue.get("original_line", "").strip()
+    fixed       = issue.get("fixed_line", "").strip()
+    lang        = issue.get("language", "").upper()
+
+    W = 70  # box width
+    sep = "─" * W
+
+    action_label = {
+        "replace":       "REPLACE  (broken line → fixed line)",
+        "insert_before": "INSERT BEFORE anchor line",
+        "insert_after":  "INSERT AFTER  anchor line",
+    }.get(action, action.upper())
+
+    print(f"\n┌{sep}┐")
+    print(f"│  🔧 AI FIX APPLIED  [{lang}]" + " " * (W - 22 - len(lang)) + "│")
+    print(f"├{sep}┤")
+    print(f"│  File   : {file_path[:W-12]:<{W-12}}│")
+    print(f"│  Line   : {str(line_found):<{W-12}}│")
+    print(f"│  Action : {action_label:<{W-12}}│")
+    desc_short = description[:W-12] if description else "-"
+    print(f"│  Issue  : {desc_short:<{W-12}}│")
+    print(f"├{sep}┤")
+
+    if action == "replace":
+        before_label = "  ✗ ERROR  "
+        after_label  = "  ✓ FIXED  "
+    else:
+        before_label = "  ⚓ ANCHOR "
+        after_label  = "  ✚ ADDED  "
+
+    # Truncate long lines so they fit in the box
+    max_code = W - 14
+    orig_display  = original[:max_code] + ("…" if len(original)  > max_code else "")
+    fixed_display = fixed[:max_code]    + ("…" if len(fixed)     > max_code else "")
+
+    print(f"│{before_label}: {orig_display:<{max_code+2}}│")
+    print(f"│           {'↓':<{W-11}}│")
+    print(f"│{after_label}: {fixed_display:<{max_code+2}}│")
+    print(f"└{sep}┘")
+
+
+# ── Print full summary table of all applied fixes ─────────────────
+
+def print_fix_summary(applied_fixes):
+    """Print a compact table of all fixes applied this run."""
+    if not applied_fixes:
+        return
+
+    print("\n")
+    W = 72
+    print("═" * W)
+    title = f"  AI AUTO-FIX SUMMARY — {len(applied_fixes)} CHANGE(S) APPLIED  "
+    print(title.center(W))
+    print("═" * W)
+
+    for idx, fix in enumerate(applied_fixes, 1):
+        file_path   = fix.get("file_path", "?")
+        line_found  = fix.get("line_found", "?")
+        action      = fix.get("action", "replace")
+        original    = fix.get("original_line", "").strip()
+        fixed_line  = fix.get("fixed_line", "").strip()
+        description = fix.get("description", "")
+
+        print(f"\n  #{idx}  {file_path}  (line {line_found})  [{action}]")
+        print(f"       Issue : {description[:60]}")
+        max_w = 60
+        orig_d  = original[:max_w]  + ("…" if len(original)  > max_w else "")
+        fixed_d = fixed_line[:max_w] + ("…" if len(fixed_line) > max_w else "")
+
+        if action == "replace":
+            print(f"       BEFORE: {orig_d}")
+            print(f"       AFTER : {fixed_d}")
+        else:
+            verb = "BEFORE" if action == "insert_before" else "AFTER"
+            print(f"       ANCHOR ({verb}): {orig_d}")
+            print(f"       INSERTED      : {fixed_d}")
+
+        print(f"       {'─'*65}")
+
+    print("═" * W)
+    print()
 
 
 # ── Run pytest ────────────────────────────────────────────────────
@@ -489,8 +579,9 @@ def main():
 
     # Step 5: apply fixes — process each file in reverse line order
     print("\nStep 4: Applying fixes...")
-    fixed_files = set()
-    applied = 0
+    fixed_files  = set()
+    applied      = 0
+    applied_fixes = []   # track details for summary
 
     by_file = defaultdict(list)
     for issue in issues:
@@ -503,11 +594,16 @@ def main():
         for issue in sorted(file_issues,
                             key=lambda x: x.get("line_number", 0),
                             reverse=True):
-            if apply_fix(issue):
+            result = apply_fix(issue)
+            if result is not False:
                 fixed_files.add(file_path)
                 applied += 1
+                # Record for the summary table
+                applied_fixes.append({**issue, "line_found": result})
 
-    print(f"\nApplied {applied} fix(es) across {len(fixed_files)} file(s)")
+    # Print the full summary diff table after all fixes
+    print_fix_summary(applied_fixes)
+    print(f"Applied {applied} fix(es) across {len(fixed_files)} file(s)")
 
     if applied == 0:
         print("AI Analyzer: No valid fixes could be applied.")
