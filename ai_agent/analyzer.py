@@ -608,59 +608,148 @@ def print_fix_summary(applied_fixes):
 # ── Run pytest ────────────────────────────────────────────────────
 
 def run_tests():
+    """
+    Run pytest across every test directory found in the project.
+    Discovers tests in: tests/, services/*/tests/, app/tests/, etc.
+    Returns True if all found tests pass (or no tests exist).
+    """
+    import glob as _glob
+
     print("\nAI Analyzer: Running pytest to verify fixes...")
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/", "--tb=short", "-q"],
-        capture_output=True, text=True, cwd=PROJECT_ROOT
-    )
-    print(result.stdout)
-    if result.returncode == 0:
+
+    # Find all test directories under the project root
+    patterns = [
+        os.path.join(PROJECT_ROOT, "tests"),
+        os.path.join(PROJECT_ROOT, "services", "*", "tests"),
+        os.path.join(PROJECT_ROOT, "app", "tests"),
+    ]
+    test_dirs = []
+    for pat in patterns:
+        for d in _glob.glob(pat):
+            if os.path.isdir(d):
+                test_dirs.append(d)
+
+    if not test_dirs:
+        print("  No test directories found — skipping test verification")
+        return True   # nothing to fail; don't block the push
+
+    print(f"  Found {len(test_dirs)} test dir(s): {[os.path.relpath(d, PROJECT_ROOT) for d in test_dirs]}")
+
+    all_passed = True
+    for test_dir in test_dirs:
+        svc_name = os.path.relpath(test_dir, PROJECT_ROOT)
+        # Run pytest from the service root (parent of tests/) so that
+        # `from app.app import ...` resolves correctly
+        cwd = os.path.dirname(test_dir)
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", test_dir, "--tb=short", "-q"],
+            capture_output=True, text=True, cwd=cwd
+        )
+        if result.returncode == 0:
+            print(f"  ✓ {svc_name}: all tests passed")
+        elif result.returncode == 5:
+            # Exit code 5 = no tests collected — treat as pass
+            print(f"  ✓ {svc_name}: no tests collected (skipping)")
+        else:
+            print(f"  ✗ {svc_name}: test failures:")
+            # Show only the failure summary lines, not the full traceback
+            for line in (result.stdout + result.stderr).splitlines():
+                if line.strip():
+                    print(f"    {line}")
+            all_passed = False
+
+    if all_passed:
         print("AI Analyzer: All tests passed ✓")
-        return True
-    print("AI Analyzer: Tests still failing:")
-    print(result.stderr or result.stdout)
-    return False
+    return all_passed
 
 
 # ── Git commit and push ───────────────────────────────────────────
 
 def git_commit_and_push(fixed_files, summary):
+    github_token = os.environ.get("GITHUB_TOKEN", "").strip()
+
+    # ── Get current remote URL ────────────────────────────────────
     repo_url = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     ).stdout.strip()
+    print(f"  Remote URL: {repo_url}")
 
-    github_token = os.environ.get("GITHUB_TOKEN", "")
-    if github_token and "github.com" in repo_url:
-        authed = repo_url.replace("https://", f"https://{github_token}@")
-        subprocess.run(["git", "remote", "set-url", "origin", authed],
+    # ── Convert SSH → HTTPS so we can inject the token ───────────
+    # SSH format:  git@github.com:user/repo.git
+    # HTTPS format: https://github.com/user/repo.git
+    if github_token:
+        if repo_url.startswith("git@github.com:"):
+            # Convert SSH → authenticated HTTPS
+            path = repo_url[len("git@github.com:"):]          # user/repo.git
+            authed_url = f"https://{github_token}@github.com/{path}"
+        elif repo_url.startswith("https://github.com/"):
+            # Already HTTPS — just inject token
+            authed_url = repo_url.replace(
+                "https://github.com/",
+                f"https://{github_token}@github.com/"
+            )
+        elif repo_url.startswith("https://") and "github.com" in repo_url:
+            # HTTPS with possible existing credential — replace it
+            import re as _re
+            authed_url = _re.sub(
+                r"https://[^@]*@github\.com/",
+                f"https://{github_token}@github.com/",
+                repo_url
+            )
+            if authed_url == repo_url:   # regex didn't match — inject directly
+                authed_url = repo_url.replace("https://", f"https://{github_token}@")
+        else:
+            authed_url = repo_url   # non-GitHub remote — leave as-is
+
+        subprocess.run(["git", "remote", "set-url", "origin", authed_url],
                        cwd=PROJECT_ROOT)
+        print("  ✓ Remote URL updated with token auth")
+    else:
+        print("  ⚠ GITHUB_TOKEN not set — push may fail if repo requires auth")
 
+    # ── Git identity (required for commit) ───────────────────────
     subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"],
                    cwd=PROJECT_ROOT)
     subprocess.run(["git", "config", "user.name",  "AI-Remediation-Bot"],
                    cwd=PROJECT_ROOT)
 
+    # ── Stage fixed files ─────────────────────────────────────────
     for fp in fixed_files:
-        subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)],
-                       cwd=PROJECT_ROOT)
+        r = subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)],
+                           capture_output=True, text=True, cwd=PROJECT_ROOT)
+        if r.returncode != 0:
+            print(f"  ⚠ git add failed for {fp}: {r.stderr.strip()}")
 
+    # ── Commit ────────────────────────────────────────────────────
+    msg = f"AI-Fix: {summary[:72]}"
     result = subprocess.run(
-        ["git", "commit", "-m", f"AI-Fix: {summary[:72]}"],
+        ["git", "commit", "-m", msg],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     )
     if result.returncode != 0:
-        print(f"AI Analyzer: git commit failed — {result.stderr}")
+        stderr = result.stderr.strip()
+        if "nothing to commit" in stderr or "nothing added" in stderr:
+            print("  AI Analyzer: nothing to commit (files unchanged on disk)")
+            return False
+        print(f"  AI Analyzer: git commit failed — {stderr}")
         return False
+    print(f"  ✓ Committed: {msg}")
 
+    # ── Push ──────────────────────────────────────────────────────
     push = subprocess.run(
         ["git", "push", "origin", "HEAD:main"],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     )
     if push.returncode == 0:
-        print("AI Analyzer: Pushed fix to GitHub ✓")
+        print("AI Analyzer: ✅ Pushed fix to GitHub ✓")
         return True
-    print(f"AI Analyzer: Push failed — {push.stderr}")
+
+    print(f"AI Analyzer: Push failed — {push.stderr.strip()}")
+    # Restore original URL so we don't leave token in git config
+    if github_token and repo_url:
+        subprocess.run(["git", "remote", "set-url", "origin", repo_url],
+                       cwd=PROJECT_ROOT)
     return False
 
 
