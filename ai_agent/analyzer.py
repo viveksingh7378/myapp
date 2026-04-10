@@ -171,9 +171,11 @@ THREE FIX ACTIONS — use the right one:
 
 RULES FOR ALL ACTIONS:
   • anchor_line / original_line must be copied EXACTLY from the file (character for character)
-  • fixed_line must be a SINGLE line — never put \\n inside it
+  • fixed_line MUST BE A SINGLE LINE — absolutely no \\n, no newlines, no line breaks of any kind
+  • If you need to insert multiple lines, create one issue object per line
   • fixed_line must not be empty
   • For "replace": original_line and fixed_line must differ
+  • DO NOT invent file paths — only report issues in files shown above between the === markers
 
 ════════════════════════════════════════
 Return ONLY raw JSON — no markdown, no code fences.
@@ -394,27 +396,51 @@ def call_ollama_analyze(prompt):
 
 # ── Validate a fix before applying ───────────────────────────────
 
+def _sanitize_line(value):
+    """
+    Strip embedded newlines from a field the AI returned as multi-line.
+    The AI is instructed to return single lines; if it disobeys, take the
+    first non-empty line so we salvage the fix rather than discard it.
+    """
+    if "\n" in value:
+        first = next((l for l in value.split("\n") if l.strip()), "")
+        return first
+    # Handle JSON-escaped literal \n sequences
+    if "\\n" in value:
+        first = next((l for l in value.split("\\n") if l.strip()), "")
+        return first
+    return value
+
+
 def is_safe_fix(issue):
     action      = issue.get("action", "replace")
     orig        = issue.get("original_line", "")
     fixed       = issue.get("fixed_line", "")
     loc         = f"{issue.get('file_path')} line {issue.get('line_number')}"
 
-    # anchor/original must not be empty — we need it to locate the insertion point
+    # anchor/original must not be empty
     if not orig.strip():
         print(f"  ⚠ Skipping — empty original_line/anchor for {loc}")
         return False
 
-    # fixed_line must have content — never delete or insert a blank line
-    if not fixed.strip():
-        print(f"  ⚠ Skipping — empty fixed_line for {loc}")
-        return False
+    # Sanitize: if AI returned multi-line values, keep only the first line
+    if "\n" in orig or "\\n" in orig:
+        orig = _sanitize_line(orig)
+        issue["original_line"] = orig
+        print(f"  ℹ  Trimmed multi-line original_line to first line for {loc}")
 
-    # no real newlines ever
-    for val, label in [(orig, "original_line"), (fixed, "fixed_line")]:
-        if "\n" in val or "\\n" in val:
-            print(f"  ⚠ Skipping — {label} contains newline for {loc}")
-            return False
+    if "\n" in fixed or "\\n" in fixed:
+        fixed = _sanitize_line(fixed)
+        issue["fixed_line"] = fixed
+        print(f"  ℹ  Trimmed multi-line fixed_line to first line for {loc}")
+
+    # After sanitization, both fields must still have content
+    if not orig.strip():
+        print(f"  ⚠ Skipping — original_line empty after sanitization for {loc}")
+        return False
+    if not fixed.strip():
+        print(f"  ⚠ Skipping — fixed_line empty after sanitization for {loc}")
+        return False
 
     # for replace: the two lines must actually differ
     if action == "replace" and orig == fixed:
@@ -755,14 +781,78 @@ def git_commit_and_push(fixed_files, summary):
 
 # ── Main ──────────────────────────────────────────────────────────
 
+def _auto_fix_html_structure(full_path, rel_path, errors):
+    """
+    Directly repair well-known HTML structural issues without needing AI.
+    Returns True if the file was modified.
+    """
+    import re as _re
+    try:
+        with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+        original = content
+        lower    = content.lower()
+
+        # Collect which tags are missing
+        missing = {err for err in errors}
+
+        # ── Prepend <!DOCTYPE html> and <html lang="en"> if missing ──
+        need_doctype = any("DOCTYPE" in e for e in missing)
+        need_html    = any("<html" in e.lower() for e in missing)
+
+        if need_doctype or need_html:
+            prefix = ""
+            if need_doctype:
+                prefix += "<!DOCTYPE html>\n"
+            if need_html:
+                prefix += '<html lang="en">\n'
+            # Only prepend if the file doesn't start with these already
+            stripped = content.lstrip()
+            if not stripped.lower().startswith("<!doctype") and \
+               not stripped.lower().startswith("<html"):
+                # Remove any leading blank lines, then prepend
+                content = prefix + stripped
+                print(f"  ✓ Auto-fixed: added {prefix.strip()} to {rel_path}")
+
+        # ── Append </body> and/or </html> if missing ──
+        need_close_body = any("</body>" in e for e in missing)
+        need_close_html = any("</html>" in e for e in missing)
+
+        if need_close_body or need_close_html:
+            tail = content.rstrip()
+            if need_close_body and "</body>" not in content.lower():
+                tail += "\n</body>"
+                print(f"  ✓ Auto-fixed: appended </body> to {rel_path}")
+            if need_close_html and "</html>" not in content.lower():
+                tail += "\n</html>"
+                print(f"  ✓ Auto-fixed: appended </html> to {rel_path}")
+            content = tail + "\n"
+
+        if content != original:
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            return True
+        return False
+
+    except Exception as e:
+        print(f"  ⚠ Could not auto-fix {rel_path}: {e}")
+        return False
+
+
 def local_syntax_check():
     """
     Run fast local syntax checkers BEFORE calling the AI.
-    Catches Python/JS/CSS/HTML errors instantly without spending API quota.
-    Returns list of dicts: [{file, line, error}]
+    Detects AND auto-fixes well-known structural errors (HTML skeleton tags,
+    CSS brace imbalance context) so simple errors are resolved even when
+    AI models are unavailable or hallucinating.
+
+    Returns: (findings, auto_fixed_files)
+      findings        — list of dicts [{file, tool, error}] for all issues found
+      auto_fixed_files — set of rel_paths that were directly repaired
     """
     import re as _re
-    findings = []
+    findings        = []
+    auto_fixed_files = set()
     print("\nPre-flight: Local syntax checks...")
 
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
@@ -842,11 +932,18 @@ def local_syntax_check():
                         ("<body",                "Missing <body> opening tag"),
                         ("</body>",              "Missing </body> closing tag"),
                     ]
+                    struct_errors = []
                     for needle, msg in struct_checks:
                         if needle not in html_lower:
                             findings.append({"file": rel_path, "tool": "html-structure",
                                              "error": msg})
+                            struct_errors.append(msg)
                             print(f"  ✗ {rel_path}: {msg}")
+
+                    # Auto-fix structural errors directly — no AI needed
+                    if struct_errors:
+                        if _auto_fix_html_structure(full_path, rel_path, struct_errors):
+                            auto_fixed_files.add(rel_path)
 
                     # Inline JS check
                     js_blocks = _re.findall(r'<script[^>]*>(.*?)</script>',
@@ -872,7 +969,9 @@ def local_syntax_check():
         print("  ✓ All files passed local syntax checks")
     else:
         print(f"\n  Found {len(findings)} local syntax issue(s) — AI will also scan for fixes")
-    return findings
+    if auto_fixed_files:
+        print(f"  ✓ Auto-fixed {len(auto_fixed_files)} file(s) locally: {sorted(auto_fixed_files)}")
+    return findings, auto_fixed_files
 
 
 def main():
@@ -881,8 +980,8 @@ def main():
     print(f"Project root: {PROJECT_ROOT}")
     print("=" * 60)
 
-    # Step 0: fast local syntax checks (before calling AI)
-    local_findings = local_syntax_check()
+    # Step 0: fast local syntax checks — detects AND auto-fixes known issues
+    local_findings, local_fixed_files = local_syntax_check()
 
     # Step 1: collect files
     print("\nStep 1: Collecting source files...")
@@ -901,8 +1000,13 @@ def main():
     raw    = call_gemini_analyze(prompt)
 
     if raw is None:
-        print("\nAI Analyzer: All Gemini models unavailable — skipping analysis.")
-        print("Lint and Test stages will catch any errors ✓")
+        print("\nAI Analyzer: All Gemini models unavailable — skipping AI analysis.")
+        if local_fixed_files:
+            print(f"  Pushing {len(local_fixed_files)} local auto-fix(es) to GitHub...")
+            summary = "auto-fix: HTML structural errors repaired by local checker"
+            git_commit_and_push(list(local_fixed_files), summary)
+        else:
+            print("Lint and Test stages will catch any errors ✓")
         sys.exit(0)
 
     print(f"\nStep 3: Gemini response:\n{raw}\n")
@@ -939,7 +1043,13 @@ def main():
         f.write(json.dumps(analysis, indent=2))
 
     if analysis.get("status") == "clean" or not analysis.get("issues"):
-        print("AI Analyzer: No syntax errors found — all files are clean ✓")
+        print("AI Analyzer: No syntax errors found by AI.")
+        if local_fixed_files:
+            print(f"  Pushing {len(local_fixed_files)} local auto-fix(es) to GitHub...")
+            summary = "auto-fix: HTML structural errors repaired by local checker"
+            git_commit_and_push(list(local_fixed_files), summary)
+        else:
+            print("  All files are clean ✓")
         sys.exit(0)
 
     # Step 4: report and filter issues
@@ -979,7 +1089,9 @@ def main():
 
     # Step 5: apply fixes — process each file in reverse line order
     print("\nStep 4: Applying fixes...")
-    fixed_files  = set()
+    # Seed fixed_files with anything the local checker already repaired,
+    # so both local and AI fixes land in a single commit.
+    fixed_files  = set(local_fixed_files)
     applied      = 0
     applied_fixes = []   # track details for summary
 
@@ -1006,8 +1118,13 @@ def main():
     print(f"Applied {applied} fix(es) across {len(fixed_files)} file(s)")
 
     if applied == 0:
-        print("AI Analyzer: No valid fixes could be applied.")
-        print("Lint and Test stages will catch real errors ✓")
+        print("AI Analyzer: No valid AI fixes could be applied.")
+        if local_fixed_files:
+            print(f"  Pushing {len(local_fixed_files)} local auto-fix(es) to GitHub...")
+            summary = "auto-fix: HTML structural errors repaired by local checker"
+            git_commit_and_push(list(local_fixed_files), summary)
+        else:
+            print("Lint and Test stages will catch real errors ✓")
         sys.exit(0)
 
     # Step 6: verify Python files compile cleanly
