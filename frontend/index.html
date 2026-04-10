@@ -321,16 +321,28 @@
         }
 
         .product-image {
-            font-size: 80px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 20px;
             border-radius: var(--radius);
-            text-align: center;
             margin-bottom: 12px;
-            min-height: 120px;
+            height: 180px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+        }
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            display: block;
+        }
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+        .product-image .img-fallback {
+            font-size: 60px;
         }
 
         .product-name {
@@ -507,14 +519,23 @@
         }
 
         .product-detail-image {
-            font-size: 120px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 40px;
             border-radius: var(--radius);
-            text-align: center;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 300px;
+        }
+        .product-detail-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            max-height: 360px;
+            border-radius: var(--radius);
+        }
+        .product-detail-image .img-fallback-lg {
+            font-size: 120px;
         }
 
         .product-detail-content h2 {
@@ -688,13 +709,21 @@
         }
 
         .cart-item-image {
-            font-size: 48px;
-            min-width: 60px;
-            height: 60px;
+            min-width: 70px;
+            width: 70px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: var(--light-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            font-size: 36px;
+        }
+        .cart-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border-radius: var(--radius);
         }
 
@@ -1601,7 +1630,7 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
             </div>
-            <div class="header-icon" onclick="showAuthModal()">
+            <div class="header-icon" id="userIcon" onclick="showAuthModal()">
                 <i class="fas fa-user"></i>
             </div>
             <div class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
@@ -2194,7 +2223,7 @@
             const userStr = localStorage.getItem('user');
             if (userStr) {
                 currentUser = JSON.parse(userStr);
-                document.querySelector('.header-icon:nth-child(2)').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
+                document.getElementById('userIcon').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
                 document.getElementById('adminIcon').style.display = 'flex';
                 document.getElementById('ordersIcon').style.display = 'flex';
             }
@@ -2274,9 +2303,15 @@
             const rating = (product.rating || 4.5).toFixed(1);
             const reviews = product.reviews || 128;
 
+            const imgSrc = product.image || '';
+            const imgHtml = imgSrc.startsWith('http')
+                ? `<img src="${imgSrc}" alt="${product.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : ``;
+            const fallbackHtml = `<span class="img-fallback" style="display:${imgSrc.startsWith('http') ? 'none' : 'flex'}">${imgSrc || '📦'}</span>`;
+
             return `
                 <div class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
-                    <div class="product-image">${product.emoji || '📦'}</div>
+                    <div class="product-image">${imgHtml}${fallbackHtml}</div>
                     <div class="product-name">${product.name}</div>
                     <div class="product-brand">${product.brand || 'Brand'}</div>
                     <div class="product-price-row">
@@ -2311,9 +2346,15 @@
             const stockStatus = stock > 20 ? 'In Stock' : stock > 0 ? 'Low Stock' : 'Out of Stock';
             const stockClass = stock > 20 ? 'stock-in' : stock > 0 ? 'stock-low' : 'stock-out';
 
+            const detailImgSrc = product.image || '';
+            const detailImgHtml = detailImgSrc.startsWith('http')
+                ? `<img src="${detailImgSrc}" alt="${product.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : ``;
+            const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
+
             const content = `
                 <div class="product-detail-modal">
-                    <div class="product-detail-image">${product.emoji || '📦'}</div>
+                    <div class="product-detail-image">${detailImgHtml}${detailFallback}</div>
                     <div class="product-detail-content">
                         <h2>${product.name}</h2>
                         <div class="product-detail-brand">${product.brand || 'Brand'}</div>
@@ -2474,7 +2515,7 @@
             } else {
                 cartItems.innerHTML = cart.map(item => `
                     <div class="cart-item">
-                        <div class="cart-item-image">${item.emoji || '📦'}</div>
+                        <div class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</div>
                         <div class="cart-item-info">
                             <div class="cart-item-name">${item.name}</div>
                             <div class="cart-item-price">₹${item.price}</div>
@@ -2732,9 +2773,12 @@
             const total = subtotal - discount + gst;
 
             const itemsHtml = checkoutData.items.map(item => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                    <div>
-                        <div style="font-weight: 600;">${item.name}</div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                    <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                        ${(item.image||'').startsWith('http') ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight: 600; font-size:13px;">${item.name}</div>
                         <div style="font-size: 12px; color: #999;">Qty: ${item.quantity}</div>
                     </div>
                     <div style="text-align: right;">
@@ -2838,7 +2882,7 @@
             currentUser = { id: Math.random(), name: name, email: email };
             localStorage.setItem('user', JSON.stringify(currentUser));
 
-            document.querySelector('.header-icon:nth-child(2)').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
+            document.getElementById('userIcon').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
             document.getElementById('adminIcon').style.display = 'flex';
             document.getElementById('ordersIcon').style.display = 'flex';
 
@@ -2856,7 +2900,7 @@
             currentUser = { id: Math.random(), name: name, email: email };
             localStorage.setItem('user', JSON.stringify(currentUser));
 
-            document.querySelector('.header-icon:nth-child(2)').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
+            document.getElementById('userIcon').innerHTML = `<i class="fas fa-user"></i> ${currentUser.name}`;
             document.getElementById('adminIcon').style.display = 'flex';
             document.getElementById('ordersIcon').style.display = 'flex';
 
