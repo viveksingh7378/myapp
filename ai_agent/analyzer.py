@@ -695,68 +695,63 @@ def git_commit_and_push(fixed_files, summary):
     import re as _re
     import base64 as _b64
 
-    # ── Read + sanitize the token ─────────────────────────────────
-    # Jenkins sometimes stores credentials with accidental quotes or
-    # newlines.  Keep only safe URL characters (alphanumeric + _-.).
+    # ── Sanitize token (strip all non-alphanumeric-safe chars) ───────
     raw_token = os.environ.get("GITHUB_TOKEN", "")
-    github_token = _re.sub(r"[^A-Za-z0-9_\-\.]", "", raw_token)
+    github_token = _re.sub(r"[^A-Za-z0-9_\-]", "", raw_token)
     if not github_token:
-        print("  ⚠ GITHUB_TOKEN not set or empty — push will likely fail")
-    else:
-        print(f"  Token length after sanitize: {len(github_token)} chars")
+        print("  ⚠ GITHUB_TOKEN not set — push will fail")
+        return False
+    print(f"  Token length: {len(github_token)} chars")
 
-    # ── Get current remote URL ────────────────────────────────────
+    # ── Get remote URL and ensure it is plain HTTPS (no embedded token) ─
     repo_url = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     ).stdout.strip()
-    # Strip any existing token from the URL before printing (security)
-    safe_url = _re.sub(r"https://[^@]+@", "https://***@", repo_url)
-    print(f"  Remote URL (before auth): {safe_url}")
 
-    # ── Disable credential helper — use URL-embedded token only ──
+    # Convert SSH → HTTPS if needed; strip any embedded token
+    if repo_url.startswith("git@github.com:"):
+        repo_url = "https://github.com/" + repo_url[len("git@github.com:"):]
+    clean_url = _re.sub(r"https://[^@]+@github\.com/", "https://github.com/", repo_url)
+    subprocess.run(["git", "remote", "set-url", "origin", clean_url],
+                   cwd=PROJECT_ROOT)
+    print(f"  Remote URL: {clean_url}")
+
+    # ── Authenticate via HTTP Authorization header ────────────────────
+    # This is the same method GitHub Actions uses. It avoids embedding
+    # the token in the URL, which causes libcurl "Bad hostname" errors
+    # on some macOS git installations when the URL is parsed.
+    #
+    # Header value = "Basic base64(x-access-token:<TOKEN>)"
+    b64 = _b64.b64encode(f"x-access-token:{github_token}".encode()).decode()
+    auth_header = f"Authorization: Basic {b64}"
+
+    # Scope the header to github.com only and clear any credential helpers
+    subprocess.run(
+        ["git", "config", "http.https://github.com/.extraHeader", auth_header],
+        cwd=PROJECT_ROOT
+    )
     subprocess.run(["git", "config", "credential.helper", ""],
                    cwd=PROJECT_ROOT)
+    # Disable interactive password prompts
+    push_env = os.environ.copy()
+    push_env["GIT_TERMINAL_PROMPT"] = "0"
+    print("  ✓ HTTP Authorization header configured")
 
-    # ── Build authenticated URL ───────────────────────────────────
-    # Handles SSH (git@github.com:…), plain HTTPS, HTTPS with old token
-    if github_token:
-        if repo_url.startswith("git@github.com:"):
-            path      = repo_url[len("git@github.com:"):]   # user/repo.git
-            authed_url = f"https://{github_token}@github.com/{path}"
-        elif "github.com" in repo_url:
-            # Strip any existing user:token@ then inject fresh token
-            authed_url = _re.sub(
-                r"https://(?:[^@]*@)?github\.com/",
-                f"https://{github_token}@github.com/",
-                repo_url
-            )
-            if authed_url == repo_url:   # regex didn't match — inject directly
-                authed_url = repo_url.replace("https://", f"https://{github_token}@", 1)
-        else:
-            authed_url = repo_url        # non-GitHub remote — leave as-is
-
-        subprocess.run(["git", "remote", "set-url", "origin", authed_url],
-                       cwd=PROJECT_ROOT)
-        print("  ✓ Remote URL set with sanitized token")
-    else:
-        authed_url = repo_url
-        print("  ⚠ No token — push will use existing remote URL")
-
-    # ── Git identity (required for commit) ───────────────────────
+    # ── Git identity (required for commit) ────────────────────────────
     subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"],
                    cwd=PROJECT_ROOT)
     subprocess.run(["git", "config", "user.name",  "AI-Remediation-Bot"],
                    cwd=PROJECT_ROOT)
 
-    # ── Stage fixed files ─────────────────────────────────────────
+    # ── Stage fixed files ─────────────────────────────────────────────
     for fp in fixed_files:
         r = subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)],
                            capture_output=True, text=True, cwd=PROJECT_ROOT)
         if r.returncode != 0:
             print(f"  ⚠ git add failed for {fp}: {r.stderr.strip()}")
 
-    # ── Commit ────────────────────────────────────────────────────
+    # ── Commit ────────────────────────────────────────────────────────
     msg = f"AI-Fix: {summary[:72]}"
     result = subprocess.run(
         ["git", "commit", "-m", msg],
@@ -771,22 +766,29 @@ def git_commit_and_push(fixed_files, summary):
         return False
     print(f"  ✓ Committed: {msg}")
 
-    # ── Push ──────────────────────────────────────────────────────
+    # ── Push ──────────────────────────────────────────────────────────
     push = subprocess.run(
         ["git", "push", "origin", "HEAD:main"],
-        capture_output=True, text=True, cwd=PROJECT_ROOT
+        capture_output=True, text=True, cwd=PROJECT_ROOT,
+        env=push_env
     )
+
+    # Always clean up the auth header from git config after push attempt
+    subprocess.run(
+        ["git", "config", "--unset", "http.https://github.com/.extraHeader"],
+        cwd=PROJECT_ROOT
+    )
+
     if push.returncode == 0:
         print("AI Analyzer: ✅ Pushed fix to GitHub ✓")
-        # Restore clean URL (hide PAT from git log / git remote -v)
-        subprocess.run(["git", "remote", "set-url", "origin",
-                        _re.sub(r"https://[^@]+@", "https://", authed_url)],
-                       cwd=PROJECT_ROOT)
         return True
 
-    stderr = push.stderr.strip()
-    print(f"AI Analyzer: Push failed — {stderr}")
-    print("  Hint: check that GITHUB_TOKEN is set and has 'repo' write scope")
+    err = push.stderr.strip()
+    print(f"AI Analyzer: Push failed — {err}")
+    if "403" in err or "Permission denied" in err:
+        print("  → Check that GITHUB_TOKEN has 'Contents: Write' permission")
+    elif "Bad hostname" in err or "Could not resolve" in err:
+        print("  → Network issue — check internet/proxy on Jenkins machine")
     return False
 
 

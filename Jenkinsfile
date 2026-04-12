@@ -41,18 +41,18 @@ pipeline {
                         string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY'),
                         string(credentialsId: 'GITHUB_TOKEN',   variable: 'GITHUB_TOKEN')
                     ]) {
-                        // Configure git BEFORE running the analyzer.
-                        // Disable Jenkins/osxkeychain credential helper so the PAT
-                        // embedded in the remote URL is always used for git push.
-                        // Strip any invisible chars (quotes/newlines) from the token
-                        // before embedding it — these corrupt the URL and cause
-                        // "URL rejected: Bad hostname" from libcurl.
+                        // Configure git auth BEFORE running the analyzer.
+                        // Uses HTTP Authorization header (same method as GitHub Actions)
+                        // instead of embedding the token in the URL — URL-embedded tokens
+                        // cause "URL rejected: Bad hostname" on macOS git/libcurl.
                         sh '''
                             git config user.email "ai-bot@pipeline.local"
                             git config user.name  "AI-Remediation-Bot"
                             git config credential.helper ""
-                            CLEAN_TOKEN=$(printf '%s' "${GITHUB_TOKEN}" | tr -cd 'A-Za-z0-9_.-')
-                            git remote set-url origin "https://${CLEAN_TOKEN}@github.com/viveksingh7378/myapp.git"
+                            git remote set-url origin https://github.com/viveksingh7378/myapp.git
+                            CLEAN_TOKEN=$(printf '%s' "${GITHUB_TOKEN}" | tr -cd 'A-Za-z0-9_-')
+                            B64=$(printf 'x-access-token:%s' "${CLEAN_TOKEN}" | base64 | tr -d '\n')
+                            git config http.https://github.com/.extraHeader "Authorization: Basic ${B64}"
                         '''
 
                         def code = sh(
@@ -64,8 +64,8 @@ pipeline {
                             returnStatus: true
                         )
 
-                        // Restore clean URL after analyzer exits (hides PAT from git log)
-                        sh 'git remote set-url origin https://github.com/viveksingh7378/myapp.git'
+                        // Clean up auth header after analyzer exits
+                        sh 'git config --unset http.https://github.com/.extraHeader || true'
 
                         if (code == 0) {
                             echo "✅ AI analysis complete — no issues found or fixes already applied"
