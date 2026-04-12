@@ -41,17 +41,32 @@ pipeline {
                         string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY'),
                         string(credentialsId: 'GITHUB_TOKEN',   variable: 'GITHUB_TOKEN')
                     ]) {
+                        // Configure git BEFORE running the analyzer.
+                        // Disable Jenkins/osxkeychain credential helper so the PAT
+                        // embedded in the remote URL is always used for git push.
+                        sh '''
+                            git config user.email "ai-bot@pipeline.local"
+                            git config user.name  "AI-Remediation-Bot"
+                            git config credential.helper ""
+                            git remote set-url origin https://${GITHUB_TOKEN}@github.com/viveksingh7378/myapp.git
+                        '''
+
                         def code = sh(
                             script: '''
-                                set -o pipefail
                                 GEMINI_API_KEY=$GEMINI_API_KEY \
                                 GITHUB_TOKEN=$GITHUB_TOKEN \
                                 python3 ai_agent/analyzer.py 2>&1 | tee analysis_output.txt
                             ''',
                             returnStatus: true
                         )
+
+                        // Restore clean URL after analyzer exits (hides PAT from git log)
+                        sh 'git remote set-url origin https://github.com/viveksingh7378/myapp.git'
+
                         if (code == 0) {
                             echo "✅ AI analysis complete — no issues found or fixes already applied"
+                        } else if (code == 1) {
+                            echo "✅ AI Analyzer fixed and pushed changes to GitHub"
                         } else {
                             echo "⚠️  AI Analyzer exited with code ${code} — Lint and Test will catch real errors"
                         }

@@ -699,38 +699,37 @@ def git_commit_and_push(fixed_files, summary):
         ["git", "config", "--get", "remote.origin.url"],
         capture_output=True, text=True, cwd=PROJECT_ROOT
     ).stdout.strip()
-    print(f"  Remote URL: {repo_url}")
+    print(f"  Remote URL (before auth): {repo_url}")
 
-    # ── Convert SSH → HTTPS so we can inject the token ───────────
-    # SSH format:  git@github.com:user/repo.git
-    # HTTPS format: https://github.com/user/repo.git
+    # ── Disable any credential helper so our token takes precedence ─
+    # Jenkins and macOS Keychain can intercept git push and use a
+    # wrong cached account.  Blanking credential.helper forces git to
+    # use only the URL-embedded token we set below.
+    subprocess.run(["git", "config", "credential.helper", ""],
+                   cwd=PROJECT_ROOT)
+
+    # ── Build authenticated URL ───────────────────────────────────
+    # Handles: SSH (git@github.com:…), plain HTTPS, HTTPS with old token
+    import re as _re
     if github_token:
         if repo_url.startswith("git@github.com:"):
-            # Convert SSH → authenticated HTTPS
-            path = repo_url[len("git@github.com:"):]          # user/repo.git
+            path      = repo_url[len("git@github.com:"):]   # user/repo.git
             authed_url = f"https://{github_token}@github.com/{path}"
-        elif repo_url.startswith("https://github.com/"):
-            # Already HTTPS — just inject token
-            authed_url = repo_url.replace(
-                "https://github.com/",
-                f"https://{github_token}@github.com/"
-            )
-        elif repo_url.startswith("https://") and "github.com" in repo_url:
-            # HTTPS with possible existing credential — replace it
-            import re as _re
+        elif "github.com" in repo_url:
+            # Strip any existing user:token@  portion, then inject ours
             authed_url = _re.sub(
-                r"https://[^@]*@github\.com/",
+                r"https://(?:[^@]*@)?github\.com/",
                 f"https://{github_token}@github.com/",
                 repo_url
             )
-            if authed_url == repo_url:   # regex didn't match — inject directly
-                authed_url = repo_url.replace("https://", f"https://{github_token}@")
+            if authed_url == repo_url:   # no match — inject after https://
+                authed_url = repo_url.replace("https://", f"https://{github_token}@", 1)
         else:
-            authed_url = repo_url   # non-GitHub remote — leave as-is
+            authed_url = repo_url        # non-GitHub — leave as-is
 
         subprocess.run(["git", "remote", "set-url", "origin", authed_url],
                        cwd=PROJECT_ROOT)
-        print("  ✓ Remote URL updated with token auth")
+        print("  ✓ Remote URL set with token auth")
     else:
         print("  ⚠ GITHUB_TOKEN not set — push may fail if repo requires auth")
 
@@ -769,13 +768,15 @@ def git_commit_and_push(fixed_files, summary):
     )
     if push.returncode == 0:
         print("AI Analyzer: ✅ Pushed fix to GitHub ✓")
+        # Restore clean URL (hide PAT from git log / git remote -v)
+        subprocess.run(["git", "remote", "set-url", "origin",
+                        _re.sub(r"https://[^@]+@", "https://", authed_url)],
+                       cwd=PROJECT_ROOT)
         return True
 
-    print(f"AI Analyzer: Push failed — {push.stderr.strip()}")
-    # Restore original URL so we don't leave token in git config
-    if github_token and repo_url:
-        subprocess.run(["git", "remote", "set-url", "origin", repo_url],
-                       cwd=PROJECT_ROOT)
+    stderr = push.stderr.strip()
+    print(f"AI Analyzer: Push failed — {stderr}")
+    print("  Hint: check that GITHUB_TOKEN is set and has 'repo' write scope")
     return False
 
 
