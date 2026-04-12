@@ -1,5 +1,5 @@
-
-<s lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2260,28 +2260,23 @@
                 renderCategories();
             } catch (err) {
                 console.log('Using mock data');
-                allProducts = [
-                    {id:1,name:'Smartphone',category:'Electronics',brand:'TechBrand',price:15000,original_price:25000,emoji:'📱',stock:50,rating:4.5,reviews:128},
-                    {id:2,name:'Laptop',category:'Electronics',brand:'TechBrand',price:45000,original_price:60000,emoji:'💻',stock:30,rating:4.3,reviews:95},
-                    {id:3,name:'T-Shirt',category:'Fashion',brand:'StyleCo',price:500,original_price:1000,emoji:'👕',stock:100,rating:4.1,reviews:250},
-                    {id:4,name:'Jeans',category:'Fashion',brand:'StyleCo',price:1200,original_price:2000,emoji:'👖',stock:80,rating:4.4,reviews:180},
-                    {id:5,name:'Pillow',category:'Home & Kitchen',brand:'ComfortPlus',price:800,original_price:1500,emoji:'🛏️',stock:60,rating:4.6,reviews:320},
-                    {id:6,name:'Coffee Maker',category:'Home & Kitchen',brand:'BrewCo',price:3000,original_price:5000,emoji:'☕',stock:40,rating:4.2,reviews:145},
-                    {id:7,name:'Novel',category:'Books',brand:'Publisher',price:300,original_price:500,emoji:'📚',stock:120,rating:4.7,reviews:200},
-                    {id:8,name:'Yoga Mat',category:'Sports',brand:'FitLife',price:1500,original_price:2500,emoji:'🧘',stock:70,rating:4.5,reviews:165},
-                    {id:9,name:'Dumbbell Set',category:'Sports',brand:'PowerFit',price:4000,original_price:6000,emoji:'🏋️',stock:45,rating:4.4,reviews:210},
-                    {id:10,name:'Face Cream',category:'Beauty',brand:'GlowSkin',price:600,original_price:1200,emoji:'💄',stock:90,rating:4.3,reviews:340},
-                    {id:11,name:'Lipstick',category:'Beauty',brand:'GlowSkin',price:400,original_price:800,emoji:'💅',stock:110,rating:4.5,reviews:280},
-                    {id:12,name:'Headphones',category:'Electronics',brand:'AudioPro',price:3500,original_price:6000,emoji:'🎧',stock:55,rating:4.6,reviews:390},
-                    {id:13,name:'Running Shoes',category:'Sports',brand:'SportX',price:3000,original_price:5000,emoji:'👟',stock:65,rating:4.5,reviews:275},
-                    {id:14,name:'Dress',category:'Fashion',brand:'StyleCo',price:2000,original_price:3500,emoji:'👗',stock:50,rating:4.2,reviews:190},
-                    {id:15,name:'Microwave',category:'Home & Kitchen',brand:'KitchenPro',price:8000,original_price:12000,emoji:'🔥',stock:25,rating:4.4,reviews:125},
-                    {id:16,name:'Cookbook',category:'Books',brand:'Publisher',price:400,original_price:700,emoji:'🍳',stock:85,rating:4.3,reviews:110},
-                    {id:17,name:'Watch',category:'Electronics',brand:'TimePro',price:5000,original_price:8000,emoji:'⌚',stock:40,rating:4.5,reviews:220},
-                    {id:18,name:'Sunglasses',category:'Fashion',brand:'VisionStyle',price:1500,original_price:2500,emoji:'😎',stock:75,rating:4.4,reviews:185},
-                    {id:19,name:'Shampoo',category:'Beauty',brand:'HairCare',price:250,original_price:500,emoji:'🧴',stock:150,rating:4.2,reviews:410},
-                    {id:20,name:'Backpack',category:'Fashion',brand:'TravelGear',price:2500,original_price:4000,emoji:'🎒',stock:60,rating:4.6,reviews:295}
-                ];
+                allProducts = data.products || [
+    {id:1,name:'Smartphone',category:'Electronics',brand:'TechBrand',price:15000,original_price:25000,emoji:'📱',stock:50,rating:4.5,reviews:128,description:'Latest smartphone with amazing features'},
+    {id:2,name:'Laptop',category:'Electronics',brand:'TechBrand',price:45000,original_price:60000,emoji:'💻',stock:30,rating:4.3,reviews:95,description:'Powerful laptop for work and gaming'},
+    {id:3,name:'T-Shirt',category:'Fashion',brand:'StyleCo',price:500,original_price:1000,emoji:'👕',stock:100,rating:4.1,reviews:250,description:'Comfortable cotton t-shirt'},
+    {id:4,name:'Jeans',category:'Fashion',brand:'StyleCo',price:1200,original_price:2000,emoji:'👖',stock:80,rating:4.4,reviews:180,description:'Classic denim jeans'},
+    {id:5,name:'Pillow',category:'Home & Kitchen',brand:'ComfortPlus',price:800,original_price:1500,emoji:'🛏️',stock:60,rating:4.6,reviews:320,description:'Ultra-soft comfortable pillow'},
+    {id:6,name:'Coffee Maker',category:'Home & Kitchen',brand:'BrewCo',price:3000,original_price:5000,emoji:'☕',stock:40,rating:4.2,reviews:145,description:'Automatic coffee maker'},
+    {id:7,name:'Novel',category:'Books',brand:'Publisher',price:300,original_price:500,emoji:'📚',stock:120,rating:4.7,reviews:200,description:'Bestselling fiction novel'},
+    {id:8,name:'Yoga Mat',category:'Sports',brand:'FitLife',price:1500,original_price:2500,emoji:'🧘',stock:70,rating:4.5,reviews:165,description:'Non-slip yoga mat'},
+    {id:9,name:'Dumbbell Set',category:'Sports',brand:'PowerFit',price:4000,original_price:6000,emoji:'🏋️',stock:45,rating:4.4,reviews:210,description:'10kg dumbbell set'},
+    {id:10,name:'Face Cream',category:'Beauty',brand:'GlowSkin',price:600,original_price:1200,emoji:'💄',stock:90,rating:4.3,reviews:340,description:'Anti-aging face cream'},
+    {id:11,name:'Lipstick',category:'Beauty',brand:'GlowSkin',price:400,original_price:800,emoji:'💅',stock:110,rating:4.5,reviews:280,description:'Long-lasting lipstick'},
+    {id:12,name:'Headphones',category:'Electronics',brand:'AudioPro',price:3500,original_price:6000,emoji:'🎧',stock:55,rating:4.6,reviews:390,description:'Noise-cancelling headphones'},
+    {id:13,name:'Running Shoes',category:'Sports',brand:'SportX',price:3000,original_price:5000,emoji:'👟',stock:65,rating:4.5,reviews:275,description:'Comfortable running shoes'},
+    {id:14,name:'Dress',category:'Fashion',brand:'StyleCo',price:2000,original_price:3500,emoji:'👗',stock:50,rating:4.2,reviews:190,description:'Elegant evening dress'},
+    {id:15,name:'Microwave',category:'Home & Kitchen',brand:'KitchenPro',price:8000,original_price:12000,emoji:'🔥',stock:25,rating:4.4,reviews:125,description:'Digital microwave oven'}
+];
                 renderProducts(allProducts);
                 renderCategories();
             }
@@ -3084,6 +3079,6 @@
                 toast.remove();
             }, 3000);
         }
-    </script>
+</script>
 </body>
 </html>
