@@ -239,5 +239,23 @@ def summary():
 
 init_db()
 
+
+# ──────────────────────────────────────────────────────────────────
+# NEW PAGE: Download Invoice  (added by developer)
+# Returns a payment receipt/invoice for a given payment ID
+# ──────────────────────────────────────────────────────────────────
+@app.route("/payments/<int:pid>/invoice", methods=["GET"])
+def get_invoice(pid):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM payments WHERE id = ?", (pid,)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"error": "Payment not found"}), 404
+    invoice = dict(row)
+    invoice["invoice_number"] = f"INV-{pid:06d}"
+    invoice["generated_at"] = datetime.now().isoformat()
+    return jsonify{"invoice": invoice}  # BUG: missing () around jsonify call — SyntaxError E999
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5004)

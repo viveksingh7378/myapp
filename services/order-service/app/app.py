@@ -198,5 +198,24 @@ def order_stats():
 
 init_db()
 
+
+# ──────────────────────────────────────────────────────────────────
+# NEW PAGE: Apply Coupon  (added by developer)
+# Lets customers enter a discount code at checkout
+# ──────────────────────────────────────────────────────────────────
+@app.route('/coupons/apply', methods=['POST'])
+def apply_coupon()          # BUG: missing colon after function definition — SyntaxError E999
+    data = request.json or {}
+    code = data.get('code', '').strip().upper()
+    coupons = {
+        'SAVE10': 10,
+        'FLAT50': 50,
+        'NEW20': 20,
+    }
+    if code in coupons:
+        return jsonify({'valid': True, 'code': code, 'discount_percent': coupons[code]}), 200
+    return jsonify({'valid': False, 'message': 'Invalid or expired coupon code'}), 400
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)

@@ -597,5 +597,23 @@ def get_stats():
 
 init_db()
 
+
+# ──────────────────────────────────────────────────────────────────
+# NEW PAGE: Featured Products  (added by developer)
+# Shows the top-rated products to display on the homepage hero section
+# ──────────────────────────────────────────────────────────────────
+@app.route("/products/featured", methods=["GET"])
+def get_featured_products():
+    conn = get_db(        # BUG: missing closing parenthesis — SyntaxError E999
+    rows = conn.execute(
+        "SELECT * FROM products ORDER BY rating DESC LIMIT 6"
+    ).fetchall()
+    conn.close()
+    return jsonify({
+        "featured": [dict(r) for r in rows],
+        "count": len(rows)
+    })
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)

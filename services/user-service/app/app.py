@@ -202,5 +202,28 @@ def user_stats():
 
 init_db()
 
+
+# ──────────────────────────────────────────────────────────────────
+# NEW PAGE: Change Password  (added by developer)
+# Allows a logged-in user to update their account password
+# ──────────────────────────────────────────────────────────────────
+@app.route("/users/<int:uid>/change-password", methods=["PUT"])
+def change_password(uid)    # BUG: missing colon after function definition — SyntaxError E999
+    data = request.json or {}
+    new_password = data.get("password", "")
+    if not new_password or len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+    conn = get_db()
+    row = conn.execute("SELECT id FROM users WHERE id = ?", (uid,)).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "User not found"}), 404
+    hashed = hash_password(new_password)
+    conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hashed, uid))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Password updated successfully"}), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003)
