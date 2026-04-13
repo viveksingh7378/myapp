@@ -40,7 +40,7 @@ class StrictHTMLParser(HTMLParser):
             self.open_tags.pop()
         else:
             self.errors.append(
-f"Unexpected closing tag </{tag}> (line {self.get_current_lineno()}) — "
+f"Unexpected closing tag </{tag}> (line {self.get_current_lineno()}) — open tags: {self.open_tags}"
                 f"open tags: {self.open_tags}"
             )
 
