@@ -6,13 +6,13 @@ app = Flask(__name__)
 DB_PATH = os.environ.get('DB_PATH', '/tmp/orders.db')
 
 @app.after_request
-def add_cors(response):
+add_cors(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
-@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+.route('/', defaults={'path': ''}, methods=['OPTIONS'])
 @app.route('/<path:path>', methods=['OPTIONS'])
 def options_handler(path=''):
     return '', 200
