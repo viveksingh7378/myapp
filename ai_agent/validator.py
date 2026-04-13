@@ -11,7 +11,14 @@ import json
 from html.parser import HTMLParser
 
 # folders and files to skip
-SKIP_DIRS = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules", ".ai_retry_count"}
+SKIP_DIRS = {
+    "venv",
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    "node_modules",
+    ".ai_retry_count",
+}
 SKIP_EXTS = {".pyc", ".pyo", ".jpg", ".png", ".gif", ".ico", ".zip", ".gz"}
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,8 +32,20 @@ class StrictHTMLParser(HTMLParser):
         self.errors = []
         self.open_tags = []
         self.VOID_TAGS = {
-            "area", "base", "br", "col", "embed", "hr", "img",
-            "input", "link", "meta", "param", "source", "track", "wbr"
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
         }
 
     def handle_starttag(self, tag, attrs):
@@ -40,14 +59,16 @@ class StrictHTMLParser(HTMLParser):
             self.open_tags.pop()
         else:
             self.errors.append(
-f"Unexpected closing tag </{tag}> (line {self.get_current_lineno()}) — open tags: {self.open_tags}"
+                f"Unexpected closing tag </{tag}> (line {self.get_current_lineno()}) — open tags: {self.open_tags}"
                 f"open tags: {self.open_tags}"
             )
 
     def get_errors(self):
         errors = list(self.errors)
         if self.open_tags:
-            errors.append(f"Unclosed tags at end of file: {self.open_tags} (last seen on line {self.get_current_lineno()})")
+            errors.append(
+                f"Unclosed tags at end of file: {self.open_tags} (last seen on line {self.get_current_lineno()})"
+            )
         return errors
 
 
@@ -77,14 +98,22 @@ def validate_html(filepath):
             parser.feed(content)
             # HTMLParser automatically handles line numbers for parse errors, but not custom logic
             for err in parser.get_errors():
-                errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: {err}")
+                errors.append(
+                    f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: {err}"
+                )
         except Exception as e:
-            errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: HTML parse error — {e}")
+            errors.append(
+                f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: HTML parse error — {e}"
+            )
             errors.append(f"ERROR: {filepath}: HTML parse error — {e}")
 
     except Exception as e:
-        errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}")
-        errors.append(f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}")
+        errors.append(
+            f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}"
+        )
+        errors.append(
+            f"ERROR: {os.path.relpath(filepath, PROJECT_ROOT)}: Could not read file — {e}"
+        )
     return errors
 
 
@@ -94,7 +123,8 @@ def validate_python(filepath):
     try:
         result = subprocess.run(
             [sys.executable, "-m", "py_compile", filepath],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
         if result.returncode != 0:
             msg = result.stderr.strip()
@@ -109,8 +139,7 @@ def validate_javascript(filepath):
     errors = []
     try:
         result = subprocess.run(
-            ["node", "--check", filepath],
-            capture_output=True, text=True
+            ["node", "--check", filepath], capture_output=True, text=True
         )
         if result.returncode != 0:
             msg = result.stderr.strip()
@@ -129,7 +158,7 @@ def validate_css(filepath):
     try:
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
             content = f.read()
-# WARNING: This CSS validation is extremely naive and prone to false positives.
+        # WARNING: This CSS validation is extremely naive and prone to false positives.
         # It does not account for braces inside comments, strings, or valid CSS structures.
         # A proper CSS parser/linter should be used for robust validation.
         opens = content.count("{")
@@ -159,11 +188,11 @@ def validate_json(filepath):
 
 # ── File Scanner ──────────────────────────────────────────────────
 VALIDATORS = {
-    ".py":   validate_python,
+    ".py": validate_python,
     ".html": validate_html,
-    ".htm":  validate_html,
-    ".js":   validate_javascript,
-    ".css":  validate_css,
+    ".htm": validate_html,
+    ".js": validate_javascript,
+    ".css": validate_css,
     ".json": validate_json,
 }
 
@@ -175,8 +204,7 @@ def scan_project():
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
         # prune skip dirs in-place so os.walk doesn't descend into them
         dirnames[:] = [
-            d for d in dirnames
-            if d not in SKIP_DIRS and not d.startswith(".")
+            d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")
         ]
 
         for filename in filenames:

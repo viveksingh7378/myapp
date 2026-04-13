@@ -12,24 +12,26 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ── Retry helpers ─────────────────────────────────────────────────
 
+
 def get_retry_count():
     if os.path.exists(RETRY_FILE):
         return int(open(RETRY_FILE).read().strip())
     return 0
 
 
-def reset_retry(): # Reset retry count on successful remediation:
+def reset_retry():  # Reset retry count on successful remediation:
     count = get_retry_count() + 1
-    open(RETRY_FILE, 'w').write(str(count))
+    open(RETRY_FILE, "w").write(str(count))
     return count
 
 
-def increment_retry(): # Increment retry count
+def increment_retry():  # Increment retry count
     if os.path.exists(RETRY_FILE):
         os.remove(RETRY_FILE)
 
 
 # ── Read actual broken file ───────────────────────────────────────
+
 
 def read_broken_file(file_path):
     """
@@ -39,11 +41,12 @@ def read_broken_file(file_path):
     full_path = os.path.join(PROJECT_ROOT, file_path)
     if not os.path.exists(full_path):
         return None
-    with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+    with open(full_path, "r", encoding="utf-8", errors="replace") as f:
         return f.read()
 
 
 # ── Call Gemini with full file context ───────────────────────────
+
 
 def call_gemini(error_context, file_path=None, file_content=None):
     import time
@@ -55,8 +58,7 @@ def call_gemini(error_context, file_path=None, file_content=None):
     file_block = ""
     if file_path and file_content:
         numbered = "\n".join(
-            f"{i+1:4d} | {line}"
-            for i, line in enumerate(file_content.splitlines())
+            f"{i+1:4d} | {line}" for i, line in enumerate(file_content.splitlines())
         )
         file_block = f"""
 The broken file is: {file_path}
@@ -110,10 +112,7 @@ JSON format — return ALL fixes in one response:
     for model_name in models_to_try:
         try:
             print(f"AI Agent: Trying model {model_name}...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
+            response = client.models.generate_content(model=model_name, contents=prompt)
             return response.text.strip()
         except genai_errors.ClientError as e:
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
@@ -128,38 +127,47 @@ JSON format — return ALL fixes in one response:
 
 # ── Apply a single fix by line number (with fallbacks) ───────────
 
+
 def apply_single_fix(lines, line_number, original_line, fixed_line, file_path):
     total_lines = len(lines)
-# Stage all fixed files
+    # Stage all fixed files
     # Strategy 1: exact line number
     if line_number and 1 <= line_number <= total_lines:
-        actual = lines[line_number - 1].rstrip('\n').rstrip('\r')
+        actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
         orig_stripped = original_line.strip()
         # match if original is empty (insertion) or content overlaps
-        if orig_stripped == '' or orig_stripped in actual or actual in orig_stripped:
-            ending = '\n' if lines[line_number - 1].endswith('\n') else ''
-            if fixed_line.strip() == '':
+        if orig_stripped == "" or orig_stripped in actual or actual in orig_stripped:
+            ending = "\n" if lines[line_number - 1].endswith("\n") else ""
+            if fixed_line.strip() == "":
                 # deletion — remove the line entirely
                 lines.pop(line_number - 1)
             else:
                 lines[line_number - 1] = fixed_line.strip() + ending
-            print(f"  ✓ Fixed line {line_number}: {repr(original_line.strip())} → {repr(fixed_line.strip())}")
+            print(
+                f"  ✓ Fixed line {line_number}: {repr(original_line.strip())} → {repr(fixed_line.strip())}"
+            )
             return True
         else:
-            print(f"  ⚠ Line {line_number} mismatch — expected {repr(orig_stripped)}, got {repr(actual)}")
+            print(
+                f"  ⚠ Line {line_number} mismatch — expected {repr(orig_stripped)}, got {repr(actual)}"
+            )
 
     # Strategy 2: search all lines
     if original_line.strip():
         for i, line in enumerate(lines):
             if original_line.strip() in line:
-                ending = '\n' if line.endswith('\n') else ''
-                if fixed_line.strip() == '':
+                ending = "\n" if line.endswith("\n") else ""
+                if fixed_line.strip() == "":
                     lines.pop(i)
                 else:
-                    lines[i] = line.replace(original_line.strip(), fixed_line.strip(), 1)
-                    if not lines[i].endswith('\n'):
+                    lines[i] = line.replace(
+                        original_line.strip(), fixed_line.strip(), 1
+                    )
+                    if not lines[i].endswith("\n"):
                         lines[i] += ending
-                print(f"  ✓ Fixed line {i+1} via search: {repr(original_line.strip())} → {repr(fixed_line.strip())}")
+                print(
+                    f"  ✓ Fixed line {i+1} via search: {repr(original_line.strip())} → {repr(fixed_line.strip())}"
+                )
                 return True
 
     print(f"  ✗ Could not locate: {repr(original_line.strip())}")
@@ -167,6 +175,7 @@ def apply_single_fix(lines, line_number, original_line, fixed_line, file_path):
 
 
 # ── Apply ALL fixes to a file in one pass ────────────────────────
+
 
 def apply_all_fixes(file_path, fixes_list):
     full_path = os.path.join(PROJECT_ROOT, file_path)
@@ -176,25 +185,27 @@ def apply_all_fixes(file_path, fixes_list):
         print(f"AI Agent: File not found — {full_path}")
         return False
 
-    with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+    with open(full_path, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
     # Sort fixes in reverse line order so line numbers stay valid after edits
-    sorted_fixes = sorted(fixes_list, key=lambda x: x.get('line_number', 0), reverse=True)
+    sorted_fixes = sorted(
+        fixes_list, key=lambda x: x.get("line_number", 0), reverse=True
+    )
 
     applied = 0
     for fix in sorted_fixes:
         ok = apply_single_fix(
             lines,
-            fix.get('line_number'),
-            fix.get('original_line', fix.get('original_code', '')),
-            fix.get('fixed_line', fix.get('fixed_code', '')),
-            file_path
+            fix.get("line_number"),
+            fix.get("original_line", fix.get("original_code", "")),
+            fix.get("fixed_line", fix.get("fixed_code", "")),
+            file_path,
         )
         if ok:
             applied += 1
 
-    with open(full_path, 'w', encoding='utf-8') as f:
+    with open(full_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
     print(f"AI Agent: Applied {applied}/{len(fixes_list)} fixes to {file_path}")
@@ -203,10 +214,10 @@ def apply_all_fixes(file_path, fixes_list):
 
 # ── Git commit and push ───────────────────────────────────────────
 
+
 def git_commit_and_push(file_paths, root_cause):
     repo_url = subprocess.run(
-        ["git", "config", "--get", "remote.origin.url"],
-        capture_output=True, text=True
+        ["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True
     ).stdout.strip()
 
     github_token = os.environ.get("GITHUB_TOKEN", "")
@@ -224,13 +235,13 @@ def git_commit_and_push(file_paths, root_cause):
 
     result = subprocess.run(
         ["git", "commit", "-m", f"AI-Fix: {root_cause[:72]}"],
-        capture_output=True, text=True
+        capture_output=True,
+        text=True,
     )
 
     if result.returncode == 0:
         push = subprocess.run(
-            ["git", "push", "origin", "HEAD:main"],
-            capture_output=True, text=True
+            ["git", "push", "origin", "HEAD:main"], capture_output=True, text=True
         )
         if push.returncode == 0:
             print("AI Agent: Fix committed and pushed to GitHub ✓")
@@ -245,10 +256,13 @@ def git_commit_and_push(file_paths, root_cause):
 
 # ── Main remediation flow ─────────────────────────────────────────
 
+
 def remediate(log_file_path):
     retries = get_retry_count()
     if retries >= MAX_RETRIES:
-        print(f"AI Agent: Max retries ({MAX_RETRIES}) reached. Human intervention needed.")
+        print(
+            f"AI Agent: Max retries ({MAX_RETRIES}) reached. Human intervention needed."
+        )
         reset_retry()
         sys.exit(1)
 
@@ -291,24 +305,26 @@ def remediate(log_file_path):
     print(f"AI Agent: File       — {fix['file_path']}")
     print(f"AI Agent: Confidence — {fix['confidence']}")
 
-    if fix['confidence'] < 0.75:
+    if fix["confidence"] < 0.75:
         print("AI Agent: Confidence too low — skipping auto-fix")
         increment_retry()
         sys.exit(1)
 
     # 6. Apply ALL fixes in one pass
-    fixes_list = fix.get('fixes')
+    fixes_list = fix.get("fixes")
 
     # backwards-compat: single fix format
     if not fixes_list:
-        fixes_list = [{
-            'line_number': fix.get('line_number'),
-            'original_line': fix.get('original_line', fix.get('original_code', '')),
-            'fixed_line': fix.get('fixed_line', fix.get('fixed_code', ''))
-        }]
+        fixes_list = [
+            {
+                "line_number": fix.get("line_number"),
+                "original_line": fix.get("original_line", fix.get("original_code", "")),
+                "fixed_line": fix.get("fixed_line", fix.get("fixed_code", "")),
+            }
+        ]
 
     print(f"AI Agent: Applying {len(fixes_list)} fix(es)...")
-    success = apply_all_fixes(fix['file_path'], fixes_list)
+    success = apply_all_fixes(fix["file_path"], fixes_list)
 
     if not success:
         print("AI Agent: Failed to apply fixes")
@@ -316,7 +332,7 @@ def remediate(log_file_path):
         sys.exit(1)
 
     # 7. Commit and push all changes in one commit
-    committed = git_commit_and_push([fix['file_path']], fix['root_cause'])
+    committed = git_commit_and_push([fix["file_path"]], fix["root_cause"])
     if not committed:
         increment_retry()
         sys.exit(1)

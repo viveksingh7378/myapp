@@ -18,18 +18,24 @@ from collections import defaultdict
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANALYSIS_LOG = os.path.join(PROJECT_ROOT, "analysis_output.txt")
 
-SKIP_DIRS  = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
-SKIP_FILES = {"analysis_output.txt", "validation_output.txt",
-              "test_output.txt", "lint_output.txt", "trivy-report.json"}
+SKIP_DIRS = {"venv", "__pycache__", ".git", ".pytest_cache", "node_modules"}
+SKIP_FILES = {
+    "analysis_output.txt",
+    "validation_output.txt",
+    "test_output.txt",
+    "lint_output.txt",
+    "trivy-report.json",
+}
 ANALYZE_EXTS = {".py", ".html", ".htm", ".js", ".css", ".json"}
 
 # Max chars sent to AI per chunk — keep below Gemini's context limit
 MAX_CHUNK_CHARS = 80000
 # If a file exceeds this, split it into overlapping chunks so no line is missed
-CHUNK_OVERLAP   = 2000   # overlap between chunks to catch errors at split boundaries
+CHUNK_OVERLAP = 2000  # overlap between chunks to catch errors at split boundaries
 
 
 # ── Collect source files (with chunking for large files) ─────────
+
 
 def split_into_chunks(content, rel_path):
     """
@@ -40,26 +46,26 @@ def split_into_chunks(content, rel_path):
     lines = content.splitlines(keepends=True)
     chunks = []
     start_line = 0
-    chunk_idx  = 1
+    chunk_idx = 1
 
     while start_line < len(lines):
         chunk_lines = []
-        char_count  = 0
-        end_line    = start_line
+        char_count = 0
+        end_line = start_line
 
         while end_line < len(lines) and char_count < MAX_CHUNK_CHARS:
             chunk_lines.append(lines[end_line])
             char_count += len(lines[end_line])
-            end_line   += 1
+            end_line += 1
 
-        label   = f"{rel_path} [chunk {chunk_idx}, lines {start_line+1}–{end_line}]"
+        label = f"{rel_path} [chunk {chunk_idx}, lines {start_line+1}–{end_line}]"
         chunks.append((label, rel_path, start_line + 1, "".join(chunk_lines)))
 
         # Move forward, but keep CHUNK_OVERLAP chars of overlap
         overlap_chars = 0
-        overlap_line  = end_line
+        overlap_line = end_line
         while overlap_line > start_line and overlap_chars < CHUNK_OVERLAP:
-            overlap_line  -= 1
+            overlap_line -= 1
             overlap_chars += len(lines[overlap_line])
 
         start_line = max(end_line - max(1, end_line - overlap_line), end_line)
@@ -80,8 +86,9 @@ def collect_files():
     file_map = {}
 
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
-        dirnames[:] = [d for d in dirnames
-                       if d not in SKIP_DIRS and not d.startswith(".")]
+        dirnames[:] = [
+            d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")
+        ]
         for filename in filenames:
             if filename in SKIP_FILES:
                 continue
@@ -89,7 +96,7 @@ def collect_files():
             if ext not in ANALYZE_EXTS:
                 continue
             full_path = os.path.join(dirpath, filename)
-            rel_path  = os.path.relpath(full_path, PROJECT_ROOT)
+            rel_path = os.path.relpath(full_path, PROJECT_ROOT)
             try:
                 with open(full_path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
@@ -97,19 +104,21 @@ def collect_files():
                 if len(content) <= MAX_CHUNK_CHARS:
                     # Small file — send as-is
                     file_map[rel_path] = {
-                        "rel_path":   rel_path,
+                        "rel_path": rel_path,
                         "line_start": 1,
-                        "content":    content,
+                        "content": content,
                     }
                 else:
                     # Large file — split into chunks (NO truncation)
                     chunks = split_into_chunks(content, rel_path)
-                    print(f"  ⚡ Large file split into {len(chunks)} chunk(s): {rel_path}")
+                    print(
+                        f"  ⚡ Large file split into {len(chunks)} chunk(s): {rel_path}"
+                    )
                     for label, rp, line_start, chunk_content in chunks:
                         file_map[label] = {
-                            "rel_path":   rp,
+                            "rel_path": rp,
                             "line_start": line_start,
-                            "content":    chunk_content,
+                            "content": chunk_content,
                         }
 
             except Exception as e:
@@ -120,10 +129,11 @@ def collect_files():
 
 # ── Build Gemini prompt ───────────────────────────────────────────
 
+
 def build_prompt(files_dict):
     file_sections = ""
     for label, meta in files_dict.items():
-        content    = meta["content"]
+        content = meta["content"]
         line_start = meta["line_start"]
         # Number each line with its TRUE line number in the original file
         numbered = "\n".join(
@@ -205,6 +215,7 @@ If errors found:
 
 # ── Call Gemini ───────────────────────────────────────────────────
 
+
 def call_gemini_analyze(prompt):
     from google import genai
     from google.genai import errors as genai_errors
@@ -231,7 +242,8 @@ def call_gemini_analyze(prompt):
             try:
                 print(f"  Trying {model_name} (attempt {attempt + 1})...")
                 response = client.models.generate_content(
-                    model=model_name, contents=prompt)
+                    model=model_name, contents=prompt
+                )
                 print(f"  ✓ Got response from {model_name}")
                 return response.text.strip()
 
@@ -258,7 +270,9 @@ def call_gemini_analyze(prompt):
                     print(f"  Retrying in {wait}s...")
                     time.sleep(wait)
                 else:
-                    print(f"  {model_name} unavailable after 3 attempts — trying next model...")
+                    print(
+                        f"  {model_name} unavailable after 3 attempts — trying next model..."
+                    )
                     all_503.append(model_name)
 
             except Exception as e:
@@ -272,7 +286,8 @@ def call_gemini_analyze(prompt):
         time.sleep(120)
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt)
+                model="gemini-2.5-flash", contents=prompt
+            )
             print("  ✓ Got response from gemini-2.5-flash (outage retry)")
             return response.text.strip()
         except Exception as e:
@@ -284,6 +299,7 @@ def call_gemini_analyze(prompt):
 
 
 # ── Ollama local fallback ─────────────────────────────────────────
+
 
 def call_ollama_analyze(prompt):
     """
@@ -315,11 +331,11 @@ def call_ollama_analyze(prompt):
     # codellama on CPU can take 3-5 min for a large prompt — give it enough time.
     # Other lighter models get a shorter timeout so we don't stall the pipeline.
     TIMEOUTS = {
-        "codellama":      360,   # 6 min — large model, CPU-only Jenkins
-        "deepseek-coder": 300,   # 5 min
-        "llama3":         300,
-        "mistral":        240,
-        "llama2":         300,
+        "codellama": 360,  # 6 min — large model, CPU-only Jenkins
+        "deepseek-coder": 300,  # 5 min
+        "llama3": 300,
+        "mistral": 240,
+        "llama2": 300,
     }
     DEFAULT_TIMEOUT = 240
 
@@ -330,24 +346,30 @@ def call_ollama_analyze(prompt):
 
         for attempt in range(max_attempts):
             try:
-                attempt_label = f" (attempt {attempt+1}/{max_attempts})" if max_attempts > 1 else ""
-                print(f"  Trying Ollama model: {model_name}{attempt_label} (timeout={timeout}s)...")
-                payload = json.dumps({
-                    "model": model_name,
-                    "prompt": ollama_prompt,
-                    "stream": False,
-                    "format": "json",          # Ollama native JSON mode
-                    "options": {
-                        "temperature": 0.1,    # low temp = more deterministic JSON
-                        "num_predict": 2048,   # capped: JSON response doesn't need 4096 tokens
+                attempt_label = (
+                    f" (attempt {attempt+1}/{max_attempts})" if max_attempts > 1 else ""
+                )
+                print(
+                    f"  Trying Ollama model: {model_name}{attempt_label} (timeout={timeout}s)..."
+                )
+                payload = json.dumps(
+                    {
+                        "model": model_name,
+                        "prompt": ollama_prompt,
+                        "stream": False,
+                        "format": "json",  # Ollama native JSON mode
+                        "options": {
+                            "temperature": 0.1,  # low temp = more deterministic JSON
+                            "num_predict": 2048,  # capped: JSON response doesn't need 4096 tokens
+                        },
                     }
-                }).encode("utf-8")
+                ).encode("utf-8")
 
                 req = urllib.request.Request(
                     OLLAMA_URL,
                     data=payload,
                     headers={"Content-Type": "application/json"},
-                    method="POST"
+                    method="POST",
                 )
                 req.add_header("Connection", "keep-alive")
 
@@ -358,26 +380,36 @@ def call_ollama_analyze(prompt):
                         print(f"  ✓ Got response from Ollama ({model_name})")
                         return text
                     else:
-                        print(f"  {model_name} returned empty response — trying next...")
+                        print(
+                            f"  {model_name} returned empty response — trying next..."
+                        )
                 break  # success or empty — don't retry
 
             except urllib.error.URLError as e:
                 err_str = str(e)
                 if "Connection refused" in err_str or "Connection reset" in err_str:
                     print("  Ollama is not running on this machine.")
-                    print("  To enable: install Ollama (https://ollama.com) then run: ollama serve")
+                    print(
+                        "  To enable: install Ollama (https://ollama.com) then run: ollama serve"
+                    )
                     return None
                 if "404" in err_str or "Not Found" in err_str:
-                    print(f"  Ollama {model_name}: model not installed — trying next...")
+                    print(
+                        f"  Ollama {model_name}: model not installed — trying next..."
+                    )
                     break  # model not installed, no point retrying
                 print(f"  Ollama {model_name} error: {e} — trying next model...")
                 break
 
             except TimeoutError as e:
                 if attempt < max_attempts - 1:
-                    print(f"  Ollama {model_name} timed out after {timeout}s — retrying once...")
+                    print(
+                        f"  Ollama {model_name} timed out after {timeout}s — retrying once..."
+                    )
                 else:
-                    print(f"  Ollama {model_name} timed out after {timeout}s — trying next model...")
+                    print(
+                        f"  Ollama {model_name} timed out after {timeout}s — trying next model..."
+                    )
 
             except Exception as e:
                 err_str = str(e)
@@ -387,7 +419,9 @@ def call_ollama_analyze(prompt):
                     else:
                         print(f"  Ollama {model_name} timed out — trying next model...")
                 else:
-                    print(f"  Ollama {model_name} unexpected error: {e} — trying next model...")
+                    print(
+                        f"  Ollama {model_name} unexpected error: {e} — trying next model..."
+                    )
                     break  # non-timeout error, move on
 
     print("  No Ollama models responded. Install one with: ollama pull codellama")
@@ -395,6 +429,7 @@ def call_ollama_analyze(prompt):
 
 
 # ── Validate a fix before applying ───────────────────────────────
+
 
 def _sanitize_line(value):
     """
@@ -413,10 +448,10 @@ def _sanitize_line(value):
 
 
 def is_safe_fix(issue):
-    action      = issue.get("action", "replace")
-    orig        = issue.get("original_line", "")
-    fixed       = issue.get("fixed_line", "")
-    loc         = f"{issue.get('file_path')} line {issue.get('line_number')}"
+    action = issue.get("action", "replace")
+    orig = issue.get("original_line", "")
+    fixed = issue.get("fixed_line", "")
+    loc = f"{issue.get('file_path')} line {issue.get('line_number')}"
 
     # anchor/original must not be empty
     if not orig.strip():
@@ -456,13 +491,14 @@ def is_safe_fix(issue):
 
 # ── Apply a single fix ────────────────────────────────────────────
 
+
 def apply_fix(issue):
     """Apply a fix and return the actual line number found, or False on failure."""
-    file_path   = issue["file_path"]
-    action      = issue.get("action", "replace")
+    file_path = issue["file_path"]
+    action = issue.get("action", "replace")
     line_number = issue.get("line_number")
-    original    = issue.get("original_line", "")
-    fixed       = issue.get("fixed_line", "")
+    original = issue.get("original_line", "")
+    fixed = issue.get("fixed_line", "")
 
     full_path = os.path.join(PROJECT_ROOT, file_path)
     if not os.path.exists(full_path):
@@ -477,8 +513,9 @@ def apply_fix(issue):
         # Strategy 1: use line number hint
         if line_number and 1 <= line_number <= len(lines):
             actual = lines[line_number - 1].rstrip("\n").rstrip("\r")
-            if original.strip() and (original.strip() in actual
-                                     or actual.strip() in original.strip()):
+            if original.strip() and (
+                original.strip() in actual or actual.strip() in original.strip()
+            ):
                 ending = "\n" if lines[line_number - 1].endswith("\n") else ""
                 lines[line_number - 1] = fixed + ending
                 _write(full_path, lines)
@@ -488,7 +525,7 @@ def apply_fix(issue):
         # Strategy 2: search whole file
         for i, line in enumerate(lines):
             if original.strip() in line:
-                ending  = "\n" if line.endswith("\n") else ""
+                ending = "\n" if line.endswith("\n") else ""
                 new_line = line.replace(line.rstrip("\n\r"), fixed, 1)
                 if not new_line.endswith("\n"):
                     new_line += ending
@@ -543,22 +580,23 @@ def _write(path, lines):
 
 # ── Pretty-print a single fix diff ───────────────────────────────
 
+
 def print_fix_diff(issue, line_found):
     """Print a Jenkins-friendly before/after box for one fix."""
-    file_path   = issue.get("file_path", "?")
-    action      = issue.get("action", "replace")
+    file_path = issue.get("file_path", "?")
+    action = issue.get("action", "replace")
     description = issue.get("description", "")
-    original    = issue.get("original_line", "").strip()
-    fixed       = issue.get("fixed_line", "").strip()
-    lang        = issue.get("language", "").upper()
+    original = issue.get("original_line", "").strip()
+    fixed = issue.get("fixed_line", "").strip()
+    lang = issue.get("language", "").upper()
 
     W = 70  # box width
     sep = "─" * W
 
     action_label = {
-        "replace":       "REPLACE  (broken line → fixed line)",
+        "replace": "REPLACE  (broken line → fixed line)",
         "insert_before": "INSERT BEFORE anchor line",
-        "insert_after":  "INSERT AFTER  anchor line",
+        "insert_after": "INSERT AFTER  anchor line",
     }.get(action, action.upper())
 
     print(f"\n┌{sep}┐")
@@ -567,21 +605,21 @@ def print_fix_diff(issue, line_found):
     print(f"│  File   : {file_path[:W-12]:<{W-12}}│")
     print(f"│  Line   : {str(line_found):<{W-12}}│")
     print(f"│  Action : {action_label:<{W-12}}│")
-    desc_short = description[:W-12] if description else "-"
+    desc_short = description[: W - 12] if description else "-"
     print(f"│  Issue  : {desc_short:<{W-12}}│")
     print(f"├{sep}┤")
 
     if action == "replace":
         before_label = "  ✗ ERROR  "
-        after_label  = "  ✓ FIXED  "
+        after_label = "  ✓ FIXED  "
     else:
         before_label = "  ⚓ ANCHOR "
-        after_label  = "  ✚ ADDED  "
+        after_label = "  ✚ ADDED  "
 
     # Truncate long lines so they fit in the box
     max_code = W - 14
-    orig_display  = original[:max_code] + ("…" if len(original)  > max_code else "")
-    fixed_display = fixed[:max_code]    + ("…" if len(fixed)     > max_code else "")
+    orig_display = original[:max_code] + ("…" if len(original) > max_code else "")
+    fixed_display = fixed[:max_code] + ("…" if len(fixed) > max_code else "")
 
     print(f"│{before_label}: {orig_display:<{max_code+2}}│")
     print(f"│           {'↓':<{W-11}}│")
@@ -590,6 +628,7 @@ def print_fix_diff(issue, line_found):
 
 
 # ── Print full summary table of all applied fixes ─────────────────
+
 
 def print_fix_summary(applied_fixes):
     """Print a compact table of all fixes applied this run."""
@@ -604,17 +643,17 @@ def print_fix_summary(applied_fixes):
     print("═" * W)
 
     for idx, fix in enumerate(applied_fixes, 1):
-        file_path   = fix.get("file_path", "?")
-        line_found  = fix.get("line_found", "?")
-        action      = fix.get("action", "replace")
-        original    = fix.get("original_line", "").strip()
-        fixed_line  = fix.get("fixed_line", "").strip()
+        file_path = fix.get("file_path", "?")
+        line_found = fix.get("line_found", "?")
+        action = fix.get("action", "replace")
+        original = fix.get("original_line", "").strip()
+        fixed_line = fix.get("fixed_line", "").strip()
         description = fix.get("description", "")
 
         print(f"\n  #{idx}  {file_path}  (line {line_found})  [{action}]")
         print(f"       Issue : {description[:60]}")
         max_w = 60
-        orig_d  = original[:max_w]  + ("…" if len(original)  > max_w else "")
+        orig_d = original[:max_w] + ("…" if len(original) > max_w else "")
         fixed_d = fixed_line[:max_w] + ("…" if len(fixed_line) > max_w else "")
 
         if action == "replace":
@@ -632,6 +671,7 @@ def print_fix_summary(applied_fixes):
 
 
 # ── Run pytest ────────────────────────────────────────────────────
+
 
 def run_tests():
     """
@@ -657,9 +697,11 @@ def run_tests():
 
     if not test_dirs:
         print("  No test directories found — skipping test verification")
-        return True   # nothing to fail; don't block the push
+        return True  # nothing to fail; don't block the push
 
-    print(f"  Found {len(test_dirs)} test dir(s): {[os.path.relpath(d, PROJECT_ROOT) for d in test_dirs]}")
+    print(
+        f"  Found {len(test_dirs)} test dir(s): {[os.path.relpath(d, PROJECT_ROOT) for d in test_dirs]}"
+    )
 
     all_passed = True
     for test_dir in test_dirs:
@@ -669,7 +711,9 @@ def run_tests():
         cwd = os.path.dirname(test_dir)
         result = subprocess.run(
             [sys.executable, "-m", "pytest", test_dir, "--tb=short", "-q"],
-            capture_output=True, text=True, cwd=cwd
+            capture_output=True,
+            text=True,
+            cwd=cwd,
         )
         if result.returncode == 0:
             print(f"  ✓ {svc_name}: all tests passed")
@@ -691,6 +735,7 @@ def run_tests():
 
 # ── Git commit and push ───────────────────────────────────────────
 
+
 def git_commit_and_push(fixed_files, summary):
     import re as _re
     import base64 as _b64
@@ -706,15 +751,16 @@ def git_commit_and_push(fixed_files, summary):
     # ── Get remote URL and ensure it is plain HTTPS (no embedded token) ─
     repo_url = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
-        capture_output=True, text=True, cwd=PROJECT_ROOT
+        capture_output=True,
+        text=True,
+        cwd=PROJECT_ROOT,
     ).stdout.strip()
 
     # Convert SSH → HTTPS if needed; strip any embedded token
     if repo_url.startswith("git@github.com:"):
-        repo_url = "https://github.com/" + repo_url[len("git@github.com:"):]
+        repo_url = "https://github.com/" + repo_url[len("git@github.com:") :]
     clean_url = _re.sub(r"https://[^@]+@github\.com/", "https://github.com/", repo_url)
-    subprocess.run(["git", "remote", "set-url", "origin", clean_url],
-                   cwd=PROJECT_ROOT)
+    subprocess.run(["git", "remote", "set-url", "origin", clean_url], cwd=PROJECT_ROOT)
     print(f"  Remote URL: {clean_url}")
 
     # ── Authenticate via HTTP Authorization header ────────────────────
@@ -729,33 +775,37 @@ def git_commit_and_push(fixed_files, summary):
     # Scope the header to github.com only and clear any credential helpers
     subprocess.run(
         ["git", "config", "http.https://github.com/.extraHeader", auth_header],
-        cwd=PROJECT_ROOT
+        cwd=PROJECT_ROOT,
     )
-    subprocess.run(["git", "config", "credential.helper", ""],
-                   cwd=PROJECT_ROOT)
+    subprocess.run(["git", "config", "credential.helper", ""], cwd=PROJECT_ROOT)
     # Disable interactive password prompts
     push_env = os.environ.copy()
     push_env["GIT_TERMINAL_PROMPT"] = "0"
     print("  ✓ HTTP Authorization header configured")
 
     # ── Git identity (required for commit) ────────────────────────────
-    subprocess.run(["git", "config", "user.email", "ai-bot@pipeline.local"],
-                   cwd=PROJECT_ROOT)
-    subprocess.run(["git", "config", "user.name",  "AI-Remediation-Bot"],
-                   cwd=PROJECT_ROOT)
+    subprocess.run(
+        ["git", "config", "user.email", "ai-bot@pipeline.local"], cwd=PROJECT_ROOT
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "AI-Remediation-Bot"], cwd=PROJECT_ROOT
+    )
 
     # ── Stage fixed files ─────────────────────────────────────────────
     for fp in fixed_files:
-        r = subprocess.run(["git", "add", os.path.join(PROJECT_ROOT, fp)],
-                           capture_output=True, text=True, cwd=PROJECT_ROOT)
+        r = subprocess.run(
+            ["git", "add", os.path.join(PROJECT_ROOT, fp)],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
         if r.returncode != 0:
             print(f"  ⚠ git add failed for {fp}: {r.stderr.strip()}")
 
     # ── Commit ────────────────────────────────────────────────────────
     msg = f"AI-Fix: {summary[:72]}"
     result = subprocess.run(
-        ["git", "commit", "-m", msg],
-        capture_output=True, text=True, cwd=PROJECT_ROOT
+        ["git", "commit", "-m", msg], capture_output=True, text=True, cwd=PROJECT_ROOT
     )
     if result.returncode != 0:
         stderr = result.stderr.strip()
@@ -769,14 +819,16 @@ def git_commit_and_push(fixed_files, summary):
     # ── Push ──────────────────────────────────────────────────────────
     push = subprocess.run(
         ["git", "push", "origin", "HEAD:main"],
-        capture_output=True, text=True, cwd=PROJECT_ROOT,
-        env=push_env
+        capture_output=True,
+        text=True,
+        cwd=PROJECT_ROOT,
+        env=push_env,
     )
 
     # Always clean up the auth header from git config after push attempt
     subprocess.run(
         ["git", "config", "--unset", "http.https://github.com/.extraHeader"],
-        cwd=PROJECT_ROOT
+        cwd=PROJECT_ROOT,
     )
 
     if push.returncode == 0:
@@ -794,24 +846,26 @@ def git_commit_and_push(fixed_files, summary):
 
 # ── Main ──────────────────────────────────────────────────────────
 
+
 def _auto_fix_html_structure(full_path, rel_path, errors):
     """
     Directly repair well-known HTML structural issues without needing AI.
     Returns True if the file was modified.
     """
     import re as _re
+
     try:
         with open(full_path, "r", encoding="utf-8", errors="replace") as f:
             content = f.read()
         original = content
-        lower    = content.lower()
+        lower = content.lower()
 
         # Collect which tags are missing
         missing = {err for err in errors}
 
         # ── Prepend <!DOCTYPE html> and <html lang="en"> if missing ──
         need_doctype = any("DOCTYPE" in e for e in missing)
-        need_html    = any("<html" in e.lower() for e in missing)
+        need_html = any("<html" in e.lower() for e in missing)
 
         if need_doctype or need_html:
             prefix = ""
@@ -821,8 +875,9 @@ def _auto_fix_html_structure(full_path, rel_path, errors):
                 prefix += '<html lang="en">\n'
             # Only prepend if the file doesn't start with these already
             stripped = content.lstrip()
-            if not stripped.lower().startswith("<!doctype") and \
-               not stripped.lower().startswith("<html"):
+            if not stripped.lower().startswith(
+                "<!doctype"
+            ) and not stripped.lower().startswith("<html"):
                 # Remove any leading blank lines, then prepend
                 content = prefix + stripped
                 print(f"  ✓ Auto-fixed: added {prefix.strip()} to {rel_path}")
@@ -864,39 +919,47 @@ def local_syntax_check():
       auto_fixed_files — set of rel_paths that were directly repaired
     """
     import re as _re
-    findings        = []
+
+    findings = []
     auto_fixed_files = set()
     print("\nPre-flight: Local syntax checks...")
 
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
-        dirnames[:] = [d for d in dirnames
-                       if d not in SKIP_DIRS and not d.startswith(".")]
+        dirnames[:] = [
+            d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")
+        ]
         for filename in filenames:
             ext = os.path.splitext(filename)[1].lower()
             full_path = os.path.join(dirpath, filename)
-            rel_path  = os.path.relpath(full_path, PROJECT_ROOT)
+            rel_path = os.path.relpath(full_path, PROJECT_ROOT)
 
             # ── Python: use py_compile ──────────────────────────
             if ext == ".py":
                 r = subprocess.run(
                     [sys.executable, "-m", "py_compile", full_path],
-                    capture_output=True, text=True
+                    capture_output=True,
+                    text=True,
                 )
                 if r.returncode != 0:
-                    findings.append({"file": rel_path, "tool": "py_compile",
-                                     "error": r.stderr.strip()})
+                    findings.append(
+                        {
+                            "file": rel_path,
+                            "tool": "py_compile",
+                            "error": r.stderr.strip(),
+                        }
+                    )
                     print(f"  ✗ Python syntax error: {rel_path}")
                     print(f"    {r.stderr.strip()}")
 
             # ── JavaScript: use node --check ────────────────────
             elif ext in (".js",):
                 r = subprocess.run(
-                    ["node", "--check", full_path],
-                    capture_output=True, text=True
+                    ["node", "--check", full_path], capture_output=True, text=True
                 )
                 if r.returncode != 0:
-                    findings.append({"file": rel_path, "tool": "node",
-                                     "error": r.stderr.strip()})
+                    findings.append(
+                        {"file": rel_path, "tool": "node", "error": r.stderr.strip()}
+                    )
                     print(f"  ✗ JS syntax error: {rel_path}")
                     print(f"    {r.stderr.strip()}")
 
@@ -907,16 +970,20 @@ def local_syntax_check():
                         html_content = f.read()
 
                     # CSS brace balance check
-                    css_blocks = _re.findall(r'<style[^>]*>(.*?)</style>',
-                                             html_content, _re.DOTALL)
+                    css_blocks = _re.findall(
+                        r"<style[^>]*>(.*?)</style>", html_content, _re.DOTALL
+                    )
                     css_text = "".join(css_blocks)
-                    opens  = css_text.count("{")
+                    opens = css_text.count("{")
                     closes = css_text.count("}")
                     if opens != closes:
-                        msg = (f"CSS brace mismatch: {opens} open vs {closes} close"
-                               f" (delta: {opens - closes:+d})")
-                        findings.append({"file": rel_path, "tool": "css-brace",
-                                         "error": msg})
+                        msg = (
+                            f"CSS brace mismatch: {opens} open vs {closes} close"
+                            f" (delta: {opens - closes:+d})"
+                        )
+                        findings.append(
+                            {"file": rel_path, "tool": "css-brace", "error": msg}
+                        )
                         print(f"  ✗ {rel_path}: {msg}")
 
                         # Pin down the line
@@ -924,32 +991,43 @@ def local_syntax_check():
                         depth = 0
                         in_style = False
                         for ln_num, ln in enumerate(lines, 1):
-                            if "<style" in ln:  in_style = True
-                            if "</style>" in ln: in_style = False
+                            if "<style" in ln:
+                                in_style = True
+                            if "</style>" in ln:
+                                in_style = False
                             if in_style:
                                 for ch in ln:
-                                    if ch == "{": depth += 1
-                                    elif ch == "}": depth -= 1
+                                    if ch == "{":
+                                        depth += 1
+                                    elif ch == "}":
+                                        depth -= 1
                                 if depth < 0:
-                                    print(f"    First negative depth at line {ln_num}: {ln.strip()}")
+                                    print(
+                                        f"    First negative depth at line {ln_num}: {ln.strip()}"
+                                    )
                                     break
 
                     # HTML structural checks — required skeleton tags
                     html_lower = html_content.lower()
                     struct_checks = [
-                        ("<!doctype html>",      "Missing <!DOCTYPE html> declaration"),
-                        ("<html",                "Missing <html> opening tag"),
-                        ("</html>",              "Missing </html> closing tag"),
-                        ("<head",                "Missing <head> opening tag"),
-                        ("</head>",              "Missing </head> closing tag"),
-                        ("<body",                "Missing <body> opening tag"),
-                        ("</body>",              "Missing </body> closing tag"),
+                        ("<!doctype html>", "Missing <!DOCTYPE html> declaration"),
+                        ("<html", "Missing <html> opening tag"),
+                        ("</html>", "Missing </html> closing tag"),
+                        ("<head", "Missing <head> opening tag"),
+                        ("</head>", "Missing </head> closing tag"),
+                        ("<body", "Missing <body> opening tag"),
+                        ("</body>", "Missing </body> closing tag"),
                     ]
                     struct_errors = []
                     for needle, msg in struct_checks:
                         if needle not in html_lower:
-                            findings.append({"file": rel_path, "tool": "html-structure",
-                                             "error": msg})
+                            findings.append(
+                                {
+                                    "file": rel_path,
+                                    "tool": "html-structure",
+                                    "error": msg,
+                                }
+                            )
                             struct_errors.append(msg)
                             print(f"  ✗ {rel_path}: {msg}")
 
@@ -959,19 +1037,24 @@ def local_syntax_check():
                             auto_fixed_files.add(rel_path)
 
                     # Inline JS check
-                    js_blocks = _re.findall(r'<script[^>]*>(.*?)</script>',
-                                            html_content, _re.DOTALL)
+                    js_blocks = _re.findall(
+                        r"<script[^>]*>(.*?)</script>", html_content, _re.DOTALL
+                    )
                     if js_blocks:
                         js_tmp = "/tmp/_inline_js_check.js"
                         with open(js_tmp, "w") as jf:
                             jf.write("\n".join(js_blocks))
                         r = subprocess.run(
-                            ["node", "--check", js_tmp],
-                            capture_output=True, text=True
+                            ["node", "--check", js_tmp], capture_output=True, text=True
                         )
                         if r.returncode != 0:
-                            findings.append({"file": rel_path, "tool": "node-inline-js",
-                                             "error": r.stderr.strip()})
+                            findings.append(
+                                {
+                                    "file": rel_path,
+                                    "tool": "node-inline-js",
+                                    "error": r.stderr.strip(),
+                                }
+                            )
                             print(f"  ✗ Inline JS error in {rel_path}")
                             print(f"    {r.stderr.strip()}")
 
@@ -981,9 +1064,13 @@ def local_syntax_check():
     if not findings:
         print("  ✓ All files passed local syntax checks")
     else:
-        print(f"\n  Found {len(findings)} local syntax issue(s) — AI will also scan for fixes")
+        print(
+            f"\n  Found {len(findings)} local syntax issue(s) — AI will also scan for fixes"
+        )
     if auto_fixed_files:
-        print(f"  ✓ Auto-fixed {len(auto_fixed_files)} file(s) locally: {sorted(auto_fixed_files)}")
+        print(
+            f"  ✓ Auto-fixed {len(auto_fixed_files)} file(s) locally: {sorted(auto_fixed_files)}"
+        )
     return findings, auto_fixed_files
 
 
@@ -1010,7 +1097,7 @@ def main():
     # Step 2: build prompt and call Gemini
     print("\nStep 2: Sending all files to Gemini for analysis...")
     prompt = build_prompt(files)
-    raw    = call_gemini_analyze(prompt)
+    raw = call_gemini_analyze(prompt)
 
     if raw is None:
         print("\nAI Analyzer: All Gemini models unavailable — skipping AI analysis.")
@@ -1028,6 +1115,7 @@ def main():
     def extract_json(text):
         """Strip markdown fences, then extract the outermost {...} JSON object."""
         import re
+
         # Remove ```json ... ``` or ``` ... ``` fences
         text = re.sub(r"```(?:json)?\s*", "", text)
         text = text.replace("```", "").strip()
@@ -1037,7 +1125,7 @@ def main():
         except json.JSONDecodeError:
             pass
         # Try to extract first {...} block (handles narrative text before/after JSON)
-        match = re.search(r'\{.*\}', text, re.DOTALL)
+        match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             try:
                 return json.loads(match.group(0))
@@ -1090,23 +1178,27 @@ def main():
 
     if hallucinated:
         unique_hallucinated = sorted(set(hallucinated))
-        print(f"  ⚠ Ignoring {len(hallucinated)} issue(s) for non-existent paths "
-              f"(AI hallucination): {unique_hallucinated}")
+        print(
+            f"  ⚠ Ignoring {len(hallucinated)} issue(s) for non-existent paths "
+            f"(AI hallucination): {unique_hallucinated}"
+        )
 
     print(f"AI Analyzer: Found {len(issues)} valid error(s) in real project files")
     print(f"Summary: {analysis.get('summary', '')}\n")
     for issue in issues:
         action = issue.get("action", "replace")
-        print(f"  [{issue.get('severity','?').upper()}] {issue['file_path']} "
-              f"line {issue.get('line_number','?')} [{action}]: {issue['description']}")
+        print(
+            f"  [{issue.get('severity', '?').upper()}] {issue['file_path']} "
+            f"line {issue.get('line_number', '?')} [{action}]: {issue['description']}"
+        )
 
     # Step 5: apply fixes — process each file in reverse line order
     print("\nStep 4: Applying fixes...")
     # Seed fixed_files with anything the local checker already repaired,
     # so both local and AI fixes land in a single commit.
-    fixed_files  = set(local_fixed_files)
-    applied      = 0
-    applied_fixes = []   # track details for summary
+    fixed_files = set(local_fixed_files)
+    applied = 0
+    applied_fixes = []  # track details for summary
 
     by_file = defaultdict(list)
     for issue in issues:
@@ -1116,9 +1208,9 @@ def main():
     for file_path, file_issues in by_file.items():
         # reverse order: insertions/replacements at higher line numbers first
         # so that earlier line numbers are not shifted
-        for issue in sorted(file_issues,
-                            key=lambda x: x.get("line_number", 0),
-                            reverse=True):
+        for issue in sorted(
+            file_issues, key=lambda x: x.get("line_number", 0), reverse=True
+        ):
             result = apply_fix(issue)
             if result is not False:
                 fixed_files.add(file_path)
@@ -1147,8 +1239,11 @@ def main():
         if not fp.endswith(".py"):
             continue
         full_path = os.path.join(PROJECT_ROOT, fp)
-        r = subprocess.run([sys.executable, "-m", "py_compile", full_path],
-                           capture_output=True, text=True)
+        r = subprocess.run(
+            [sys.executable, "-m", "py_compile", full_path],
+            capture_output=True,
+            text=True,
+        )
         if r.returncode != 0:
             print(f"  ✗ {fp}: syntax error after fix — {r.stderr.strip()}")
             syntax_ok = False
@@ -1165,7 +1260,7 @@ def main():
         sys.exit(2)
 
     # Step 8: commit and push
-    summary   = analysis.get("summary", "fixed syntax errors detected by Gemini")
+    summary = analysis.get("summary", "fixed syntax errors detected by Gemini")
     committed = git_commit_and_push(list(fixed_files), summary)
 
     if committed:
