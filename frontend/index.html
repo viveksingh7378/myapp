@@ -2346,7 +2346,7 @@
                 ? `<img src="${detailImgSrc}" alt="${product.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
                 : ``;
             const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
-
+            const content = `
             const content = `
                 <div class="product-detail-modal">
                     <div class="product-detail-image">${detailImgHtml}${detailFallback}</div>
