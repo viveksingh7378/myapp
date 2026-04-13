@@ -1,16 +1,16 @@
-from app.app import app, init_db
-import pytest
 import os
 import sqlite3
+import pytest
 
-# Use a named shared-memory SQLite URI so all connections within the same
-# process share the same in-memory database (fixes "no such table" errors).
+# ── MUST be set before importing app so DB_PATH is correct at module load ──
 _DB_URI = "file:productmem?mode=memory&cache=shared"
 os.environ["DB_PATH"] = _DB_URI
 
+from app.app import app, init_db  # noqa: E402
 
-# Module-level keeper connection: keeps the shared in-memory DB alive for the
-# entire test session.  Without this, the DB is destroyed between connections.
+# Module-level keeper: keeps the named shared-memory DB alive for the whole
+# test session.  Without this connection, SQLite destroys the in-memory DB
+# the moment every other connection closes.
 _keeper = sqlite3.connect(_DB_URI, uri=True)
 
 
@@ -21,11 +21,10 @@ def client():
         init_db()
     with app.test_client() as c:
         yield c
-    # Wipe data between tests so tests stay independent
+    # Wipe data between tests so each test starts clean
     with sqlite3.connect(_DB_URI, uri=True) as cx:
         cx.execute("DELETE FROM products")
         cx.execute("DELETE FROM reviews")
-        # Reset AUTOINCREMENT counters so IDs start from 1 each test
         cx.execute("DELETE FROM sqlite_sequence WHERE name='products'")
         cx.execute("DELETE FROM sqlite_sequence WHERE name='reviews'")
         cx.commit()

@@ -7,7 +7,7 @@ import string
 from datetime import datetime
 
 app = Flask(__name__)
-DB_PATH = os.environ.get("DB_PATH", "/tmp/payments.db")
+_DEFAULT_DB = "/tmp/payments.db"
 
 
 @app.after_request
@@ -25,9 +25,11 @@ def options_handler(path=""):
 
 
 def get_db():
-    # Support SQLite URI mode (e.g. file:mem?mode=memory&cache=shared)
-    use_uri = DB_PATH.startswith("file:")
-    conn = sqlite3.connect(DB_PATH, uri=use_uri)
+    # Read DB_PATH at call time (not module load time) so tests can override
+    # it via os.environ before importing this module.
+    db_path = os.environ.get("DB_PATH", _DEFAULT_DB)
+    use_uri = db_path.startswith("file:")
+    conn = sqlite3.connect(db_path, uri=use_uri)
     conn.row_factory = sqlite3.Row
     return conn
 
