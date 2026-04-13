@@ -1615,93 +1615,93 @@
 
     <!-- HEADER -->
     <header class="header">
-        <iv class="header-left">
-            <iv class="logo" onclick="showHome()">
+        <div class="header-left">
+            <div class="logo" onclick="showHome()">
                 <span>🛍️</span>
                 <span>ShopNow</span>
-            </iv>
-            <iv class="search-bar">
+            </div>
+            <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="Search products, brands...">
                 <button onclick="performSearch()"><i class="fas fa-search"></i></button>
-            </iv>
-        </iv>
-        <iv class="header-right">
-            <iv class="header-icon" onclick="toggleCart()">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon" onclick="toggleCart()">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
-            </iv>
-            <iv class="header-icon" id="userIcon" onclick="showAuthModal()">
+            </div>
+            <div class="header-icon" id="userIcon" onclick="showAuthModal()">
                 <i class="fas fa-user"></i>
-            </iv>
-            <iv class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
+            </div>
+            <div class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
                 <i class="fas fa-chart-bar"></i>
-            </iv>
-            <iv class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
+            </div>
+            <div class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
                 <i class="fas fa-box"></i>
-            </iv>
-        </iv>
+            </div>
+        </div>
     </header>
 
     <!-- HOME VIEW -->
-    <iv id="homeView" class="view active">
+    <div id="homeView" class="view active">
         <!-- HERO BANNER -->
-        <iv class="hero slide-1" id="heroBanner">
-            <iv class="hero-content">
+        <div class="hero slide-1" id="heroBanner">
+            <div class="hero-content">
                 <h1>Discover Amazing Deals</h1>
                 <p>Shop from thousands of products at unbeatable prices</p>
                 <button class="btn-primary" onclick="scrollToProducts()">Shop Now</button>
-            </iv>
-        </iv>
+            </div>
+        </div>
 
         <!-- CATEGORIES -->
-        <iv class="categories" id="categoriesBar"></iv>
+        <div class="categories" id="categoriesBar"></div>
 
         <!-- DEAL OF THE DAY -->
-        <iv class="section">
-            <iv style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
-                <iv>
+        <div class="section">
+            <div style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔥 Deal of the Day</h3>
                     <p style="font-size: 14px; opacity: 0.9;">Limited time offers on premium products</p>
-                </iv>
-                <iv style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</iv>
-            </iv>
-        </iv>
+                </div>
+                <div style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</div>
+            </div>
+        </div>
 
         <!-- FEATURED PRODUCTS -->
-        <iv class="section">
+        <div class="section">
             <h2 class="section-title">
                 <i class="fas fa-star"></i>
                 Featured Products
             </h2>
-            <iv class="product-grid" id="productGrid"></iv>
-        </iv>
-    </iv>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+    </div>
 
     <!-- PRODUCT LISTING VIEW -->
-    <iv id="listingView" class="view">
-        <iv style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
+    <div id="listingView" class="view">
+        <div style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
             <!-- FILTERS SIDEBAR -->
-            <iv style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
+            <div style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
                 <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px;">Filters</h3>
 
                 <!-- CATEGORIES FILTER -->
-                <iv style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Category</h4>
-                    <iv style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></iv>
-                </iv>
+                    <div style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></div>
+                </div>
 
                 <!-- PRICE RANGE FILTER -->
-                <iv style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Price Range</h4>
                     <input type="range" id="priceFilter" min="0" max="100000" step="1000" style="width: 100%; cursor: pointer;">
-                    <iv style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
                         <span>₹0</span>
                         <span id="priceValue">₹100000</span>
-                    </iv>
-                </iv>
+                    </div>
+                </div>
 
                 <!-- RATING FILTER -->
-                <iv style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Min Rating</h4>
                     <select id="ratingFilter" style="width: 100%;">
                         <option value="0">All ratings</option>
@@ -1709,14 +1709,14 @@
                         <option value="3">3★ & above</option>
                         <option value="2">2★ & above</option>
                     </select>
-                </iv>
+                </div>
 
                 <button onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</button>
-            </iv>
+            </div>
 
             <!-- PRODUCTS -->
-            <iv>
-                <iv style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="font-size: 20px; font-weight: 700;">Products</h2>
                     <select id="sortFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
                         <option value="relevance">Relevance</option>
@@ -1725,27 +1725,27 @@
                         <option value="rating">Top Rated</option>
                         <option value="popular">Most Popular</option>
                     </select>
-                </iv>
-                <iv class="product-grid" id="listingProductGrid"></iv>
-            </iv>
-        </iv>
-    </iv>
+                </div>
+                <div class="product-grid" id="listingProductGrid"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- MY ORDERS VIEW -->
-    <iv id="ordersView" class="view">
-        <iv class="orders-container">
+    <div id="ordersView" class="view">
+        <div class="orders-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">My Orders</h1>
-            <iv id="ordersList"></iv>
-        </iv>
-    </iv>
+            <div id="ordersList"></div>
+        </div>
+    </div>
 
     <!-- ADMIN DASHBOARD VIEW -->
-    <iv id="adminView" class="view">
-        <iv class="admin-container">
+    <div id="adminView" class="view">
+        <div class="admin-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">Admin Dashboard</h1>
 
             <!-- STATS -->
-            <iv class="stats-grid" id="statsGrid"></iv>
+            <div class="stats-grid" id="statsGrid"></div>
 
             <!-- RECENT ORDERS -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Recent Orders</h2>
@@ -1780,409 +1780,409 @@
 
             <!-- SERVICE HEALTH -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Service Health</h2>
-            <iv class="health-panel" id="healthPanel"></iv>
-        </iv>
-    </iv>
+            <div class="health-panel" id="healthPanel"></div>
+        </div>
+    </div>
 
     <!-- PRODUCT DETAIL MODAL -->
-    <iv class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
-        <iv class="modal" onclick="event.stopPropagation()">
-            <iv class="modal-header">
+    <div class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Product Details</h2>
                 <button class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
-            </iv>
-            <iv class="modal-body" id="productDetailContent"></iv>
-        </iv>
-    </iv>
+            </div>
+            <div class="modal-body" id="productDetailContent"></div>
+        </div>
+    </div>
 
     <!-- CART SIDEBAR -->
-    <iv class="cart-sidebar" id="cartSidebar">
-        <iv class="cart-header">
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
             <h2 class="modal-title">Shopping Cart</h2>
             <button class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></button>
-        </iv>
-        <iv class="cart-body" id="cartItems"></iv>
-        <iv class="cart-summary">
-            <iv class="summary-row">
+        </div>
+        <div class="cart-body" id="cartItems"></div>
+        <div class="cart-summary">
+            <div class="summary-row">
                 <span>Subtotal</span>
                 <span id="subtotal">₹0</span>
-            </iv>
-            <iv class="summary-row" id="discountRow" style="display: none;">
+            </div>
+            <div class="summary-row" id="discountRow" style="display: none;">
                 <span>Discount (10%)</span>
                 <span id="discountAmount">-₹0</span>
-            </iv>
-            <iv class="summary-row">
+            </div>
+            <div class="summary-row">
                 <span>GST (18%)</span>
                 <span id="gstAmount">₹0</span>
-            </iv>
-            <iv class="summary-row total">
+            </div>
+            <div class="summary-row total">
                 <span>Total</span>
                 <span id="totalAmount">₹0</span>
-            </iv>
-        </iv>
-        <iv class="cart-footer">
+            </div>
+        </div>
+        <div class="cart-footer">
             <button class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</button>
-            <iv class="continue-shopping" onclick="toggleCart()">Continue Shopping</iv>
-        </iv>
-    </iv>
+            <div class="continue-shopping" onclick="toggleCart()">Continue Shopping</div>
+        </div>
+    </div>
 
     <!-- CHECKOUT MODAL -->
-    <iv class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
-        <iv class="modal checkout-modal" onclick="event.stopPropagation()">
-            <iv class="modal-header">
+    <div class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
+        <div class="modal checkout-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Checkout</h2>
                 <button class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></button>
-            </iv>
+            </div>
 
             <!-- PROGRESS BAR -->
-            <iv class="progress-bar">
-                <iv class="progress-step active" id="step1Indicator">
-                    <iv class="progress-circle">1</iv>
-                    <iv>Address</iv>
-                </iv>
-                <iv class="progress-step" id="step2Indicator">
-                    <iv class="progress-circle">2</iv>
-                    <iv>Payment</iv>
-                </iv>
-                <iv class="progress-step" id="step3Indicator">
-                    <iv class="progress-circle">3</iv>
-                    <iv>Review</iv>
-                </iv>
-                <iv class="progress-step" id="step4Indicator">
-                    <iv class="progress-circle">4</iv>
-                    <iv>Confirm</iv>
-                </iv>
-            </iv>
+            <div class="progress-bar">
+                <div class="progress-step active" id="step1Indicator">
+                    <div class="progress-circle">1</div>
+                    <div>Address</div>
+                </div>
+                <div class="progress-step" id="step2Indicator">
+                    <div class="progress-circle">2</div>
+                    <div>Payment</div>
+                </div>
+                <div class="progress-step" id="step3Indicator">
+                    <div class="progress-circle">3</div>
+                    <div>Review</div>
+                </div>
+                <div class="progress-step" id="step4Indicator">
+                    <div class="progress-circle">4</div>
+                    <div>Confirm</div>
+                </div>
+            </div>
 
-            <iv class="modal-body">
+            <div class="modal-body">
                 <!-- STEP 1: ADDRESS -->
-                <iv id="checkoutStep1" class="checkout-step">
+                <div id="checkoutStep1" class="checkout-step">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Delivery Address</h3>
                     <form class="checkout-form" id="addressForm">
-                        <iv class="form-row">
-                            <iv class="form-group">
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Full Name</label>
                                 <input type="text" id="fullName" required>
-                            </iv>
-                            <iv class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Phone</label>
                                 <input type="tel" id="phone" required>
-                            </iv>
-                        </iv>
-                        <iv class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Email</label>
                             <input type="email" id="email" required>
-                        </iv>
-                        <iv class="form-row">
-                            <iv class="form-group">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Pincode</label>
                                 <input type="text" id="pincode" required>
-                            </iv>
-                            <iv class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">City</label>
                                 <input type="text" id="city" required>
-                            </iv>
-                        </iv>
-                        <iv class="form-row">
-                            <iv class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">State</label>
                                 <input type="text" id="state" required>
-                            </iv>
-                        </iv>
-                        <iv class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Address Line 1</label>
                             <input type="text" id="address1" required>
-                        </iv>
-                        <iv class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Address Line 2</label>
                             <input type="text" id="address2">
-                        </iv>
+                        </div>
                     </form>
-                </iv>
+                </div>
 
                 <!-- STEP 2: PAYMENT -->
-                <iv id="checkoutStep2" class="checkout-step" style="display: none;">
+                <div id="checkoutStep2" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Payment Method</h3>
 
-                    <iv class="payment-tabs">
+                    <div class="payment-tabs">
                         <button class="payment-tab active" onclick="switchPaymentTab('card')">Card</button>
                         <button class="payment-tab" onclick="switchPaymentTab('upi')">UPI</button>
                         <button class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</button>
                         <button class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</button>
-                    </iv>
+                    </div>
 
                     <!-- CARD TAB -->
-                    <iv id="paymentCard" class="payment-content">
-                        <iv class="card-preview">
-                            <iv class="card-front" id="cardFront">
-                                <iv style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div id="paymentCard" class="payment-content">
+                        <div class="card-preview">
+                            <div class="card-front" id="cardFront">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                     <span style="font-size: 24px; font-weight: 700;">💳</span>
                                     <span id="cardType" style="font-size: 12px;">VISA</span>
-                                </iv>
-                                <iv class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</iv>
-                                <iv class="card-bottom">
-                                    <iv>
-                                        <iv class="card-holder">CARDHOLDER</iv>
-                                        <iv id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</iv>
-                                    </iv>
-                                    <iv>
-                                        <iv class="card-holder">VALID THRU</iv>
-                                        <iv id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</iv>
-                                    </iv>
-                                </iv>
-                            </iv>
-                        </iv>
-                        <iv class="form-group">
+                                </div>
+                                <div class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+                                <div class="card-bottom">
+                                    <div>
+                                        <div class="card-holder">CARDHOLDER</div>
+                                        <div id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</div>
+                                    </div>
+                                    <div>
+                                        <div class="card-holder">VALID THRU</div>
+                                        <div id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Card Number</label>
                             <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </iv>
-                        <iv class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Cardholder Name</label>
                             <input type="text" id="cardHolder" placeholder="John Doe">
-                        </iv>
-                        <iv class="form-row">
-                            <iv class="form-group">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Expiry (MM/YY)</label>
                                 <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5">
-                            </iv>
-                            <iv class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">CVV</label>
                                 <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-                            </iv>
-                        </iv>
-                    </iv>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- UPI TAB -->
-                    <iv id="paymentUpi" class="payment-content" style="display: none;">
-                        <iv class="form-group">
+                    <div id="paymentUpi" class="payment-content" style="display: none;">
+                        <div class="form-group">
                             <label class="form-label">UPI ID</label>
                             <input type="text" id="upiId" placeholder="yourname@paytm">
-                        </iv>
+                        </div>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or use UPI apps:</h4>
-                        <iv class="upi-options">
+                        <div class="upi-options">
                             <button type="button" class="upi-btn">PhonePe</button>
                             <button type="button" class="upi-btn">Google Pay</button>
                             <button type="button" class="upi-btn">Paytm</button>
-                        </iv>
+                        </div>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or scan QR code:</h4>
-                        <iv class="qr-placeholder">📱 Scan QR Code</iv>
-                    </iv>
+                        <div class="qr-placeholder">📱 Scan QR Code</div>
+                    </div>
 
                     <!-- NET BANKING TAB -->
-                    <iv id="paymentNetbanking" class="payment-content" style="display: none;">
+                    <div id="paymentNetbanking" class="payment-content" style="display: none;">
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Select your bank:</h4>
-                        <iv class="bank-grid">
+                        <div class="bank-grid">
                             <button type="button" class="bank-btn">SBI</button>
                             <button type="button" class="bank-btn">HDFC</button>
                             <button type="button" class="bank-btn">ICICI</button>
                             <button type="button" class="bank-btn">Axis</button>
                             <button type="button" class="bank-btn">Kotak</button>
                             <button type="button" class="bank-btn">Yes Bank</button>
-                        </iv>
-                    </iv>
+                        </div>
+                    </div>
 
                     <!-- COD TAB -->
-                    <iv id="paymentCod" class="payment-content" style="display: none;">
+                    <div id="paymentCod" class="payment-content" style="display: none;">
                         <p style="margin-bottom: 16px;">Pay when your order is delivered</p>
-                        <iv class="cod-notice">
+                        <div class="cod-notice">
                             <strong>₹40 COD fee</strong> will be applicable for Cash on Delivery orders
-                        </iv>
-                    </iv>
-                </iv>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- STEP 3: REVIEW -->
-                <iv id="checkoutStep3" class="checkout-step" style="display: none;">
+                <div id="checkoutStep3" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Order Review</h3>
-                    <iv id="reviewContent"></iv>
-                </iv>
+                    <div id="reviewContent"></div>
+                </div>
 
                 <!-- STEP 4: CONFIRMATION -->
-                <iv id="checkoutStep4" class="checkout-step" style="display: none;">
-                    <iv class="confirmation-container">
-                        <iv class="checkmark">
+                <div id="checkoutStep4" class="checkout-step" style="display: none;">
+                    <div class="confirmation-container">
+                        <div class="checkmark">
                             <i class="fas fa-check"></i>
-                        </iv>
+                        </div>
                         <h2>Order Placed Successfully!</h2>
                         <p style="margin-bottom: 20px; color: #666;">Thank you for your purchase</p>
-                        <iv class="order-id" id="confirmationOrderId">#ORD-000000</iv>
-                        <iv class="delivery-info">
+                        <div class="order-id" id="confirmationOrderId">#ORD-000000</div>
+                        <div class="delivery-info">
                             <p>✓ Your order will be delivered in 3-5 business days</p>
                             <p style="margin-top: 8px;">📅 Estimated delivery: <span id="estimatedDelivery"></span></p>
-                        </iv>
-                    </iv>
-                </iv>
-            </iv>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <iv class="modal-footer">
+            <div class="modal-footer">
                 <button class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</button>
                 <button class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</button>
-            </iv>
-        </iv>
-    </iv>
+            </div>
+        </div>
+    </div>
 
     <!-- AUTH MODAL -->
-    <iv class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
-        <iv class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
-            <iv class="modal-header">
+    <div class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
+        <div class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Account</h2>
                 <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-            </iv>
-            <iv class="modal-body">
-                <iv class="auth-tabs">
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
                     <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
                     <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
-                </iv>
+                </div>
 
                 <!-- LOGIN FORM -->
                 <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-                    <iv id="loginError" class="auth-error" style="display: none;"></iv>
-                    <iv class="form-group">
+                    <div id="loginError" class="auth-error" style="display: none;"></div>
+                    <div class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="loginEmail" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="loginPassword" required>
-                    </iv>
+                    </div>
                     <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</button>
-                    <iv class="forgot-password">Forgot password?</iv>
+                    <div class="forgot-password">Forgot password?</div>
                 </form>
 
                 <!-- REGISTER FORM -->
                 <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
-                    <iv id="registerError" class="auth-error" style="display: none;"></iv>
-                    <iv class="form-group">
+                    <div id="registerError" class="auth-error" style="display: none;"></div>
+                    <div class="form-group">
                         <label class="form-label">Full Name</label>
                         <input type="text" id="registerName" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="registerEmail" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Phone</label>
                         <input type="tel" id="registerPhone" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="registerPassword" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Confirm Password</label>
                         <input type="password" id="registerConfirm" required>
-                    </iv>
+                    </div>
                     <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
                 </form>
-            </iv>
-        </iv>
-    </iv>
+            </div>
+        </div>
+    </div>
 
     <!-- TRACKING MODAL -->
-    <iv class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
-        <iv class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <iv class="modal-header">
+    <div class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
+        <div class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Order Tracking</h2>
                 <button class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></button>
-            </iv>
-            <iv class="modal-body">
-                <iv id="trackingContent" class="tracking-timeline"></iv>
-            </iv>
-        </iv>
-    </iv>
+            </div>
+            <div class="modal-body">
+                <div id="trackingContent" class="tracking-timeline"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- ADD PRODUCT MODAL -->
-    <iv class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
-        <iv class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <iv class="modal-header">
+    <div class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
+        <div class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Add Product</h2>
                 <button class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></button>
-            </iv>
-            <iv class="modal-body">
+            </div>
+            <div class="modal-body">
                 <form id="addProductForm" class="checkout-form" onsubmit="submitAddProduct(event)">
-                    <iv class="form-group">
+                    <div class="form-group">
                         <label class="form-label">Product Name</label>
                         <input type="text" id="productNameInput" required>
-                    </iv>
-                    <iv class="form-row">
-                        <iv class="form-group">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">Category</label>
                             <input type="text" id="productCategoryInput" required>
-                        </iv>
-                        <iv class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Brand</label>
                             <input type="text" id="productBrandInput" required>
-                        </iv>
-                    </iv>
-                    <iv class="form-row">
-                        <iv class="form-group">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">Price (₹)</label>
                             <input type="number" id="productPriceInput" required>
-                        </iv>
-                        <iv class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Original Price (₹)</label>
                             <input type="number" id="productOriginalInput" required>
-                        </iv>
-                    </iv>
-                    <iv class="form-group">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Stock</label>
                         <input type="number" id="productStockInput" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Emoji</label>
                         <input type="text" id="productEmojiInput" placeholder="📱" required>
-                    </iv>
-                    <iv class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Description</label>
                         <textarea id="productDescriptionInput" required></textarea>
-                    </iv>
+                    </div>
                 </form>
-            </iv>
-            <iv class="modal-footer">
+            </div>
+            <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeAddProductModal()">Cancel</button>
                 <button class="btn-primary" onclick="submitAddProduct()">Add Product</button>
-            </iv>
-        </iv>
-    </iv>
+            </div>
+        </div>
+    </div>
 
     <!-- FOOTER -->
     <footer class="footer">
-        <iv class="footer-content">
-            <iv class="footer-section">
+        <div class="footer-content">
+            <div class="footer-section">
                 <h3>About ShopNow</h3>
                 <ul>
                     <li><a href="#">About Us</a></li>
                     <li><a href="#">Careers</a></li>
                     <li><a href="#">Press</a></li>
                 </ul>
-            </iv>
-            <iv class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Help & Support</h3>
                 <ul>
                     <li><a href="#">Contact Us</a></li>
                     <li><a href="#">FAQs</a></li>
                     <li><a href="#">Shipping Info</a></li>
                 </ul>
-            </iv>
-            <iv class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Policies</h3>
                 <ul>
                     <li><a href="#">Privacy Policy</a></li>
                     <li><a href="#">Terms & Conditions</a></li>
                     <li><a href="#">Return Policy</a></li>
                 </ul>
-            </iv>
-            <iv class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Connect With Us</h3>
                 <ul>
                     <li><a href="#">Facebook</a></li>
                     <li><a href="#">Twitter</a></li>
                     <li><a href="#">Instagram</a></li>
                 </ul>
-            </iv>
-        </iv>
-        <iv class="footer-bottom">
+            </div>
+        </div>
+        <div class="footer-bottom">
             <p>&copy; 2026 ShopNow. All rights reserved. | Built with for online shopping</p>
-        </iv>
+        </div>
     </footer>
 
     <script>
@@ -2305,28 +2305,28 @@
             const fallbackHtml = `<span class="img-fallback" style="display:${imgSrc.startsWith('http') ? 'none' : 'flex'}">${imgSrc || '📦'}</span>`;
 
             return `
-                <iv class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
-                    <iv class="product-image">${imgHtml}${fallbackHtml}</iv>
-                    <iv class="product-name">${product.name}</iv>
-                    <iv class="product-brand">${product.brand || 'Brand'}</iv>
-                    <iv class="product-price-row">
+                <div class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
+                    <div class="product-image">${imgHtml}${fallbackHtml}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-brand">${product.brand || 'Brand'}</div>
+                    <div class="product-price-row">
                         <span class="product-price">₹${product.price}</span>
                         <span class="product-original">₹${product.original_price}</span>
                         <span class="product-discount">${discount}% OFF</span>
-                    </iv>
-                    <iv class="product-rating">
+                    </div>
+                    <div class="product-rating">
                         <span class="stars">${'★'.repeat(Math.floor(rating))}</span>
                         <span>(${reviews})</span>
-                    </iv>
-                    <iv class="product-buttons" onclick="event.stopPropagation()">
+                    </div>
+                    <div class="product-buttons" onclick="event.stopPropagation()">
                         <button class="btn-sm btn-cart" onclick="addToCart(${product.id})">
                             <i class="fas fa-shopping-cart"></i> Add
                         </button>
                         <button class="btn-sm btn-view" onclick="showProductDetail(${product.id})">
                             Quick View
                         </button>
-                    </iv>
-                </iv>
+                    </div>
+                </div>
             `;
         }
 
@@ -2348,50 +2348,50 @@
             const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
             const content = `
                 <iv class="product-detail-modal">
-                    <iv class="product-detail-image">${detailImgHtml}${detailFallback}</iv>
-                    <iv class="product-detail-content">
+                    <div class="product-detail-image">${detailImgHtml}${detailFallback}</div>
+                    <div class="product-detail-content">
                         <h2>${product.name}</h2>
-                        <iv class="product-detail-brand">${product.brand || 'Brand'}</iv>
-                        <iv class="product-detail-price">
+                        <div class="product-detail-brand">${product.brand || 'Brand'}</div>
+                        <div class="product-detail-price">
                             <span class="price">₹${product.price}</span>
                             <span style="text-decoration: line-through; color: #999;">₹${product.original_price}</span>
                             <span style="background: var(--success); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${discount}% OFF</span>
-                        </iv>
-                        <iv class="product-detail-stock ${stockClass}">${stockStatus}</iv>
-                        <iv style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        </div>
+                        <div class="product-detail-stock ${stockClass}">${stockStatus}</div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                             <span class="stars" style="font-size: 16px;">${'★'.repeat(Math.floor(rating))}</span>
                             <span style="color: #999; font-size: 14px;">${rating} (${product.reviews || 128})</span>
-                        </iv>
-                        <iv class="product-detail-description">
+                        </div>
+                        <div class="product-detail-description">
                             ${product.description || 'Premium quality product with excellent features and durability.'}
-                        </iv>
-                        <iv class="product-detail-buttons">
+                        </div>
+                        <div class="product-detail-buttons">
                             <button class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
                             </button>
                             <button class="btn-accent" onclick="addToCart(${product.id}); closeProductModal(); startCheckout()">
                                 <i class="fas fa-bolt"></i> Buy Now
                             </button>
-                        </iv>
-                        <iv class="reviews-section">
+                        </div>
+                        <div class="reviews-section">
                             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Reviews</h3>
-                            <iv class="review-item">
-                                <iv class="review-header">
+                            <div class="review-item">
+                                <div class="review-header">
                                     <span><strong>John Doe</strong> - 5★</span>
                                     <span style="font-size: 11px; color: #999;">2 days ago</span>
-                                </iv>
-                                <iv class="review-text">Excellent product! Highly recommended.</iv>
-                            </iv>
-                            <iv class="review-item">
-                                <iv class="review-header">
+                                </div>
+                                <div class="review-text">Excellent product! Highly recommended.</div>
+                            </div>
+                            <div class="review-item">
+                                <div class="review-header">
                                     <span><strong>Jane Smith</strong> - 4★</span>
                                     <span style="font-size: 11px; color: #999;">1 week ago</span>
-                                </iv>
-                                <iv class="review-text">Good quality and fast delivery.</iv>
-                            </iv>
-                        </iv>
-                    </iv>
-                </iv>
+                                </div>
+                                <div class="review-text">Good quality and fast delivery.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
 
             document.getElementById('productDetailContent').innerHTML = content;
@@ -2505,22 +2505,22 @@
 
             const cartItems = document.getElementById('cartItems');
             if (cart.length === 0) {
-                cartItems.innerHTML = '<iv class="empty-state"><iv class="empty-state-icon">🛒</iv><iv class="empty-state-title">Your cart is empty</iv></iv>';
+                cartItems.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><div class="empty-state-title">Your cart is empty</div></div>';
             } else {
                 cartItems.innerHTML = cart.map(item => `
-                    <iv class="cart-item">
-                        <iv class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</iv>
-                        <iv class="cart-item-info">
-                            <iv class="cart-item-name">${item.name}</iv>
-                            <iv class="cart-item-price">₹${item.price}</iv>
-                            <iv class="cart-item-qty">
+                    <div class="cart-item">
+                        <div class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</div>
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-price">₹${item.price}</div>
+                            <div class="cart-item-qty">
                                 <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
                                 <span style="min-width: 30px; text-align: center;">${item.quantity}</span>
                                 <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
                                 <span class="cart-remove" onclick="removeFromCart(${item.id})">Remove</span>
-                            </iv>
-                        </iv>
-                    </iv>
+                            </div>
+                        </div>
+                    </div>
                 `).join('');
             }
 
@@ -2767,22 +2767,22 @@
             const total = subtotal - discount + gst;
 
             const itemsHtml = checkoutData.items.map(item => `
-                <iv style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                    <iv style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                    <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
                         ${(item.image||'').startsWith('http') ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}
-                    </iv>
-                    <iv style="flex:1;">
-                        <iv style="font-weight: 600; font-size:13px;">${item.name}</iv>
-                        <iv style="font-size: 12px; color: #999;">Qty: ${item.quantity}</iv>
-                    </iv>
-                    <iv style="text-align: right;">
-                        <iv style="font-weight: 600;">₹${item.price * item.quantity}</iv>
-                    </iv>
-                </iv>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight: 600; font-size:13px;">${item.name}</div>
+                        <div style="font-size: 12px; color: #999;">Qty: ${item.quantity}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600;">₹${item.price * item.quantity}</div>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('reviewContent').innerHTML = `
-                <iv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Delivery Address</h4>
                     <p style="font-size: 13px; line-height: 1.6;">
                         ${checkoutData.address.fullName}<br>
@@ -2790,34 +2790,34 @@
                         ${checkoutData.address.state}<br>
                         <strong>Phone:</strong> ${checkoutData.address.phone}
                     </p>
-                </iv>
+                </div>
 
-                <iv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Payment Method</h4>
                     <p style="font-size: 13px; text-transform: capitalize;">${selectedPaymentMethod}</p>
-                </iv>
+                </div>
 
                 <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Order Items</h4>
                 ${itemsHtml}
 
-                <iv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                    <iv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Subtotal</span>
                         <span>₹${subtotal}</span>
-                    </iv>
-                    ${currentUser ? `<iv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </div>
+                    ${currentUser ? `<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Discount (10%)</span>
                         <span>-₹${Math.round(discount)}</span>
-                    </iv>` : ''}
-                    <iv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </div>` : ''}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>GST (18%)</span>
                         <span>₹${Math.round(gst)}</span>
-                    </iv>
-                    <iv style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
                         <span>Total</span>
                         <span>₹${Math.round(total)}</span>
-                    </iv>
-                </iv>
+                    </div>
+                </div>
             `;
         }
 
@@ -2926,18 +2926,18 @@
             };
 
             const html = orders.map(order => `
-                <iv class="order-card">
-                    <iv class="order-info">
-                        <iv class="order-id-text">${order.id}</iv>
-                        <iv class="order-date">${order.date.toLocaleDateString()}</iv>
-                        <iv class="order-items">${order.items} items</iv>
+                <div class="order-card">
+                    <div class="order-info">
+                        <div class="order-id-text">${order.id}</div>
+                        <div class="order-date">${order.date.toLocaleDateString()}</div>
+                        <div class="order-items">${order.items} items</div>
                         <span class="order-status ${statusColors[order.status] || 'status-placed'}">${order.status.toUpperCase()}</span>
-                    </iv>
-                    <iv class="order-total">₹${order.total}</iv>
-                    <iv class="order-actions">
+                    </div>
+                    <div class="order-total">₹${order.total}</div>
+                    <div class="order-actions">
                         <button class="btn-primary" onclick="showTracking('${order.id}')">Track</button>
-                    </iv>
-                </iv>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('ordersList').innerHTML = html;
@@ -2955,14 +2955,14 @@
             ];
 
             const html = steps.map((step, i) => `
-                <iv class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
-                    <iv class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</iv>
-                    ${i < steps.length - 1 ? '<iv class="tracking-line"></iv>' : ''}
-                    <iv class="tracking-content">
-                        <iv class="tracking-title">${step.title}</iv>
-                        <iv class="tracking-date">${new Date().toLocaleDateString()}</iv>
-                    </iv>
-                </iv>
+                <div class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
+                    <div class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</div>
+                    ${i < steps.length - 1 ? '<div class="tracking-line"></div>' : ''}
+                    <div class="tracking-content">
+                        <div class="tracking-title">${step.title}</div>
+                        <div class="tracking-date">${new Date().toLocaleDateString()}</div>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('trackingContent').innerHTML = html;
@@ -2984,22 +2984,22 @@
             showView('adminView');
 
             const statsHtml = `
-                <iv class="stat-card">
-                    <iv class="stat-value">120</iv>
-                    <iv class="stat-label">Total Products</iv>
-                </iv>
-                <iv class="stat-card">
-                    <iv class="stat-value">1024</iv>
-                    <iv class="stat-label">Total Orders</iv>
-                </iv>
-                <iv class="stat-card">
-                    <iv class="stat-value">₹12,50,000</iv>
-                    <iv class="stat-label">Total Revenue</iv>
-                </iv>
-                <iv class="stat-card">
-                    <iv class="stat-value">485</iv>
-                    <iv class="stat-label">Registered Users</iv>
-                </iv>
+                <div class="stat-card">
+                    <div class="stat-value">120</div>
+                    <div class="stat-label">Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1024</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹12,50,000</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">485</div>
+                    <div class="stat-label">Registered Users</div>
+                </div>
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
@@ -3023,10 +3023,10 @@
                 { name: 'User Service', status: 'online' },
                 { name: 'Payment Service', status: 'online' }
             ].map(service => `
-                <iv class="health-item">
-                    <iv class="health-dot ${service.status}"></iv>
+                <div class="health-item">
+                    <div class="health-dot ${service.status}"></div>
                     <span>${service.name}</span>
-                </iv>
+                </div>
             `).join('');
             document.getElementById('healthPanel').innerHTML = healthHtml;
         }
@@ -3069,7 +3069,7 @@
 
         // TOAST NOTIFICATIONS
         function showToast(message, type = 'info') {
-            const toast = document.createElement('iv');
+            const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
             document.body.appendChild(toast);
