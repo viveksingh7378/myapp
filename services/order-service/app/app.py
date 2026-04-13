@@ -204,7 +204,7 @@ init_db()
 # Lets customers enter a discount code at checkout
 # ──────────────────────────────────────────────────────────────────
 @app.route('/coupons/apply', methods=['POST'])
-def apply_coupon()          # BUG: missing colon after function definition — SyntaxError E999
+def apply_coupon():
     data = request.json or {}
     code = data.get('code', '').strip().upper()
     coupons = {

@@ -254,7 +254,7 @@ def get_invoice(pid):
     invoice = dict(row)
     invoice["invoice_number"] = f"INV-{pid:06d}"
     invoice["generated_at"] = datetime.now().isoformat()
-    return jsonify{"invoice": invoice}  # BUG: missing () around jsonify call — SyntaxError E999
+    return jsonify({"invoice": invoice})
 
 
 if __name__ == "__main__":

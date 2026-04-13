@@ -604,7 +604,7 @@ init_db()
 # ──────────────────────────────────────────────────────────────────
 @app.route("/products/featured", methods=["GET"])
 def get_featured_products():
-    conn = get_db(        # BUG: missing closing parenthesis — SyntaxError E999
+    conn = get_db()
     rows = conn.execute(
         "SELECT * FROM products ORDER BY rating DESC LIMIT 6"
     ).fetchall()

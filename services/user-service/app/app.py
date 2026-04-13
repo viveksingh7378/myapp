@@ -208,7 +208,7 @@ init_db()
 # Allows a logged-in user to update their account password
 # ──────────────────────────────────────────────────────────────────
 @app.route("/users/<int:uid>/change-password", methods=["PUT"])
-def change_password(uid)    # BUG: missing colon after function definition — SyntaxError E999
+def change_password(uid):
     data = request.json or {}
     new_password = data.get("password", "")
     if not new_password or len(new_password) < 6:
