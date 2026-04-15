@@ -782,6 +782,40 @@ def git_commit_and_push(fixed_files, summary):
     push_env = os.environ.copy()
     push_env["GIT_TERMINAL_PROMPT"] = "0"
     print("  ✓ HTTP Authorization header configured")
+    print(f"  Token preview: {github_token[:4]}{'*' * (len(github_token) - 4)}")
+
+    # ── Pre-push auth test — verify token BEFORE making a commit ─────
+    # If this fails you'll see the real error (403, network, etc.) without
+    # leaving behind an un-pushable local commit.
+    print("  Testing auth with git ls-remote ...")
+    ls = subprocess.run(
+        ["git", "ls-remote", "--heads", "origin"],
+        capture_output=True,
+        text=True,
+        cwd=PROJECT_ROOT,
+        env=push_env,
+    )
+    if ls.returncode != 0:
+        err = (ls.stderr + ls.stdout).strip()
+        print(f"  ✗ Auth test FAILED — {err}")
+        if "403" in err:
+            print("  → Token lacks 'Contents: Write' permission on this repo.")
+            print("    Fix: GitHub → Settings → Developer settings → Personal access tokens")
+            print("    Classic PAT: enable 'repo' scope")
+            print("    Fine-grained PAT: enable 'Contents: Read and Write'")
+        elif "401" in err or "authentication" in err.lower():
+            print("  → Token is invalid or expired — regenerate it in GitHub")
+        elif "Could not resolve" in err or "Network" in err:
+            print("  → Cannot reach github.com from Jenkins — check network/proxy")
+        else:
+            print("  → Unknown error — see above for details")
+        # Cleanup before returning
+        subprocess.run(
+            ["git", "config", "--unset", "http.https://github.com/.extraHeader"],
+            cwd=PROJECT_ROOT,
+        )
+        return False
+    print("  ✓ Auth test passed — token is valid and can reach GitHub")
 
     # ── Git identity (required for commit) ────────────────────────────
     subprocess.run(
@@ -817,12 +851,17 @@ def git_commit_and_push(fixed_files, summary):
     print(f"  ✓ Committed: {msg}")
 
     # ── Push ──────────────────────────────────────────────────────────
+    # GIT_CURL_VERBOSE=1 prints the full HTTP conversation on failure,
+    # making it easy to see proxy errors, 403 responses, etc.
+    verbose_env = push_env.copy()
+    verbose_env["GIT_CURL_VERBOSE"] = "1"
+
     push = subprocess.run(
         ["git", "push", "origin", "HEAD:main"],
         capture_output=True,
         text=True,
         cwd=PROJECT_ROOT,
-        env=push_env,
+        env=verbose_env,
     )
 
     # Always clean up the auth header from git config after push attempt
@@ -835,12 +874,31 @@ def git_commit_and_push(fixed_files, summary):
         print("AI Analyzer: ✅ Pushed fix to GitHub ✓")
         return True
 
-    err = push.stderr.strip()
-    print(f"AI Analyzer: Push failed — {err}")
-    if "403" in err or "Permission denied" in err:
-        print("  → Check that GITHUB_TOKEN has 'Contents: Write' permission")
-    elif "Bad hostname" in err or "Could not resolve" in err:
-        print("  → Network issue — check internet/proxy on Jenkins machine")
+    # Print FULL output so Jenkins console shows the exact HTTP response
+    err = (push.stderr + "\n" + push.stdout).strip()
+    print(f"AI Analyzer: ✗ Push FAILED (exit {push.returncode})")
+    print("──── git push output ────")
+    print(err)
+    print("─────────────────────────")
+    if "403" in err:
+        print("  → CAUSE: 403 Forbidden")
+        print("    Most common reasons:")
+        print("    1. GITHUB_TOKEN missing/wrong in Jenkins Credentials store")
+        print("    2. Token lacks write permission — needs 'repo' scope (classic PAT)")
+        print("       or 'Contents: Read and Write' (fine-grained PAT)")
+        print("    3. Branch protection rule blocks direct push to main")
+        print("       Fix: GitHub repo → Settings → Branches → disable 'Require PR'")
+    elif "401" in err or "authentication failed" in err.lower():
+        print("  → CAUSE: 401 Unauthorized — token invalid or expired")
+        print("    Fix: regenerate token at github.com → Settings → Developer settings")
+    elif "rejected" in err and "non-fast-forward" in err:
+        print("  → CAUSE: Remote main has commits the local branch does not")
+        print("    Fix: the next build will pick up the latest and push cleanly")
+    elif "Could not resolve" in err or "Network" in err or "proxy" in err.lower():
+        print("  → CAUSE: Network/proxy blocking GitHub access from Jenkins machine")
+        print("    Fix: run this on the Jenkins machine:")
+        print("      git config --global http.proxy http://PROXY_HOST:PORT")
+        print("      git config --global https.proxy http://PROXY_HOST:PORT")
     return False
 
 

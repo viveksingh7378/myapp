@@ -55,6 +55,37 @@ pipeline {
                             git config http.https://github.com/.extraHeader "Authorization: Basic ${B64}"
                         '''
 
+                        // ── Quick token smoke-test before running the analyzer ──────────
+                        // Prints the exact HTTP code so you can diagnose push failures fast.
+                        sh '''
+                            echo "=== GitHub Token Verification ==="
+                            CLEAN_TOKEN=$(printf '%s' "${GITHUB_TOKEN}" | tr -cd 'A-Za-z0-9_-')
+                            TOKEN_LEN=$(printf '%s' "${CLEAN_TOKEN}" | wc -c | tr -d ' ')
+                            TOKEN_PREVIEW=$(printf '%s' "${CLEAN_TOKEN}" | cut -c1-4)
+                            echo "  Token length : ${TOKEN_LEN} chars"
+                            echo "  Token preview: ${TOKEN_PREVIEW}****"
+                            HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+                                   -H "Authorization: Bearer ${CLEAN_TOKEN}" \
+                                   https://api.github.com/repos/viveksingh7378/myapp)
+                            echo "  GitHub API   : HTTP ${HTTP}"
+                            if [ "${HTTP}" = "200" ]; then
+                                echo "  ✅ Token is VALID — repo is accessible"
+                            elif [ "${HTTP}" = "403" ]; then
+                                echo "  ⚠  HTTP 403 — token lacks write access"
+                                echo "     Fix: GitHub → Settings → Developer settings → Personal access tokens"
+                                echo "     Classic PAT: enable repo scope"
+                                echo "     Fine-grained PAT: Contents = Read and Write"
+                            elif [ "${HTTP}" = "401" ]; then
+                                echo "  ✗  HTTP 401 — token is invalid or expired, please regenerate it"
+                            elif [ "${HTTP}" = "000" ]; then
+                                echo "  ✗  HTTP 000 — cannot reach github.com (proxy / network issue)"
+                                echo "     Fix on Jenkins machine: git config --global http.proxy http://PROXY:PORT"
+                            else
+                                echo "  ?  Unexpected HTTP ${HTTP}"
+                            fi
+                            echo "=================================="
+                        '''
+
                         def code = sh(
                             script: '''
                                 GEMINI_API_KEY=$GEMINI_API_KEY \
