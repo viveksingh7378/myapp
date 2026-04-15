@@ -1,0 +1,125 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+#  ShopEasy E-Commerce — Docker Compose (AWS EC2 deployment)
+#  Pull latest images from DockerHub and run all services.
+#
+#  Usage:
+#    docker compose pull          # pull latest images
+#    docker compose up -d         # start everything
+#    docker compose logs -f       # tail logs
+#    docker compose down          # stop everything
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Frontend ──────────────────────────────────────────────
+  frontend:
+    image: vivek7378/frontend:latest
+    container_name: frontend
+    ports:
+      - "80:80"          # serve on port 80 so users visit http://EC2_IP
+    depends_on:
+      - product-service
+      - order-service
+      - user-service
+      - payment-service
+    restart: unless-stopped
+    networks:
+      - shopeasy
+
+  # ── Product Service ───────────────────────────────────────
+  product-service:
+    image: vivek7378/product-service:latest
+    container_name: product-service
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - DB_PATH=/data/products.db
+    volumes:
+      - product_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - shopeasy
+
+  # ── Order Service ─────────────────────────────────────────
+  order-service:
+    image: vivek7378/order-service:latest
+    container_name: order-service
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_ENV=production
+      - DB_PATH=/data/orders.db
+    volumes:
+      - order_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - shopeasy
+
+  # ── User Service ──────────────────────────────────────────
+  user-service:
+    image: vivek7378/user-service:latest
+    container_name: user-service
+    ports:
+      - "5003:5003"
+    environment:
+      - FLASK_ENV=production
+      - DB_PATH=/data/users.db
+    volumes:
+      - user_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - shopeasy
+
+  # ── Payment Service ───────────────────────────────────────
+  payment-service:
+    image: vivek7378/payment-service:latest
+    container_name: payment-service
+    ports:
+      - "5004:5004"
+    environment:
+      - FLASK_ENV=production
+      - DB_PATH=/data/payments.db
+    volumes:
+      - payment_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - shopeasy
+
+# ── Persistent volumes (SQLite DB files survive restarts) ──
+volumes:
+  product_data:
+  order_data:
+  user_data:
+  payment_data:
+
+# ── Internal network ───────────────────────────────────────
+networks:
+  shopeasy:
+    driver: bridge
