@@ -612,7 +612,7 @@ def get_featured_products():
     return jsonify({
         "featured": [dict(r) for r in rows],
         "count": len(rows)
-    })
+    }), 200
 
 
 if __name__ == "__main__":
