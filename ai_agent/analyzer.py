@@ -1112,6 +1112,96 @@ def local_syntax_check():
                         if _auto_fix_html_structure(full_path, rel_path, struct_errors):
                             auto_fixed_files.add(rel_path)
 
+                    # ── Invalid tag bulk-replace ──────────────────────
+                    # Detect every non-standard HTML tag in the file.
+                    # For each invalid tag we can confidently map to a
+                    # real tag (e.g. <jt> → <div>), replace ALL occurrences
+                    # in one pass — never call the AI for this, it will only
+                    # fix a few lines at a time and leave the rest broken.
+                    all_tags = set(_re.findall(r"</?([A-Za-z][A-Za-z0-9-]*)", html_content))
+                    invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS}
+
+                    if invalid_tags:
+                        # Build a substitution map: guess the correct tag.
+                        # Rules (in priority order):
+                        #   1. If ALL the invalid tag's CSS classes match .div rules → div
+                        #   2. If it wraps only inline content / is self-contained → span
+                        #   3. Default → div  (block-level is almost always the intent)
+                        sub_map = {}
+                        for bad_tag in invalid_tags:
+                            # Collect all class names this tag is ever given
+                            classes_used = set(
+                                c
+                                for m in _re.finditer(
+                                    rf'<{_re.escape(bad_tag)}[^>]*class="([^"]*)"',
+                                    html_content, _re.IGNORECASE,
+                                )
+                                for c in m.group(1).split()
+                            )
+                            # Check which of those classes are styled as inline
+                            inline_css_hint = False
+                            for css_block in css_blocks:
+                                for cls in classes_used:
+                                    if _re.search(
+                                        rf'\.{_re.escape(cls)}\s*\{{[^}}]*display\s*:\s*inline',
+                                        css_block,
+                                    ):
+                                        inline_css_hint = True
+                            sub_map[bad_tag.lower()] = "span" if inline_css_hint else "div"
+
+                        # Apply all substitutions in one pass and report
+                        fixed_content = html_content
+                        total_replaced = 0
+                        for bad_tag, good_tag in sub_map.items():
+                            # opening tags:  <jt  →  <div   (preserve attributes)
+                            new_content, n1 = _re.subn(
+                                rf"(?i)<{_re.escape(bad_tag)}(\s|>|/>)",
+                                lambda m, g=good_tag: f"<{g}{m.group(1)}",
+                                fixed_content,
+                            )
+                            # closing tags:  </jt>  →  </div>
+                            new_content, n2 = _re.subn(
+                                rf"(?i)</{_re.escape(bad_tag)}>",
+                                f"</{good_tag}>",
+                                new_content,
+                            )
+                            fixed_content = new_content
+                            total_replaced += n1 + n2
+                            if n1 + n2:
+                                msg = (
+                                    f"Invalid HTML tag <{bad_tag}> used throughout file "
+                                    f"({n1} opening + {n2} closing tags replaced with <{good_tag}>)"
+                                )
+                                findings.append({
+                                    "file": rel_path,
+                                    "tool": "html-invalid-tag",
+                                    "error": msg,
+                                })
+                                print(f"  ✗ {rel_path}: {msg}")
+
+                        if total_replaced > 0:
+                            with open(full_path, "w", encoding="utf-8") as f:
+                                f.write(fixed_content)
+
+                            # Validate the result before marking as fixed
+                            ok, reason = validate_html_fix(rel_path)
+                            if ok:
+                                # Update html_content so subsequent checks see fixed state
+                                html_content = fixed_content
+                                auto_fixed_files.add(rel_path)
+                                print(
+                                    f"  ✓ Auto-fixed {total_replaced} invalid tag(s) "
+                                    f"in {rel_path} — no AI needed"
+                                )
+                            else:
+                                # Revert to the ORIGINAL pre-fix content
+                                with open(full_path, "w", encoding="utf-8") as f:
+                                    f.write(html_content)  # html_content still holds original
+                                print(
+                                    f"  ⚠ Invalid-tag fix did not fully resolve {rel_path}: "
+                                    f"{reason} — will pass to AI"
+                                )
+
                     # Inline JS check
                     js_blocks = _re.findall(
                         r"<script[^>]*>(.*?)</script>", html_content, _re.DOTALL
