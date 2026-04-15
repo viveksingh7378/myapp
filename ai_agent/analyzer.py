@@ -188,6 +188,24 @@ RULES FOR ALL ACTIONS:
   • DO NOT invent file paths — only report issues in files shown above between the === markers
 
 ════════════════════════════════════════
+ABSOLUTE RULES — NEVER BREAK THESE:
+
+  ❌ NEVER rename, replace, or invent HTML tag names.
+     <div>, <span>, <p>, <section> etc. must remain exactly as they are.
+     Do NOT change <div> to <jt>, <dv>, <iv>, <dt>, or ANY other tag.
+     Do NOT introduce ANY tag name that is not a standard HTML5 element.
+     If a closing tag is wrong (e.g. </jt>), the fix is </div> — restore
+     the ORIGINAL correct tag, never invent a new one.
+
+  ❌ NEVER remove or rename existing opening or closing HTML tags.
+     Only fix the SPECIFIC broken character (e.g. missing colon, bracket).
+
+  ❌ NEVER fix what is not broken. If a line has no error, do not touch it.
+
+  ❌ NEVER produce a fixed_line that contains a made-up tag such as <jt>,
+     <dv>, <iv>, <dt>, <ht>, <bt>, or anything not in the HTML5 standard.
+
+════════════════════════════════════════
 Return ONLY raw JSON — no markdown, no code fences.
 
 If no errors found:
@@ -1132,6 +1150,94 @@ def local_syntax_check():
     return findings, auto_fixed_files
 
 
+# ── HTML post-fix validator ───────────────────────────────────────
+# Called after the AI applies fixes to an HTML file.
+# If Gemini hallucinated invalid tag names (e.g. <jt>, <iv>) or broke
+# the div balance / skeleton structure, we catch it here and REVERT.
+
+# Complete set of valid HTML5 element names (covers 99 % of real usage).
+_VALID_HTML_TAGS = {
+    "a", "abbr", "address", "area", "article", "aside", "audio",
+    "b", "base", "bdi", "bdo", "blockquote", "body", "br", "button",
+    "canvas", "caption", "cite", "code", "col", "colgroup",
+    "data", "datalist", "dd", "del", "details", "dfn", "dialog",
+    "div", "dl", "dt",
+    "em", "embed",
+    "fieldset", "figcaption", "figure", "footer", "form",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "head", "header", "hgroup", "hr", "html",
+    "i", "iframe", "img", "input", "ins",
+    "kbd", "label", "legend", "li", "link",
+    "main", "map", "mark", "menu", "meta", "meter",
+    "nav", "noscript",
+    "object", "ol", "optgroup", "option", "output",
+    "p", "picture", "pre", "progress",
+    "q", "rp", "rt", "ruby",
+    "s", "samp", "script", "section", "select", "small",
+    "source", "span", "strong", "style", "sub", "summary", "sup",
+    "table", "tbody", "td", "template", "textarea", "tfoot",
+    "th", "thead", "time", "title", "tr", "track",
+    "u", "ul", "var", "video", "wbr",
+    # SVG elements that legitimately appear inside HTML
+    "svg", "path", "circle", "rect", "line", "polygon",
+    "polyline", "ellipse", "text", "tspan", "g", "defs",
+    "use", "symbol", "clippath", "lineargradient",
+    "radialgradient", "stop", "mask", "pattern", "filter",
+    "feblend", "fecolormatrix", "fecomposite", "feconvolvematrix",
+    "fediffuselighting", "fedisplacementmap", "feflood",
+    "fegaussianblur", "feimage", "femerge", "femorphology",
+    "feoffset", "fespecularlighting", "fetile", "feturbulence",
+}
+
+
+def validate_html_fix(rel_path):
+    """
+    Validate an HTML file after the AI has applied fixes.
+    Returns (ok: bool, reason: str).
+
+    Checks:
+      1. No unknown / hallucinated tag names (e.g. <jt>, <iv>)
+      2. <div> open/close count is balanced
+      3. Required skeleton tags are present (DOCTYPE, html, head, body)
+    """
+    import re as _re
+
+    full_path = os.path.join(PROJECT_ROOT, rel_path)
+    try:
+        with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+    except OSError as e:
+        return False, f"Cannot read file: {e}"
+
+    # ── 1. Unknown tag check ──────────────────────────────────────
+    # Extract every <tagname ...> and </tagname> — skip comments and DOCTYPE
+    tag_names = _re.findall(r"</?([A-Za-z][A-Za-z0-9-]*)", content)
+    unknown = {t for t in tag_names if t.lower() not in _VALID_HTML_TAGS}
+    if unknown:
+        return False, (
+            f"AI introduced invalid/unknown HTML tag(s): {sorted(unknown)}. "
+            "This is a hallucination — reverting the file."
+        )
+
+    # ── 2. <div> balance check ────────────────────────────────────
+    div_opens  = len(_re.findall(r"<div[\s>]", content, _re.IGNORECASE))
+    div_closes = content.lower().count("</div>")
+    if div_opens != div_closes:
+        return False, (
+            f"<div> imbalance after fix: {div_opens} open vs {div_closes} close. "
+            "Reverting."
+        )
+
+    # ── 3. Required skeleton tags ─────────────────────────────────
+    lower = content.lower()
+    for needle in ("<!doctype", "<html", "</html>", "<head", "</head>",
+                   "<body", "</body>"):
+        if needle not in lower:
+            return False, f"Required tag '{needle}' missing after fix — reverting."
+
+    return True, "OK"
+
+
 def main():
     print("=" * 60)
     print("AI Code Analyzer — Powered by Google Gemini")
@@ -1264,17 +1370,68 @@ def main():
             by_file[issue["file_path"]].append(issue)
 
     for file_path, file_issues in by_file.items():
+
+        # ── Snapshot the file BEFORE any changes ─────────────────
+        # If our post-fix validation fails we restore this backup,
+        # so a bad AI fix can never be committed to GitHub.
+        full_path = os.path.join(PROJECT_ROOT, file_path)
+        try:
+            with open(full_path, "r", encoding="utf-8", errors="replace") as _f:
+                _original_content = _f.read()
+        except OSError:
+            _original_content = None
+
         # reverse order: insertions/replacements at higher line numbers first
         # so that earlier line numbers are not shifted
+        file_applied = 0
         for issue in sorted(
             file_issues, key=lambda x: x.get("line_number", 0), reverse=True
         ):
             result = apply_fix(issue)
             if result is not False:
-                fixed_files.add(file_path)
+                file_applied += 1
                 applied += 1
                 # Record for the summary table
                 applied_fixes.append({**issue, "line_found": result})
+
+        if file_applied == 0:
+            continue  # nothing changed for this file — skip validation
+
+        # ── Post-fix validation gate ──────────────────────────────
+        # For Python: re-compile to catch introduced syntax errors.
+        # For HTML:   check tag names, div balance, skeleton tags.
+        # If validation fails → REVERT to original and skip this file.
+        revert_reason = None
+
+        if file_path.endswith(".py"):
+            r = subprocess.run(
+                [sys.executable, "-m", "py_compile", full_path],
+                capture_output=True, text=True,
+            )
+            if r.returncode != 0:
+                revert_reason = f"py_compile failed: {r.stderr.strip()}"
+
+        elif file_path.endswith((".html", ".htm")):
+            ok, reason = validate_html_fix(file_path)
+            if not ok:
+                revert_reason = reason
+
+        if revert_reason:
+            print(f"\n  ✗ POST-FIX VALIDATION FAILED for {file_path}:")
+            print(f"    Reason : {revert_reason}")
+            if _original_content is not None:
+                with open(full_path, "w", encoding="utf-8") as _f:
+                    _f.write(_original_content)
+                print(f"    Action : File REVERTED to original — will NOT be committed")
+            else:
+                print(f"    Action : Could not revert (no backup) — file may be broken")
+            # Subtract the fixes we just "applied" — they're now undone
+            applied -= file_applied
+            applied_fixes = [x for x in applied_fixes
+                             if x.get("file_path") != file_path]
+        else:
+            fixed_files.add(file_path)
+            print(f"  ✓ Post-fix validation passed for {file_path}")
 
     # Print the full summary diff table after all fixes
     print_fix_summary(applied_fixes)
@@ -1290,7 +1447,8 @@ def main():
             print("Lint and Test stages will catch real errors ✓")
         sys.exit(0)
 
-    # Step 6: verify Python files compile cleanly
+    # Step 6: verify Python files compile cleanly (second pass — catches
+    # any files the per-file gate above may have missed, e.g. local fixes)
     print("\nStep 5: Verifying Python syntax on modified files...")
     syntax_ok = True
     for fp in fixed_files:
