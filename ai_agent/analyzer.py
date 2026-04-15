@@ -68,7 +68,7 @@ def split_into_chunks(content, rel_path):
             overlap_line -= 1
             overlap_chars += len(lines[overlap_line])
 
-        start_line = max(end_line - max(1, end_line - overlap_line), end_line)
+        start_line = overlap_line
         # If we didn't advance, force forward to avoid infinite loop
         if start_line <= (chunk_idx - 1) * (end_line - start_line):
             start_line = end_line
