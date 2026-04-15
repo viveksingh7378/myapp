@@ -205,7 +205,7 @@ init_db()
 # ──────────────────────────────────────────────────────────────────
 @app.route('/coupons/apply', methods=['POST'])
 def apply_coupon():
-    data = request.json or {}
+    data = request.json() or {}
     code = data.get('code', '').strip().upper()
     coupons = {
         'SAVE10': 10,
