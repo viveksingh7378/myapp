@@ -2347,7 +2347,7 @@
                 : ``;
             const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
             const content = `
-                <iv class="product-detail-modal">
+                <div class="product-detail-modal">
                     <div class="product-detail-image">${detailImgHtml}${detailFallback}</div>
                     <div class="product-detail-content">
                         <h2>${product.name}</h2>
@@ -2392,6 +2392,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             `;
 
             document.getElementById('productDetailContent').innerHTML = content;
