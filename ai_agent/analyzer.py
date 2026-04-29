@@ -1240,7 +1240,7 @@ def local_syntax_check():
                     # in one pass — never call the AI for this, it will only
                     # fix a few lines at a time and leave the rest broken.
                     all_tags = set(_re.findall(r"</?([A-Za-z][A-Za-z0-9-]*)", html_content))
-                    invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS}
+                    invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS} # Refers to a constant defined later
 
                     if invalid_tags:
                         # Build a substitution map: guess the correct tag.
