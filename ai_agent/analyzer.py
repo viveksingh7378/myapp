@@ -1233,121 +1233,103 @@ def local_syntax_check():
                         if _auto_fix_html_structure(full_path, rel_path, struct_errors):
                             auto_fixed_files.add(rel_path)
 
-                    # ── Invalid tag bulk-replace ──────────────────────
-                    # Detect every non-standard HTML tag in the file.
-                    # For each invalid tag we can confidently map to a
-                    # real tag (e.g. <jt> → <div>), replace ALL occurrences
-                    # in one pass — never call the AI for this, it will only
-                    # fix a few lines at a time and leave the rest broken.
+                    # ── Invalid tag detection (NO local auto-fix) ─────
+                    # Detect every non-standard HTML tag in the file and
+                    # REPORT it. By default we DO NOT auto-replace these
+                    # locally — the AI (Gemini/Ollama) gets to see the raw
+                    # HTML and propose the correct fix with full context.
+                    # That way <riv> becomes <div> (its true intent), not
+                    # <span> (a layout-breaking heuristic guess).
+                    #
+                    # Set env var LOCAL_AUTOFIX_INVALID_TAGS=1 to bring back
+                    # the old fuzzy-match auto-fix as a fallback when the AI
+                    # is unavailable (e.g. Gemini quota exhausted).
                     all_tags = set(_re.findall(r"</?([A-Za-z][A-Za-z0-9-]*)", html_content))
-                    invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS} # Refers to a constant defined later
+                    invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS}
 
                     if invalid_tags:
-                        # Build a substitution map: guess the correct tag.
-                        # PRIORITY 1 — fuzzy-match against valid tags. If the
-                        # bad tag is a near-typo of a real one (riv≈div,
-                        # rivton≈button, dvi≈div), recover the ORIGINAL tag
-                        # rather than collapsing everything to <span>. This
-                        # preserves layout when users do find/replace edits.
-                        # PRIORITY 2 — fall back to CSS-display heuristic only
-                        # when no plausible recovery exists.
-                        import difflib as _difflib
-
-                        sub_map = {}
-                        for bad_tag in invalid_tags:
-                            bad_lower = bad_tag.lower()
-
-                            # Try fuzzy recovery first. Cutoff 0.6 catches
-                            # 1-3 char typos against tags like "div" or
-                            # "button" without producing nonsense matches.
-                            # Cutoff 0.6 catches single-char typos cleanly
-                            # (riv→div, dvi→div, but→button, secton→section)
-                            # without false matches like aaa→data or
-                            # rivton→strong. Longer typos that miss the
-                            # cutoff fall through to the CSS heuristic
-                            # below, which now correctly defaults to <div>
-                            # (block-level, layout-safe).
-                            close = _difflib.get_close_matches(
-                                bad_lower, _VALID_HTML_TAGS, n=1, cutoff=0.6,
+                        # Always REPORT every invalid tag (with line numbers
+                        # so the AI prompt and the human reader both know).
+                        for bad_tag in sorted(invalid_tags):
+                            # Find first line where the bad tag appears, for
+                            # easier debugging in the Jenkins log.
+                            first_line = None
+                            for ln_num, ln in enumerate(html_content.splitlines(), 1):
+                                if _re.search(rf"</?{_re.escape(bad_tag)}\b", ln, _re.I):
+                                    first_line = ln_num
+                                    break
+                            msg = (
+                                f"Non-standard HTML tag <{bad_tag}> detected"
+                                + (f" (first at line {first_line})" if first_line else "")
+                                + " — sending to AI for analysis"
                             )
-                            if close:
-                                sub_map[bad_lower] = close[0]
-                                continue
+                            findings.append({
+                                "file": rel_path,
+                                "tool": "html-invalid-tag",
+                                "error": msg,
+                            })
+                            print(f"  ✗ {rel_path}: {msg}")
 
-                            # No close match — fall back to CSS heuristic.
-                            classes_used = set(
-                                c
-                                for m in _re.finditer(
-                                    rf'<{_re.escape(bad_tag)}[^>]*class="([^"]*)"',
-                                    html_content, _re.IGNORECASE,
+                        # Optional fallback: only auto-fix if explicitly enabled.
+                        if os.environ.get("LOCAL_AUTOFIX_INVALID_TAGS") == "1":
+                            print(
+                                f"  ℹ LOCAL_AUTOFIX_INVALID_TAGS=1 set — "
+                                f"applying fuzzy-match auto-fix as fallback"
+                            )
+                            import difflib as _difflib
+
+                            sub_map = {}
+                            for bad_tag in invalid_tags:
+                                bad_lower = bad_tag.lower()
+                                close = _difflib.get_close_matches(
+                                    bad_lower, _VALID_HTML_TAGS, n=1, cutoff=0.6,
                                 )
-                                for c in m.group(1).split()
-                            )
-                            inline_css_hint = False
-                            for css_block in css_blocks:
-                                for cls in classes_used:
-                                    # Require word-boundary after "inline"
-                                    # so we don't false-match inline-block
-                                    # or inline-flex (both block-level).
-                                    if _re.search(
-                                        rf'\.{_re.escape(cls)}\s*\{{[^}}]*display\s*:\s*inline\s*[;}}]',
-                                        css_block,
-                                    ):
-                                        inline_css_hint = True
-                            sub_map[bad_lower] = "span" if inline_css_hint else "div"
+                                if close:
+                                    sub_map[bad_lower] = close[0]
+                                    continue
+                                # No close match — default to <div> (block-level,
+                                # layout-safe) so a failed guess doesn't collapse
+                                # the page into inline text.
+                                sub_map[bad_lower] = "div"
 
-                        # Apply all substitutions in one pass and report
-                        fixed_content = html_content
-                        total_replaced = 0
-                        for bad_tag, good_tag in sub_map.items():
-                            # opening tags:  <jt  →  <div   (preserve attributes)
-                            new_content, n1 = _re.subn(
-                                rf"(?i)<{_re.escape(bad_tag)}(\s|>|/>)",
-                                lambda m, g=good_tag: f"<{g}{m.group(1)}",
-                                fixed_content,
-                            )
-                            # closing tags:  </jt>  →  </div>
-                            new_content, n2 = _re.subn(
-                                rf"(?i)</{_re.escape(bad_tag)}>",
-                                f"</{good_tag}>",
-                                new_content,
-                            )
-                            fixed_content = new_content
-                            total_replaced += n1 + n2
-                            if n1 + n2:
-                                msg = (
-                                    f"Invalid HTML tag <{bad_tag}> used throughout file "
-                                    f"({n1} opening + {n2} closing tags replaced with <{good_tag}>)"
+                            fixed_content = html_content
+                            total_replaced = 0
+                            for bad_tag, good_tag in sub_map.items():
+                                new_content, n1 = _re.subn(
+                                    rf"(?i)<{_re.escape(bad_tag)}(\s|>|/>)",
+                                    lambda m, g=good_tag: f"<{g}{m.group(1)}",
+                                    fixed_content,
                                 )
-                                findings.append({
-                                    "file": rel_path,
-                                    "tool": "html-invalid-tag",
-                                    "error": msg,
-                                })
-                                print(f"  ✗ {rel_path}: {msg}")
-
-                        if total_replaced > 0:
-                            with open(full_path, "w", encoding="utf-8") as f:
-                                f.write(fixed_content)
-
-                            # Validate the result before marking as fixed
-                            ok, reason = validate_html_fix(rel_path)
-                            if ok:
-                                # Update html_content so subsequent checks see fixed state
-                                html_content = fixed_content
-                                auto_fixed_files.add(rel_path)
-                                print(
-                                    f"  ✓ Auto-fixed {total_replaced} invalid tag(s) "
-                                    f"in {rel_path} — no AI needed"
+                                new_content, n2 = _re.subn(
+                                    rf"(?i)</{_re.escape(bad_tag)}>",
+                                    f"</{good_tag}>",
+                                    new_content,
                                 )
-                            else:
-                                # Revert to the ORIGINAL pre-fix content
+                                fixed_content = new_content
+                                total_replaced += n1 + n2
+                                if n1 + n2:
+                                    print(
+                                        f"    fallback: <{bad_tag}> → <{good_tag}> "
+                                        f"({n1} open + {n2} close)"
+                                    )
+
+                            if total_replaced > 0:
                                 with open(full_path, "w", encoding="utf-8") as f:
-                                    f.write(html_content)  # html_content still holds original
-                                print(
-                                    f"  ⚠ Invalid-tag fix did not fully resolve {rel_path}: "
-                                    f"{reason} — will pass to AI"
-                                )
+                                    f.write(fixed_content)
+                                ok, reason = validate_html_fix(rel_path)
+                                if ok:
+                                    html_content = fixed_content
+                                    auto_fixed_files.add(rel_path)
+                                    print(
+                                        f"  ✓ Fallback auto-fix applied to {rel_path}"
+                                    )
+                                else:
+                                    with open(full_path, "w", encoding="utf-8") as f:
+                                        f.write(html_content)
+                                    print(
+                                        f"  ⚠ Fallback auto-fix did not validate "
+                                        f"({reason}) — reverted; AI will retry"
+                                    )
 
                     # Inline JS check
                     js_blocks = _re.findall(
