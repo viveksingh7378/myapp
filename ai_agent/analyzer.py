@@ -25,13 +25,20 @@ SKIP_FILES = {
     "test_output.txt",
     "lint_output.txt",
     "trivy-report.json",
+    ".ai_analyzer_cache.json",
 }
 ANALYZE_EXTS = {".py", ".html", ".htm", ".js", ".css", ".json"}
 
-# Max chars sent to AI per chunk — keep below Gemini's context limit
-MAX_CHUNK_CHARS = 80000
+# Max chars sent to AI per chunk. Raised from 80k → 300k so a 113 KB HTML file
+# fits in a single Gemini call instead of two — halving API quota usage.
+# Gemini 2.5-flash accepts ~1M tokens (~3M chars) so we have huge headroom.
+MAX_CHUNK_CHARS = 300000
 # If a file exceeds this, split it into overlapping chunks so no line is missed
 CHUNK_OVERLAP = 2000  # overlap between chunks to catch errors at split boundaries
+
+# Cache of file hashes that have already been analyzed cleanly.
+# Saves a Gemini call on every subsequent run for files that haven't changed.
+CACHE_FILE = os.path.join(PROJECT_ROOT, ".ai_analyzer_cache.json")
 
 
 # ── Collect source files (with chunking for large files) ─────────
@@ -77,13 +84,97 @@ def split_into_chunks(content, rel_path):
     return chunks
 
 
+def _changed_files_from_git():
+    """
+    Return the set of relpaths changed between HEAD~1 and HEAD.
+    Returns None if git is unavailable or the env var AI_ANALYZER_FULL_SCAN=1 is set,
+    meaning the caller should fall back to walking the whole project.
+
+    This is the biggest single optimization for free-tier Gemini quota:
+    a typical PR touches 1-3 files, not 30, so we cut API calls by ~90%.
+    """
+    if os.environ.get("AI_ANALYZER_FULL_SCAN") == "1":
+        return None
+    try:
+        r = subprocess.run(
+            ["git", "-C", PROJECT_ROOT, "diff", "--name-only", "HEAD~1", "HEAD"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if r.returncode != 0:
+            return None
+        changed = {ln.strip() for ln in r.stdout.splitlines() if ln.strip()}
+        return changed
+    except Exception:
+        return None
+
+
+def _file_sha256(content):
+    import hashlib
+    return hashlib.sha256(content.encode("utf-8", errors="replace")).hexdigest()
+
+
+def load_clean_cache():
+    """Load {rel_path: sha256} of files previously found clean by the AI."""
+    try:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_clean_cache(cache):
+    try:
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2)
+    except Exception as e:
+        print(f"  Warning: could not write {CACHE_FILE} — {e}")
+
+
+def _update_clean_cache_for(files_dict, dirty_paths):
+    """
+    For each rel_path in files_dict that is NOT in dirty_paths, record its
+    current sha256 in the clean cache. Re-reads from disk so we cache the
+    POST-fix content (in case a file was just fixed and is now clean).
+    """
+    cache = load_clean_cache()
+    seen = set()
+    for meta in files_dict.values():
+        rp = meta["rel_path"]
+        if rp in seen or rp in dirty_paths:
+            continue
+        seen.add(rp)
+        full_path = os.path.join(PROJECT_ROOT, rp)
+        try:
+            with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+                cache[rp] = _file_sha256(f.read())
+        except OSError:
+            continue
+    save_clean_cache(cache)
+
+
 def collect_files():
     """
-    Collect all source files. Large files are split into chunks so the AI
-    sees every line — no more silent truncation in the middle of a file.
+    Collect source files for AI analysis. Honors two free-tier optimizations:
+      1. git-diff filter: only scan files changed in HEAD~1..HEAD (skipped if no git
+         history or AI_ANALYZER_FULL_SCAN=1 is set).
+      2. file-hash cache: skip files whose sha256 matches a previous clean run.
+    Large files are still split into chunks so the AI sees every line.
     Returns dict: label → {"rel_path": ..., "line_start": ..., "content": ...}
     """
     file_map = {}
+
+    changed_set = _changed_files_from_git()
+    if changed_set is not None:
+        print(
+            f"  ⚡ git-diff filter active — scanning {len(changed_set)} changed file(s)"
+            " (set AI_ANALYZER_FULL_SCAN=1 to force full scan)"
+        )
+    else:
+        print("  ⚡ Full project scan (no git history available)")
+
+    cache = load_clean_cache()
+    skipped_cached = 0
 
     for dirpath, dirnames, filenames in os.walk(PROJECT_ROOT):
         dirnames[:] = [
@@ -97,9 +188,19 @@ def collect_files():
                 continue
             full_path = os.path.join(dirpath, filename)
             rel_path = os.path.relpath(full_path, PROJECT_ROOT)
+
+            # git-diff filter: skip files unchanged in this commit
+            if changed_set is not None and rel_path not in changed_set:
+                continue
+
             try:
                 with open(full_path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
+
+                # file-hash cache: skip files we've already verified clean
+                if cache.get(rel_path) == _file_sha256(content):
+                    skipped_cached += 1
+                    continue
 
                 if len(content) <= MAX_CHUNK_CHARS:
                     # Small file — send as-is
@@ -123,6 +224,9 @@ def collect_files():
 
             except Exception as e:
                 print(f"  Warning: could not read {rel_path} — {e}")
+
+    if skipped_cached:
+        print(f"  ⚡ Skipped {skipped_cached} file(s) — sha256 matches clean cache")
 
     return file_map
 
@@ -240,16 +344,21 @@ def call_gemini_analyze(prompt):
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    # Ordered by capability; includes multiple fallbacks across model families.
-    # gemini-2.0-flash-exp removed — returns 404 (model retired).
-    # gemini-1.5-flash / gemini-1.5-pro added as stable low-quota fallbacks.
+    # Order: HIGHER free-tier quota first, escalate to stronger-but-rarer models
+    # only if the cheap ones can't handle it. Free-tier daily caps (approx):
+    #   2.0-flash-lite : 1500/day   ← lead with this for routine runs
+    #   1.5-flash      : 1500/day
+    #   2.0-flash      : 200/day
+    #   2.5-flash      : 20/day     ← was first; burned the quota immediately
+    #   2.5-pro        : 5/day
+    #   1.5-pro        : 50/day
     models = [
-        "gemini-2.5-flash",
-        "gemini-2.5-pro",
-        "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
         "gemini-1.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
         "gemini-1.5-pro",
+        "gemini-2.5-pro",
     ]
 
     # Track how many models hit 503 vs 429 vs hard errors
@@ -344,7 +453,19 @@ def call_ollama_analyze(prompt):
         "Your ENTIRE response must start with { and end with }. "
         "Any response that is not pure JSON will be rejected.\n\n"
     )
-    ollama_prompt = json_instruction + prompt
+
+    # Strip the "ABSOLUTE RULES" section from the prompt before handing to Ollama.
+    # Smaller open models read that section as "do nothing" and stay silent on
+    # real bugs (e.g. <div> swapped for <but>). Gemini handles the nuance fine;
+    # Ollama needs the simpler instruction set.
+    import re as _re_strip
+    cleaned_prompt = _re_strip.sub(
+        r"════════════════════════════════════════\nABSOLUTE RULES.*?(?=════════════════════════════════════════)",
+        "",
+        prompt,
+        flags=_re_strip.DOTALL,
+    )
+    ollama_prompt = json_instruction + cleaned_prompt
 
     # codellama on CPU can take 3-5 min for a large prompt — give it enough time.
     # Other lighter models get a shorter timeout so we don't stall the pipeline.
@@ -1399,6 +1520,8 @@ def main():
 
     if analysis.get("status") == "clean" or not analysis.get("issues"):
         print("AI Analyzer: No syntax errors found by AI.")
+        # Persist clean-cache so next run skips these files (saves Gemini calls).
+        _update_clean_cache_for(files, dirty_paths=set())
         if local_fixed_files:
             print(f"  Pushing {len(local_fixed_files)} local auto-fix(es) to GitHub...")
             summary = "auto-fix: HTML structural errors repaired by local checker"
@@ -1527,6 +1650,10 @@ def main():
     print_fix_summary(applied_fixes)
     print(f"Applied {applied} fix(es) across {len(fixed_files)} file(s)")
 
+    # Cache files we just verified clean (those NOT modified by the AI), so
+    # subsequent runs can skip them entirely and conserve Gemini quota.
+    _update_clean_cache_for(files, dirty_paths=fixed_files)
+
     if applied == 0:
         print("AI Analyzer: No valid AI fixes could be applied.")
         if local_fixed_files:
@@ -1570,6 +1697,9 @@ def main():
     committed = git_commit_and_push(list(fixed_files), summary)
 
     if committed:
+        # Cache the POST-FIX hashes of files we just repaired, so the next run
+        # treats them as clean and doesn't re-spend Gemini quota on them.
+        _update_clean_cache_for(files, dirty_paths=set())
         print("\nAI Analyzer: Self-healing complete ✓")
         sys.exit(1)
     else:
