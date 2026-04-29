@@ -43,7 +43,7 @@
             color: var(--primary);
         }
 
-        rivton {
+        button {
             font-family: 'Poppins', sans-serif;
             cursor: pointer;
             border: none;
@@ -120,7 +120,7 @@
             margin: 0;
         }
 
-        .search-bar rivton {
+        .search-bar button {
             background: transparent;
             color: var(--primary);
             padding: 0;
@@ -400,7 +400,7 @@
             color: var(--warning);
         }
 
-        .product-rivtons {
+        .product-buttons {
             display: flex;
             gap: 8px;
         }
@@ -592,7 +592,7 @@
             color: #666;
         }
 
-        .product-detail-rivtons {
+        .product-detail-buttons {
             display: flex;
             gap: 12px;
             margin: 24px 0;
@@ -1500,7 +1500,7 @@
                 grid-template-columns: 1fr;
             }
 
-            .product-detail-rivtons {
+            .product-detail-buttons {
                 flex-direction: column;
             }
 
@@ -1615,93 +1615,93 @@
 
     <!-- HEADER -->
     <header class="header">
-        <span class="header-left">
-            <span class="logo" onclick="showHome()">
+        <div class="header-left">
+            <div class="logo" onclick="showHome()">
                 <span>🛍️</span>
                 <span>ShopNow</span>
-            </span>
-            <span class="search-bar">
+            </div>
+            <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="Search products, brands...">
-                <span onclick="performSearch()"><i class="fas fa-search"></i></span>
-            </span>
-        </span>
-        <span class="header-right">
-            <span class="header-icon" onclick="toggleCart()">
+                <button onclick="performSearch()"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon" onclick="toggleCart()">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
-            </span>
-            <span class="header-icon" id="userIcon" onclick="showAuthModal()">
+            </div>
+            <div class="header-icon" id="userIcon" onclick="showAuthModal()">
                 <i class="fas fa-user"></i>
-            </span>
-            <span class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
+            </div>
+            <div class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
                 <i class="fas fa-chart-bar"></i>
-            </span>
-            <span class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
+            </div>
+            <div class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
                 <i class="fas fa-box"></i>
-            </span>
-        </span>
+            </div>
+        </div>
     </header>
 
     <!-- HOME VIEW -->
-    <span id="homeView" class="view active">
+    <div id="homeView" class="view active">
         <!-- HERO BANNER -->
-        <span class="hero slide-1" id="heroBanner">
-            <span class="hero-content">
+        <div class="hero slide-1" id="heroBanner">
+            <div class="hero-content">
                 <h1>Discover Amazing Deals</h1>
                 <p>Shop from thousands of products at unbeatable prices</p>
-                <span class="btn-primary" onclick="scrollToProducts()">Shop Now</span>
-            </span>
-        </span>
+                <button class="btn-primary" onclick="scrollToProducts()">Shop Now</button>
+            </div>
+        </div>
 
         <!-- CATEGORIES -->
-        <span class="categories" id="categoriesBar"></span>
+        <div class="categories" id="categoriesBar"></div>
 
         <!-- DEAL OF THE DAY -->
-        <span class="section">
-            <span style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
-                <span>
+        <div class="section">
+            <div style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔥 Deal of the Day</h3>
                     <p style="font-size: 14px; opacity: 0.9;">Limited time offers on premium products</p>
-                </span>
-                <span style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</span>
-            </span>
-        </span>
+                </div>
+                <div style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</div>
+            </div>
+        </div>
 
         <!-- FEATURED PRODUCTS -->
-        <span class="section">
+        <div class="section">
             <h2 class="section-title">
                 <i class="fas fa-star"></i>
                 Featured Products
             </h2>
-            <span class="product-grid" id="productGrid"></span>
-        </span>
-    </span>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+    </div>
 
     <!-- PRODUCT LISTING VIEW -->
-    <span id="listingView" class="view">
-        <span style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
+    <div id="listingView" class="view">
+        <div style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
             <!-- FILTERS SIDEBAR -->
-            <span style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
+            <div style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
                 <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px;">Filters</h3>
 
                 <!-- CATEGORIES FILTER -->
-                <span style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Category</h4>
-                    <span style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></span>
-                </span>
+                    <div style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></div>
+                </div>
 
                 <!-- PRICE RANGE FILTER -->
-                <span style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Price Range</h4>
                     <input type="range" id="priceFilter" min="0" max="100000" step="1000" style="width: 100%; cursor: pointer;">
-                    <span style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
                         <span>₹0</span>
                         <span id="priceValue">₹100000</span>
-                    </span>
-                </span>
+                    </div>
+                </div>
 
                 <!-- RATING FILTER -->
-                <span style="margin-bottom: 24px;">
+                <div style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Min Rating</h4>
                     <select id="ratingFilter" style="width: 100%;">
                         <option value="0">All ratings</option>
@@ -1709,14 +1709,14 @@
                         <option value="3">3★ & above</option>
                         <option value="2">2★ & above</option>
                     </select>
-                </span>
+                </div>
 
-                <span onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</span>
-            </span>
+                <button onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</button>
+            </div>
 
             <!-- PRODUCTS -->
-            <span>
-                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="font-size: 20px; font-weight: 700;">Products</h2>
                     <select id="sortFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
                         <option value="relevance">Relevance</option>
@@ -1725,27 +1725,27 @@
                         <option value="rating">Top Rated</option>
                         <option value="popular">Most Popular</option>
                     </select>
-                </span>
-                <span class="product-grid" id="listingProductGrid"></span>
-            </span>
-        </span>
-    </span>
+                </div>
+                <div class="product-grid" id="listingProductGrid"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- MY ORDERS VIEW -->
-    <span id="ordersView" class="view">
-        <span class="orders-container">
+    <div id="ordersView" class="view">
+        <div class="orders-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">My Orders</h1>
-            <span id="ordersList"></span>
-        </span>
-    </span>
+            <div id="ordersList"></div>
+        </div>
+    </div>
 
     <!-- ADMIN DASHBOARD VIEW -->
-    <span id="adminView" class="view">
-        <span class="admin-container">
+    <div id="adminView" class="view">
+        <div class="admin-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">Admin Dashboard</h1>
 
             <!-- STATS -->
-            <span class="stats-grid" id="statsGrid"></span>
+            <div class="stats-grid" id="statsGrid"></div>
 
             <!-- RECENT ORDERS -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Recent Orders</h2>
@@ -1764,7 +1764,7 @@
 
             <!-- PRODUCTS MANAGEMENT -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Products Management</h2>
-            <span class="btn-accent" onclick="showAddProductModal()" style="margin-bottom: 20px;">+ Add Product</span>
+            <button class="btn-accent" onclick="showAddProductModal()" style="margin-bottom: 20px;">+ Add Product</button>
             <table class="admin-table" id="productsTable">
                 <thead>
                     <tr>
@@ -1780,409 +1780,409 @@
 
             <!-- SERVICE HEALTH -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Service Health</h2>
-            <span class="health-panel" id="healthPanel"></span>
-        </span>
-    </span>
+            <div class="health-panel" id="healthPanel"></div>
+        </div>
+    </div>
 
     <!-- PRODUCT DETAIL MODAL -->
-    <span class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
-        <span class="modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <div class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Product Details</h2>
-                <span class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body" id="productDetailContent"></span>
-        </span>
-    </span>
+                <button class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="productDetailContent"></div>
+        </div>
+    </div>
 
     <!-- CART SIDEBAR -->
-    <span class="cart-sidebar" id="cartSidebar">
-        <span class="cart-header">
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
             <h2 class="modal-title">Shopping Cart</h2>
-            <span class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></span>
-        </span>
-        <span class="cart-body" id="cartItems"></span>
-        <span class="cart-summary">
-            <span class="summary-row">
+            <button class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-body" id="cartItems"></div>
+        <div class="cart-summary">
+            <div class="summary-row">
                 <span>Subtotal</span>
                 <span id="subtotal">₹0</span>
-            </span>
-            <span class="summary-row" id="discountRow" style="display: none;">
+            </div>
+            <div class="summary-row" id="discountRow" style="display: none;">
                 <span>Discount (10%)</span>
                 <span id="discountAmount">-₹0</span>
-            </span>
-            <span class="summary-row">
+            </div>
+            <div class="summary-row">
                 <span>GST (18%)</span>
                 <span id="gstAmount">₹0</span>
-            </span>
-            <span class="summary-row total">
+            </div>
+            <div class="summary-row total">
                 <span>Total</span>
                 <span id="totalAmount">₹0</span>
-            </span>
-        </span>
-        <span class="cart-footer">
-            <span class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</span>
-            <span class="continue-shopping" onclick="toggleCart()">Continue Shopping</span>
-        </span>
-    </span>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <button class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</button>
+            <div class="continue-shopping" onclick="toggleCart()">Continue Shopping</div>
+        </div>
+    </div>
 
     <!-- CHECKOUT MODAL -->
-    <span class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
-        <span class="modal checkout-modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <div class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
+        <div class="modal checkout-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Checkout</h2>
-                <span class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></span>
-            </span>
+                <button class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></button>
+            </div>
 
             <!-- PROGRESS BAR -->
-            <span class="progress-bar">
-                <span class="progress-step active" id="step1Indicator">
-                    <span class="progress-circle">1</span>
-                    <span>Address</span>
-                </span>
-                <span class="progress-step" id="step2Indicator">
-                    <span class="progress-circle">2</span>
-                    <span>Payment</span>
-                </span>
-                <span class="progress-step" id="step3Indicator">
-                    <span class="progress-circle">3</span>
-                    <span>Review</span>
-                </span>
-                <span class="progress-step" id="step4Indicator">
-                    <span class="progress-circle">4</span>
-                    <span>Confirm</span>
-                </span>
-            </span>
+            <div class="progress-bar">
+                <div class="progress-step active" id="step1Indicator">
+                    <div class="progress-circle">1</div>
+                    <div>Address</div>
+                </div>
+                <div class="progress-step" id="step2Indicator">
+                    <div class="progress-circle">2</div>
+                    <div>Payment</div>
+                </div>
+                <div class="progress-step" id="step3Indicator">
+                    <div class="progress-circle">3</div>
+                    <div>Review</div>
+                </div>
+                <div class="progress-step" id="step4Indicator">
+                    <div class="progress-circle">4</div>
+                    <div>Confirm</div>
+                </div>
+            </div>
 
-            <span class="modal-body">
+            <div class="modal-body">
                 <!-- STEP 1: ADDRESS -->
-                <span id="checkoutStep1" class="checkout-step">
+                <div id="checkoutStep1" class="checkout-step">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Delivery Address</h3>
                     <form class="checkout-form" id="addressForm">
-                        <span class="form-row">
-                            <span class="form-group">
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Full Name</label>
                                 <input type="text" id="fullName" required>
-                            </span>
-                            <span class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Phone</label>
                                 <input type="tel" id="phone" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Email</label>
                             <input type="email" id="email" required>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Pincode</label>
                                 <input type="text" id="pincode" required>
-                            </span>
-                            <span class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">City</label>
                                 <input type="text" id="city" required>
-                            </span>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">State</label>
                                 <input type="text" id="state" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Address Line 1</label>
                             <input type="text" id="address1" required>
-                        </span>
-                        <span class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Address Line 2</label>
                             <input type="text" id="address2">
-                        </span>
+                        </div>
                     </form>
-                </span>
+                </div>
 
                 <!-- STEP 2: PAYMENT -->
-                <span id="checkoutStep2" class="checkout-step" style="display: none;">
+                <div id="checkoutStep2" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Payment Method</h3>
 
-                    <span class="payment-tabs">
-                        <span class="payment-tab active" onclick="switchPaymentTab('card')">Card</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('upi')">UPI</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</span>
-                    </span>
+                    <div class="payment-tabs">
+                        <button class="payment-tab active" onclick="switchPaymentTab('card')">Card</button>
+                        <button class="payment-tab" onclick="switchPaymentTab('upi')">UPI</button>
+                        <button class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</button>
+                        <button class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</button>
+                    </div>
 
                     <!-- CARD TAB -->
-                    <span id="paymentCard" class="payment-content">
-                        <span class="card-preview">
-                            <span class="card-front" id="cardFront">
-                                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div id="paymentCard" class="payment-content">
+                        <div class="card-preview">
+                            <div class="card-front" id="cardFront">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                     <span style="font-size: 24px; font-weight: 700;">💳</span>
                                     <span id="cardType" style="font-size: 12px;">VISA</span>
-                                </span>
-                                <span class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</span>
-                                <span class="card-bottom">
-                                    <span>
-                                        <span class="card-holder">CARDHOLDER</span>
-                                        <span id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</span>
-                                    </span>
-                                    <span>
-                                        <span class="card-holder">VALID THRU</span>
-                                        <span id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</span>
-                                    </span>
-                                </span>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                                </div>
+                                <div class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+                                <div class="card-bottom">
+                                    <div>
+                                        <div class="card-holder">CARDHOLDER</div>
+                                        <div id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</div>
+                                    </div>
+                                    <div>
+                                        <div class="card-holder">VALID THRU</div>
+                                        <div id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Card Number</label>
                             <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </span>
-                        <span class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Cardholder Name</label>
                             <input type="text" id="cardHolder" placeholder="John Doe">
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label class="form-label">Expiry (MM/YY)</label>
                                 <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5">
-                            </span>
-                            <span class="form-group">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">CVV</label>
                                 <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-                            </span>
-                        </span>
-                    </span>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- UPI TAB -->
-                    <span id="paymentUpi" class="payment-content" style="display: none;">
-                        <span class="form-group">
+                    <div id="paymentUpi" class="payment-content" style="display: none;">
+                        <div class="form-group">
                             <label class="form-label">UPI ID</label>
                             <input type="text" id="upiId" placeholder="yourname@paytm">
-                        </span>
+                        </div>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or use UPI apps:</h4>
-                        <span class="upi-options">
-                            <span type="rivton" class="upi-btn">PhonePe</span>
-                            <span type="rivton" class="upi-btn">Google Pay</span>
-                            <span type="rivton" class="upi-btn">Paytm</span>
-                        </span>
+                        <div class="upi-options">
+                            <button type="button" class="upi-btn">PhonePe</button>
+                            <button type="button" class="upi-btn">Google Pay</button>
+                            <button type="button" class="upi-btn">Paytm</button>
+                        </div>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or scan QR code:</h4>
-                        <span class="qr-placeholder">📱 Scan QR Code</span>
-                    </span>
+                        <div class="qr-placeholder">📱 Scan QR Code</div>
+                    </div>
 
                     <!-- NET BANKING TAB -->
-                    <span id="paymentNetbanking" class="payment-content" style="display: none;">
+                    <div id="paymentNetbanking" class="payment-content" style="display: none;">
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Select your bank:</h4>
-                        <span class="bank-grid">
-                            <span type="rivton" class="bank-btn">SBI</span>
-                            <span type="rivton" class="bank-btn">HDFC</span>
-                            <span type="rivton" class="bank-btn">ICICI</span>
-                            <span type="rivton" class="bank-btn">Axis</span>
-                            <span type="rivton" class="bank-btn">Kotak</span>
-                            <span type="rivton" class="bank-btn">Yes Bank</span>
-                        </span>
-                    </span>
+                        <div class="bank-grid">
+                            <button type="button" class="bank-btn">SBI</button>
+                            <button type="button" class="bank-btn">HDFC</button>
+                            <button type="button" class="bank-btn">ICICI</button>
+                            <button type="button" class="bank-btn">Axis</button>
+                            <button type="button" class="bank-btn">Kotak</button>
+                            <button type="button" class="bank-btn">Yes Bank</button>
+                        </div>
+                    </div>
 
                     <!-- COD TAB -->
-                    <span id="paymentCod" class="payment-content" style="display: none;">
+                    <div id="paymentCod" class="payment-content" style="display: none;">
                         <p style="margin-bottom: 16px;">Pay when your order is delivered</p>
-                        <span class="cod-notice">
+                        <div class="cod-notice">
                             <strong>₹40 COD fee</strong> will be applicable for Cash on Delivery orders
-                        </span>
-                    </span>
-                </span>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- STEP 3: REVIEW -->
-                <span id="checkoutStep3" class="checkout-step" style="display: none;">
+                <div id="checkoutStep3" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Order Review</h3>
-                    <span id="reviewContent"></span>
-                </span>
+                    <div id="reviewContent"></div>
+                </div>
 
                 <!-- STEP 4: CONFIRMATION -->
-                <span id="checkoutStep4" class="checkout-step" style="display: none;">
-                    <span class="confirmation-container">
-                        <span class="checkmark">
+                <div id="checkoutStep4" class="checkout-step" style="display: none;">
+                    <div class="confirmation-container">
+                        <div class="checkmark">
                             <i class="fas fa-check"></i>
-                        </span>
+                        </div>
                         <h2>Order Placed Successfully!</h2>
                         <p style="margin-bottom: 20px; color: #666;">Thank you for your purchase</p>
-                        <span class="order-id" id="confirmationOrderId">#ORD-000000</span>
-                        <span class="delivery-info">
+                        <div class="order-id" id="confirmationOrderId">#ORD-000000</div>
+                        <div class="delivery-info">
                             <p>✓ Your order will be delivered in 3-5 business days</p>
                             <p style="margin-top: 8px;">📅 Estimated delivery: <span id="estimatedDelivery"></span></p>
-                        </span>
-                    </span>
-                </span>
-            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <span class="modal-footer">
-                <span class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</span>
-                <span class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</span>
-            </span>
-        </span>
-    </span>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</button>
+                <button class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</button>
+            </div>
+        </div>
+    </div>
 
     <!-- AUTH MODAL -->
-    <span class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
-        <span class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <div class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
+        <div class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Account</h2>
-                <span class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
-                <span class="auth-tabs">
-                    <span class="auth-tab active" onclick="switchAuthTab('login')">Login</span>
-                    <span class="auth-tab" onclick="switchAuthTab('register')">Register</span>
-                </span>
+                <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+                </div>
 
                 <!-- LOGIN FORM -->
                 <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-                    <span id="loginError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
+                    <div id="loginError" class="auth-error" style="display: none;"></div>
+                    <div class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="loginEmail" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="loginPassword" required>
-                    </span>
-                    <span type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</span>
-                    <span class="forgot-password">Forgot password?</span>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</button>
+                    <div class="forgot-password">Forgot password?</div>
                 </form>
 
                 <!-- REGISTER FORM -->
                 <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
-                    <span id="registerError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
+                    <div id="registerError" class="auth-error" style="display: none;"></div>
+                    <div class="form-group">
                         <label class="form-label">Full Name</label>
                         <input type="text" id="registerName" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="registerEmail" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Phone</label>
                         <input type="tel" id="registerPhone" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="registerPassword" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Confirm Password</label>
                         <input type="password" id="registerConfirm" required>
-                    </span>
-                    <span type="submit" class="btn-primary" style="width: 100%;">Create Account</span>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
                 </form>
-            </span>
-        </span>
-    </span>
+            </div>
+        </div>
+    </div>
 
     <!-- TRACKING MODAL -->
-    <span class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <div class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
+        <div class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Order Tracking</h2>
-                <span class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
-                <span id="trackingContent" class="tracking-timeline"></span>
-            </span>
-        </span>
-    </span>
+                <button class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="trackingContent" class="tracking-timeline"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- ADD PRODUCT MODAL -->
-    <span class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <div class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
+        <div class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
                 <h2 class="modal-title">Add Product</h2>
-                <span class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
+                <button class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
                 <form id="addProductForm" class="checkout-form" onsubmit="submitAddProduct(event)">
-                    <span class="form-group">
+                    <div class="form-group">
                         <label class="form-label">Product Name</label>
                         <input type="text" id="productNameInput" required>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">Category</label>
                             <input type="text" id="productCategoryInput" required>
-                        </span>
-                        <span class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Brand</label>
                             <input type="text" id="productBrandInput" required>
-                        </span>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">Price (₹)</label>
                             <input type="number" id="productPriceInput" required>
-                        </span>
-                        <span class="form-group">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Original Price (₹)</label>
                             <input type="number" id="productOriginalInput" required>
-                        </span>
-                    </span>
-                    <span class="form-group">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Stock</label>
                         <input type="number" id="productStockInput" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Emoji</label>
                         <input type="text" id="productEmojiInput" placeholder="📱" required>
-                    </span>
-                    <span class="form-group">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Description</label>
                         <textarea id="productDescriptionInput" required></textarea>
-                    </span>
+                    </div>
                 </form>
-            </span>
-            <span class="modal-footer">
-                <span class="btn-secondary" onclick="closeAddProductModal()">Cancel</span>
-                <span class="btn-primary" onclick="submitAddProduct()">Add Product</span>
-            </span>
-        </span>
-    </span>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeAddProductModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitAddProduct()">Add Product</button>
+            </div>
+        </div>
+    </div>
 
     <!-- FOOTER -->
     <footer class="footer">
-        <span class="footer-content">
-            <span class="footer-section">
+        <div class="footer-content">
+            <div class="footer-section">
                 <h3>About ShopNow</h3>
                 <ul>
                     <li><a href="#">About Us</a></li>
                     <li><a href="#">Careers</a></li>
                     <li><a href="#">Press</a></li>
                 </ul>
-            </span>
-            <span class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Help & Support</h3>
                 <ul>
                     <li><a href="#">Contact Us</a></li>
                     <li><a href="#">FAQs</a></li>
                     <li><a href="#">Shipping Info</a></li>
                 </ul>
-            </span>
-            <span class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Policies</h3>
                 <ul>
                     <li><a href="#">Privacy Policy</a></li>
                     <li><a href="#">Terms & Conditions</a></li>
                     <li><a href="#">Return Policy</a></li>
                 </ul>
-            </span>
-            <span class="footer-section">
+            </div>
+            <div class="footer-section">
                 <h3>Connect With Us</h3>
                 <ul>
                     <li><a href="#">Facebook</a></li>
                     <li><a href="#">Twitter</a></li>
                     <li><a href="#">Instagram</a></li>
                 </ul>
-            </span>
-        </span>
-        <span class="footer-bottom">
+            </div>
+        </div>
+        <div class="footer-bottom">
             <p>&copy; 2026 ShopNow. All rights reserved. | Built with for online shopping</p>
-        </span>
+        </div>
     </footer>
 
     <script>
@@ -2305,28 +2305,28 @@
             const fallbackHtml = `<span class="img-fallback" style="display:${imgSrc.startsWith('http') ? 'none' : 'flex'}">${imgSrc || '📦'}</span>`;
 
             return `
-                <span class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
-                    <span class="product-image">${imgHtml}${fallbackHtml}</span>
-                    <span class="product-name">${product.name}</span>
-                    <span class="product-brand">${product.brand || 'Brand'}</span>
-                    <span class="product-price-row">
+                <div class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
+                    <div class="product-image">${imgHtml}${fallbackHtml}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-brand">${product.brand || 'Brand'}</div>
+                    <div class="product-price-row">
                         <span class="product-price">₹${product.price}</span>
                         <span class="product-original">₹${product.original_price}</span>
                         <span class="product-discount">${discount}% OFF</span>
-                    </span>
-                    <span class="product-rating">
+                    </div>
+                    <div class="product-rating">
                         <span class="stars">${'★'.repeat(Math.floor(rating))}</span>
                         <span>(${reviews})</span>
-                    </span>
-                    <span class="product-rivtons" onclick="event.stopPropagation()">
-                        <span class="btn-sm btn-cart" onclick="addToCart(${product.id})">
+                    </div>
+                    <div class="product-buttons" onclick="event.stopPropagation()">
+                        <button class="btn-sm btn-cart" onclick="addToCart(${product.id})">
                             <i class="fas fa-shopping-cart"></i> Add
-                        </span>
-                        <span class="btn-sm btn-view" onclick="showProductDetail(${product.id})">
+                        </button>
+                        <button class="btn-sm btn-view" onclick="showProductDetail(${product.id})">
                             Quick View
-                        </span>
-                    </span>
-                </span>
+                        </button>
+                    </div>
+                </div>
             `;
         }
 
@@ -2347,52 +2347,52 @@
                 : ``;
             const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
             const content = `
-                <span class="product-detail-modal">
-                    <span class="product-detail-image">${detailImgHtml}${detailFallback}</span>
-                    <span class="product-detail-content">
+                <div class="product-detail-modal">
+                    <div class="product-detail-image">${detailImgHtml}${detailFallback}</div>
+                    <div class="product-detail-content">
                         <h2>${product.name}</h2>
-                        <span class="product-detail-brand">${product.brand || 'Brand'}</span>
-                        <span class="product-detail-price">
+                        <div class="product-detail-brand">${product.brand || 'Brand'}</div>
+                        <div class="product-detail-price">
                             <span class="price">₹${product.price}</span>
                             <span style="text-decoration: line-through; color: #999;">₹${product.original_price}</span>
                             <span style="background: var(--success); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${discount}% OFF</span>
-                        </span>
-                        <span class="product-detail-stock ${stockClass}">${stockStatus}</span>
-                        <span style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        </div>
+                        <div class="product-detail-stock ${stockClass}">${stockStatus}</div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                             <span class="stars" style="font-size: 16px;">${'★'.repeat(Math.floor(rating))}</span>
                             <span style="color: #999; font-size: 14px;">${rating} (${product.reviews || 128})</span>
-                        </span>
-                        <span class="product-detail-description">
+                        </div>
+                        <div class="product-detail-description">
                             ${product.description || 'Premium quality product with excellent features and durability.'}
-                        </span>
-                        <span class="product-detail-rivtons">
-                            <span class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
+                        </div>
+                        <div class="product-detail-buttons">
+                            <button class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </span>
-                            <span class="btn-accent" onclick="addToCart(${product.id}); closeProductModal(); startCheckout()">
+                            </button>
+                            <button class="btn-accent" onclick="addToCart(${product.id}); closeProductModal(); startCheckout()">
                                 <i class="fas fa-bolt"></i> Buy Now
-                            </span>
-                        </span>
-                        <span class="reviews-section">
+                            </button>
+                        </div>
+                        <div class="reviews-section">
                             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Reviews</h3>
-                            <span class="review-item">
-                                <span class="review-header">
+                            <div class="review-item">
+                                <div class="review-header">
                                     <span><strong>John Doe</strong> - 5★</span>
                                     <span style="font-size: 11px; color: #999;">2 days ago</span>
-                                </span>
-                                <span class="review-text">Excellent product! Highly recommended.</span>
-                            </span>
-                            <span class="review-item">
-                                <span class="review-header">
+                                </div>
+                                <div class="review-text">Excellent product! Highly recommended.</div>
+                            </div>
+                            <div class="review-item">
+                                <div class="review-header">
                                     <span><strong>Jane Smith</strong> - 4★</span>
                                     <span style="font-size: 11px; color: #999;">1 week ago</span>
-                                </span>
-                                <span class="review-text">Good quality and fast delivery.</span>
-                            </span>
-                        </span>
-                    </span>
-                </span>
-            </span>
+                                </div>
+                                <div class="review-text">Good quality and fast delivery.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             `;
 
             document.getElementById('productDetailContent').innerHTML = content;
@@ -2409,7 +2409,7 @@
         function renderCategories() {
             const bar = document.getElementById('categoriesBar');
             bar.innerHTML = CATEGORIES.map(cat => `
-                <span class="category-pill" onclick="filterByCategory('${cat}')">${cat}</span>
+                <button class="category-pill" onclick="filterByCategory('${cat}')">${cat}</button>
             `).join('');
 
             const filterCats = document.getElementById('filterCategories');
@@ -2506,22 +2506,22 @@
 
             const cartItems = document.getElementById('cartItems');
             if (cart.length === 0) {
-                cartItems.innerHTML = '<span class="empty-state"><span class="empty-state-icon">🛒</span><span class="empty-state-title">Your cart is empty</span></span>';
+                cartItems.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><div class="empty-state-title">Your cart is empty</div></div>';
             } else {
                 cartItems.innerHTML = cart.map(item => `
-                    <span class="cart-item">
-                        <span class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</span>
-                        <span class="cart-item-info">
-                            <span class="cart-item-name">${item.name}</span>
-                            <span class="cart-item-price">₹${item.price}</span>
-                            <span class="cart-item-qty">
-                                <span class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</span>
+                    <div class="cart-item">
+                        <div class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</div>
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-price">₹${item.price}</div>
+                            <div class="cart-item-qty">
+                                <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
                                 <span style="min-width: 30px; text-align: center;">${item.quantity}</span>
-                                <span class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</span>
+                                <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
                                 <span class="cart-remove" onclick="removeFromCart(${item.id})">Remove</span>
-                            </span>
-                        </span>
-                    </span>
+                            </div>
+                        </div>
+                    </div>
                 `).join('');
             }
 
@@ -2768,22 +2768,22 @@
             const total = subtotal - discount + gst;
 
             const itemsHtml = checkoutData.items.map(item => `
-                <span style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                    <span style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                    <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
                         ${(item.image||'').startsWith('http') ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}
-                    </span>
-                    <span style="flex:1;">
-                        <span style="font-weight: 600; font-size:13px;">${item.name}</span>
-                        <span style="font-size: 12px; color: #999;">Qty: ${item.quantity}</span>
-                    </span>
-                    <span style="text-align: right;">
-                        <span style="font-weight: 600;">₹${item.price * item.quantity}</span>
-                    </span>
-                </span>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight: 600; font-size:13px;">${item.name}</div>
+                        <div style="font-size: 12px; color: #999;">Qty: ${item.quantity}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600;">₹${item.price * item.quantity}</div>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('reviewContent').innerHTML = `
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Delivery Address</h4>
                     <p style="font-size: 13px; line-height: 1.6;">
                         ${checkoutData.address.fullName}<br>
@@ -2791,34 +2791,34 @@
                         ${checkoutData.address.state}<br>
                         <strong>Phone:</strong> ${checkoutData.address.phone}
                     </p>
-                </span>
+                </div>
 
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Payment Method</h4>
                     <p style="font-size: 13px; text-transform: capitalize;">${selectedPaymentMethod}</p>
-                </span>
+                </div>
 
                 <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Order Items</h4>
                 ${itemsHtml}
 
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Subtotal</span>
                         <span>₹${subtotal}</span>
-                    </span>
-                    ${currentUser ? `<span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </div>
+                    ${currentUser ? `<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Discount (10%)</span>
                         <span>-₹${Math.round(discount)}</span>
-                    </span>` : ''}
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </div>` : ''}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>GST (18%)</span>
                         <span>₹${Math.round(gst)}</span>
-                    </span>
-                    <span style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
                         <span>Total</span>
                         <span>₹${Math.round(total)}</span>
-                    </span>
-                </span>
+                    </div>
+                </div>
             `;
         }
 
@@ -2927,18 +2927,18 @@
             };
 
             const html = orders.map(order => `
-                <span class="order-card">
-                    <span class="order-info">
-                        <span class="order-id-text">${order.id}</span>
-                        <span class="order-date">${order.date.toLocaleDateString()}</span>
-                        <span class="order-items">${order.items} items</span>
+                <div class="order-card">
+                    <div class="order-info">
+                        <div class="order-id-text">${order.id}</div>
+                        <div class="order-date">${order.date.toLocaleDateString()}</div>
+                        <div class="order-items">${order.items} items</div>
                         <span class="order-status ${statusColors[order.status] || 'status-placed'}">${order.status.toUpperCase()}</span>
-                    </span>
-                    <span class="order-total">₹${order.total}</span>
-                    <span class="order-actions">
-                        <span class="btn-primary" onclick="showTracking('${order.id}')">Track</span>
-                    </span>
-                </span>
+                    </div>
+                    <div class="order-total">₹${order.total}</div>
+                    <div class="order-actions">
+                        <button class="btn-primary" onclick="showTracking('${order.id}')">Track</button>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('ordersList').innerHTML = html;
@@ -2956,14 +2956,14 @@
             ];
 
             const html = steps.map((step, i) => `
-                <span class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
-                    <span class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</span>
-                    ${i < steps.length - 1 ? '<span class="tracking-line"></span>' : ''}
-                    <span class="tracking-content">
-                        <span class="tracking-title">${step.title}</span>
-                        <span class="tracking-date">${new Date().toLocaleDateString()}</span>
-                    </span>
-                </span>
+                <div class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
+                    <div class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</div>
+                    ${i < steps.length - 1 ? '<div class="tracking-line"></div>' : ''}
+                    <div class="tracking-content">
+                        <div class="tracking-title">${step.title}</div>
+                        <div class="tracking-date">${new Date().toLocaleDateString()}</div>
+                    </div>
+                </div>
             `).join('');
 
             document.getElementById('trackingContent').innerHTML = html;
@@ -2985,22 +2985,22 @@
             showView('adminView');
 
             const statsHtml = `
-                <span class="stat-card">
-                    <span class="stat-value">120</span>
-                    <span class="stat-label">Total Products</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">1024</span>
-                    <span class="stat-label">Total Orders</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">₹12,50,000</span>
-                    <span class="stat-label">Total Revenue</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">485</span>
-                    <span class="stat-label">Registered Users</span>
-                </span>
+                <div class="stat-card">
+                    <div class="stat-value">120</div>
+                    <div class="stat-label">Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1024</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹12,50,000</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">485</div>
+                    <div class="stat-label">Registered Users</div>
+                </div>
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
@@ -3011,8 +3011,8 @@
                     <td>₹${p.price}</td>
                     <td>${p.stock || 50}</td>
                     <td>
-                        <span class="btn-sm btn-view" style="padding: 4px 8px;">Edit</span>
-                        <span class="btn-sm btn-cart" style="padding: 4px 8px; margin-left: 4px;">Delete</span>
+                        <button class="btn-sm btn-view" style="padding: 4px 8px;">Edit</button>
+                        <button class="btn-sm btn-cart" style="padding: 4px 8px; margin-left: 4px;">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -3024,10 +3024,10 @@
                 { name: 'User Service', status: 'online' },
                 { name: 'Payment Service', status: 'online' }
             ].map(service => `
-                <span class="health-item">
-                    <span class="health-dot ${service.status}"></span>
+                <div class="health-item">
+                    <div class="health-dot ${service.status}"></div>
                     <span>${service.name}</span>
-                </span>
+                </div>
             `).join('');
             document.getElementById('healthPanel').innerHTML = healthHtml;
         }
@@ -3070,7 +3070,7 @@
 
         // TOAST NOTIFICATIONS
         function showToast(message, type = 'info') {
-            const toast = document.createElement('riv');
+            const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
             document.body.appendChild(toast);
