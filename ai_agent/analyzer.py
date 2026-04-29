@@ -1244,13 +1244,37 @@ def local_syntax_check():
 
                     if invalid_tags:
                         # Build a substitution map: guess the correct tag.
-                        # Rules (in priority order):
-                        #   1. If ALL the invalid tag's CSS classes match .div rules → div
-                        #   2. If it wraps only inline content / is self-contained → span
-                        #   3. Default → div  (block-level is almost always the intent)
+                        # PRIORITY 1 — fuzzy-match against valid tags. If the
+                        # bad tag is a near-typo of a real one (riv≈div,
+                        # rivton≈button, dvi≈div), recover the ORIGINAL tag
+                        # rather than collapsing everything to <span>. This
+                        # preserves layout when users do find/replace edits.
+                        # PRIORITY 2 — fall back to CSS-display heuristic only
+                        # when no plausible recovery exists.
+                        import difflib as _difflib
+
                         sub_map = {}
                         for bad_tag in invalid_tags:
-                            # Collect all class names this tag is ever given
+                            bad_lower = bad_tag.lower()
+
+                            # Try fuzzy recovery first. Cutoff 0.6 catches
+                            # 1-3 char typos against tags like "div" or
+                            # "button" without producing nonsense matches.
+                            # Cutoff 0.6 catches single-char typos cleanly
+                            # (riv→div, dvi→div, but→button, secton→section)
+                            # without false matches like aaa→data or
+                            # rivton→strong. Longer typos that miss the
+                            # cutoff fall through to the CSS heuristic
+                            # below, which now correctly defaults to <div>
+                            # (block-level, layout-safe).
+                            close = _difflib.get_close_matches(
+                                bad_lower, _VALID_HTML_TAGS, n=1, cutoff=0.6,
+                            )
+                            if close:
+                                sub_map[bad_lower] = close[0]
+                                continue
+
+                            # No close match — fall back to CSS heuristic.
                             classes_used = set(
                                 c
                                 for m in _re.finditer(
@@ -1259,16 +1283,18 @@ def local_syntax_check():
                                 )
                                 for c in m.group(1).split()
                             )
-                            # Check which of those classes are styled as inline
                             inline_css_hint = False
                             for css_block in css_blocks:
                                 for cls in classes_used:
+                                    # Require word-boundary after "inline"
+                                    # so we don't false-match inline-block
+                                    # or inline-flex (both block-level).
                                     if _re.search(
-                                        rf'\.{_re.escape(cls)}\s*\{{[^}}]*display\s*:\s*inline',
+                                        rf'\.{_re.escape(cls)}\s*\{{[^}}]*display\s*:\s*inline\s*[;}}]',
                                         css_block,
                                     ):
                                         inline_css_hint = True
-                            sub_map[bad_tag.lower()] = "span" if inline_css_hint else "div"
+                            sub_map[bad_lower] = "span" if inline_css_hint else "div"
 
                         # Apply all substitutions in one pass and report
                         fixed_content = html_content
