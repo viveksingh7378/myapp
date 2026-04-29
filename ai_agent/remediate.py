@@ -27,7 +27,7 @@ def reset_retry():  # Reset retry count on successful remediation:
 
 def increment_retry():  # Increment retry count
     if os.path.exists(RETRY_FILE):
-        os.remove(RETRY_FILE)
+        with open(RETRY_FILE, "w") as f: f.write(str(get_retry_count() + 1))
 
 
 # ── Read actual broken file ───────────────────────────────────────
