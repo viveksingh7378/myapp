@@ -1233,26 +1233,30 @@ def local_syntax_check():
                         if _auto_fix_html_structure(full_path, rel_path, struct_errors):
                             auto_fixed_files.add(rel_path)
 
-                    # ── Invalid tag detection (NO local auto-fix) ─────
-                    # Detect every non-standard HTML tag in the file and
-                    # REPORT it. By default we DO NOT auto-replace these
-                    # locally — the AI (Gemini/Ollama) gets to see the raw
-                    # HTML and propose the correct fix with full context.
-                    # That way <riv> becomes <div> (its true intent), not
-                    # <span> (a layout-breaking heuristic guess).
+                    # ── Invalid HTML tag bulk-replace (fuzzy-match) ────
+                    # Detect every non-standard HTML tag and replace ALL
+                    # occurrences in one pass. Why local-and-not-AI:
+                    #   • A find-replace mistake produces 100s of identical
+                    #     bad tags (e.g. <riv> 228× opens + 229× closes).
+                    #   • Gemini's per-response token budget can't reliably
+                    #     emit 450+ JSON fix objects — it fixes opens but
+                    #     gives up before all the closes, leaving the file
+                    #     half-broken (mismatched tags).
+                    #   • Local bulk-replace is instant, complete, and now
+                    #     uses fuzzy-match so it picks the RIGHT tag
+                    #     (riv→div, dvi→div, but→button) instead of the
+                    #     old <span> heuristic that broke layouts.
+                    # AI still scans the file afterward for any non-tag
+                    # bugs (CSS, JS, structure).
                     #
-                    # Set env var LOCAL_AUTOFIX_INVALID_TAGS=1 to bring back
-                    # the old fuzzy-match auto-fix as a fallback when the AI
-                    # is unavailable (e.g. Gemini quota exhausted).
+                    # Set env var SKIP_LOCAL_AUTOFIX_INVALID_TAGS=1 to opt
+                    # out and force AI-only handling.
                     all_tags = set(_re.findall(r"</?([A-Za-z][A-Za-z0-9-]*)", html_content))
                     invalid_tags = {t for t in all_tags if t.lower() not in _VALID_HTML_TAGS}
 
                     if invalid_tags:
-                        # Always REPORT every invalid tag (with line numbers
-                        # so the AI prompt and the human reader both know).
+                        # Always report each invalid tag (with line numbers).
                         for bad_tag in sorted(invalid_tags):
-                            # Find first line where the bad tag appears, for
-                            # easier debugging in the Jenkins log.
                             first_line = None
                             for ln_num, ln in enumerate(html_content.splitlines(), 1):
                                 if _re.search(rf"</?{_re.escape(bad_tag)}\b", ln, _re.I):
@@ -1261,7 +1265,6 @@ def local_syntax_check():
                             msg = (
                                 f"Non-standard HTML tag <{bad_tag}> detected"
                                 + (f" (first at line {first_line})" if first_line else "")
-                                + " — sending to AI for analysis"
                             )
                             findings.append({
                                 "file": rel_path,
@@ -1270,12 +1273,13 @@ def local_syntax_check():
                             })
                             print(f"  ✗ {rel_path}: {msg}")
 
-                        # Optional fallback: only auto-fix if explicitly enabled.
-                        if os.environ.get("LOCAL_AUTOFIX_INVALID_TAGS") == "1":
+                        # Skip auto-fix only if user explicitly opts out.
+                        if os.environ.get("SKIP_LOCAL_AUTOFIX_INVALID_TAGS") == "1":
                             print(
-                                f"  ℹ LOCAL_AUTOFIX_INVALID_TAGS=1 set — "
-                                f"applying fuzzy-match auto-fix as fallback"
+                                f"  ℹ SKIP_LOCAL_AUTOFIX_INVALID_TAGS=1 — "
+                                f"deferring to AI (may leave file partially fixed)"
                             )
+                        else:
                             import difflib as _difflib
 
                             sub_map = {}
@@ -1288,8 +1292,8 @@ def local_syntax_check():
                                     sub_map[bad_lower] = close[0]
                                     continue
                                 # No close match — default to <div> (block-level,
-                                # layout-safe) so a failed guess doesn't collapse
-                                # the page into inline text.
+                                # layout-safe) instead of <span> (inline, breaks
+                                # layout when the original was a container).
                                 sub_map[bad_lower] = "div"
 
                             fixed_content = html_content
@@ -1309,7 +1313,7 @@ def local_syntax_check():
                                 total_replaced += n1 + n2
                                 if n1 + n2:
                                     print(
-                                        f"    fallback: <{bad_tag}> → <{good_tag}> "
+                                        f"    bulk: <{bad_tag}> → <{good_tag}> "
                                         f"({n1} open + {n2} close)"
                                     )
 
@@ -1321,13 +1325,14 @@ def local_syntax_check():
                                     html_content = fixed_content
                                     auto_fixed_files.add(rel_path)
                                     print(
-                                        f"  ✓ Fallback auto-fix applied to {rel_path}"
+                                        f"  ✓ Bulk-replaced {total_replaced} tag(s) "
+                                        f"in {rel_path} — AI will scan for further issues"
                                     )
                                 else:
                                     with open(full_path, "w", encoding="utf-8") as f:
                                         f.write(html_content)
                                     print(
-                                        f"  ⚠ Fallback auto-fix did not validate "
+                                        f"  ⚠ Bulk fix did not validate "
                                         f"({reason}) — reverted; AI will retry"
                                     )
 
