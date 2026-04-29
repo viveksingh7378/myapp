@@ -1615,201 +1615,93 @@
 
     <!-- HEADER -->
     <header class="header">
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <span class="header-left">
-            <span class="logo" onclick="showHome()">
-                <span>🛍️</span>
-                <span>ShopNow</span>
-            </span>
-            <span class="search-bar">
-                <input type="text" id="searchInput" placeholder="Search products, brands...">
-                <button onclick="performSearch()"><i class="fas fa-search"></i></button>
-            </span>
-        </span>
-        <span class="header-right">
-            <span class="header-icon" onclick="toggleCart()">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
-            </span>
-            <span class="header-icon" id="userIcon" onclick="showAuthModal()">
-                <i class="fas fa-user"></i>
-            </span>
-            <span class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
-                <i class="fas fa-chart-bar"></i>
-            </span>
-            <span class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
-                <i class="fas fa-box"></i>
-            </span>
-        </span>
-    </header>
-
-    <!-- HOME VIEW -->
-    <span id="homeView" class="view active">
-        <!-- HERO BANNER -->
-        <span class="hero slide-1" id="heroBanner">
-            <span class="hero-content">
-                <h1>Discover Amazing Deals</h1>
-                <p>Shop from thousands of products at unbeatable prices</p>
-                <button class="btn-primary" onclick="scrollToProducts()">Shop Now</button>
-            </span>
-        </span>
-
-        <!-- CATEGORIES -->
-        <span class="categories" id="categoriesBar"></span>
-
-        <!-- DEAL OF THE DAY -->
-        <span class="section">
-            <span style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
-                <span>
-                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔥 Deal of the Day</h3>
-                    <p style="font-size: 14px; opacity: 0.9;">Limited time offers on premium products</p>
-                </span>
-                <span style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</span>
-            </span>
-        </span>
-
-        <!-- FEATURED PRODUCTS -->
-        <span class="section">
-=======
-        <span class="header-left">
-            <span class="logo" onclick="showHome()">
-=======
         <riv class="header-left">
             <riv class="logo" onclick="showHome()">
->>>>>>> fb77943 (sfuiut675)
                 <span>🛍️</span>
                 <span>ShopNow</span>
-            </span>
-            <span class="search-bar">
+            </riv>
+            <riv class="search-bar">
                 <input type="text" id="searchInput" placeholder="Search products, brands...">
-                <span onclick="performSearch()"><i class="fas fa-search"></i></span>
-            </span>
-        </span>
-        <span class="header-right">
-            <span class="header-icon" onclick="toggleCart()">
+                <rivton onclick="performSearch()"><i class="fas fa-search"></i></rivton>
+            </riv>
+        </riv>
+        <riv class="header-right">
+            <riv class="header-icon" onclick="toggleCart()">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
-            </span>
-            <span class="header-icon" id="userIcon" onclick="showAuthModal()">
+            </riv>
+            <riv class="header-icon" id="userIcon" onclick="showAuthModal()">
                 <i class="fas fa-user"></i>
-            </span>
-            <span class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
+            </riv>
+            <riv class="header-icon" onclick="showAdminPanel()" style="display: none;" id="adminIcon">
                 <i class="fas fa-chart-bar"></i>
-            </span>
-            <span class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
+            </riv>
+            <riv class="header-icon" onclick="showMyOrders()" style="cursor: pointer; display: none;" id="ordersIcon">
                 <i class="fas fa-box"></i>
-            </span>
-        </span>
+            </riv>
+        </riv>
     </header>
 
     <!-- HOME VIEW -->
-    <span id="homeView" class="view active">
+    <riv id="homeView" class="view active">
         <!-- HERO BANNER -->
-        <span class="hero slide-1" id="heroBanner">
-            <span class="hero-content">
+        <riv class="hero slide-1" id="heroBanner">
+            <riv class="hero-content">
                 <h1>Discover Amazing Deals</h1>
                 <p>Shop from thousands of products at unbeatable prices</p>
-                <span class="btn-primary" onclick="scrollToProducts()">Shop Now</span>
-            </span>
-        </span>
+                <rivton class="btn-primary" onclick="scrollToProducts()">Shop Now</rivton>
+            </riv>
+        </riv>
 
         <!-- CATEGORIES -->
-        <span class="categories" id="categoriesBar"></span>
+        <riv class="categories" id="categoriesBar"></riv>
 
         <!-- DEAL OF THE DAY -->
-        <span class="section">
-            <span style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
-                <span>
+        <riv class="section">
+            <riv style="background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                <riv>
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔥 Deal of the Day</h3>
                     <p style="font-size: 14px; opacity: 0.9;">Limited time offers on premium products</p>
-                </span>
-                <span style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</span>
-            </span>
-        </span>
+                </riv>
+                <riv style="font-size: 24px; font-weight: 700;" id="countdown">04:00:00</riv>
+            </riv>
+        </riv>
 
         <!-- FEATURED PRODUCTS -->
-<<<<<<< HEAD
-        <span class="section">
->>>>>>> a8656be (Sdfs)
-=======
         <riv class="section">
->>>>>>> fb77943 (sfuiut675)
             <h2 class="section-title">
                 <i class="fas fa-star"></i>
                 Featured Products
             </h2>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            <span class="product-grid" id="productGrid"></span>
-        </span>
-    </span>
-
-    <!-- PRODUCT LISTING VIEW -->
-    <span id="listingView" class="view">
-        <span style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
-            <!-- FILTERS SIDEBAR -->
-            <span style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
-                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px;">Filters</h3>
-
-                <!-- CATEGORIES FILTER -->
-                <span style="margin-bottom: 24px;">
-                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Category</h4>
-                    <span style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></span>
-                </span>
-
-                <!-- PRICE RANGE FILTER -->
-                <span style="margin-bottom: 24px;">
-                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Price Range</h4>
-                    <input type="range" id="priceFilter" min="0" max="100000" step="1000" style="width: 100%; cursor: pointer;">
-                    <span style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
-                        <span>₹0</span>
-                        <span id="priceValue">₹100000</span>
-                    </span>
-                </span>
-
-                <!-- RATING FILTER -->
-                <span style="margin-bottom: 24px;">
-=======
-            <span class="product-grid" id="productGrid"></span>
-        </span>
-    </span>
-=======
             <riv class="product-grid" id="productGrid"></riv>
         </riv>
     </riv>
->>>>>>> fb77943 (sfuiut675)
 
     <!-- PRODUCT LISTING VIEW -->
-    <span id="listingView" class="view">
-        <span style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
+    <riv id="listingView" class="view">
+        <riv style="display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto;">
             <!-- FILTERS SIDEBAR -->
-            <span style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
+            <riv style="background: white; padding: 20px; border-radius: 8px; height: fit-content;">
                 <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px;">Filters</h3>
 
                 <!-- CATEGORIES FILTER -->
-                <span style="margin-bottom: 24px;">
+                <riv style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Category</h4>
-                    <span style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></span>
-                </span>
+                    <riv style="display: flex; flex-direction: column; gap: 8px;" id="filterCategories"></riv>
+                </riv>
 
                 <!-- PRICE RANGE FILTER -->
-                <span style="margin-bottom: 24px;">
+                <riv style="margin-bottom: 24px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Price Range</h4>
                     <input type="range" id="priceFilter" min="0" max="100000" step="1000" style="width: 100%; cursor: pointer;">
-                    <span style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
+                    <riv style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
                         <span>₹0</span>
                         <span id="priceValue">₹100000</span>
-                    </span>
-                </span>
+                    </riv>
+                </riv>
 
                 <!-- RATING FILTER -->
-<<<<<<< HEAD
-                <span style="margin-bottom: 24px;">
->>>>>>> a8656be (Sdfs)
-=======
                 <riv style="margin-bottom: 24px;">
->>>>>>> fb77943 (sfuiut675)
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Min Rating</h4>
                     <select id="ratingFilter" style="width: 100%;">
                         <option value="0">All ratings</option>
@@ -1817,34 +1709,14 @@
                         <option value="3">3★ & above</option>
                         <option value="2">2★ & above</option>
                     </select>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                </span>
-
-                <button onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</button>
-            </span>
-
-            <!-- PRODUCTS -->
-            <span>
-                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-=======
-                </span>
-=======
                 </riv>
->>>>>>> fb77943 (sfuiut675)
 
-                <span onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</span>
-            </span>
+                <rivton onclick="clearFilters()" class="btn-secondary" style="width: 100%;">Clear Filters</rivton>
+            </riv>
 
             <!-- PRODUCTS -->
-<<<<<<< HEAD
-            <span>
-                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
->>>>>>> a8656be (Sdfs)
-=======
             <riv>
                 <riv style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
->>>>>>> fb77943 (sfuiut675)
                     <h2 style="font-size: 20px; font-weight: 700;">Products</h2>
                     <select id="sortFilter" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
                         <option value="relevance">Relevance</option>
@@ -1853,63 +1725,27 @@
                         <option value="rating">Top Rated</option>
                         <option value="popular">Most Popular</option>
                     </select>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                </span>
-                <span class="product-grid" id="listingProductGrid"></span>
-            </span>
-        </span>
-    </span>
-
-    <!-- MY ORDERS VIEW -->
-    <span id="ordersView" class="view">
-        <span class="orders-container">
-            <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">My Orders</h1>
-            <span id="ordersList"></span>
-        </span>
-    </span>
-
-    <!-- ADMIN DASHBOARD VIEW -->
-    <span id="adminView" class="view">
-        <span class="admin-container">
-            <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">Admin Dashboard</h1>
-
-            <!-- STATS -->
-            <span class="stats-grid" id="statsGrid"></span>
-=======
-                </span>
-                <span class="product-grid" id="listingProductGrid"></span>
-            </span>
-        </span>
-    </span>
-=======
                 </riv>
                 <riv class="product-grid" id="listingProductGrid"></riv>
             </riv>
         </riv>
     </riv>
->>>>>>> fb77943 (sfuiut675)
 
     <!-- MY ORDERS VIEW -->
-    <span id="ordersView" class="view">
-        <span class="orders-container">
+    <riv id="ordersView" class="view">
+        <riv class="orders-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">My Orders</h1>
-            <span id="ordersList"></span>
-        </span>
-    </span>
+            <riv id="ordersList"></riv>
+        </riv>
+    </riv>
 
     <!-- ADMIN DASHBOARD VIEW -->
-    <span id="adminView" class="view">
-        <span class="admin-container">
+    <riv id="adminView" class="view">
+        <riv class="admin-container">
             <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 30px;">Admin Dashboard</h1>
 
             <!-- STATS -->
-<<<<<<< HEAD
-            <span class="stats-grid" id="statsGrid"></span>
->>>>>>> a8656be (Sdfs)
-=======
             <riv class="stats-grid" id="statsGrid"></riv>
->>>>>>> fb77943 (sfuiut675)
 
             <!-- RECENT ORDERS -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Recent Orders</h2>
@@ -1928,7 +1764,7 @@
 
             <!-- PRODUCTS MANAGEMENT -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Products Management</h2>
-            <span class="btn-accent" onclick="showAddProductModal()" style="margin-bottom: 20px;">+ Add Product</span>
+            <rivton class="btn-accent" onclick="showAddProductModal()" style="margin-bottom: 20px;">+ Add Product</rivton>
             <table class="admin-table" id="productsTable">
                 <thead>
                     <tr>
@@ -1944,847 +1780,409 @@
 
             <!-- SERVICE HEALTH -->
             <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Service Health</h2>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            <span class="health-panel" id="healthPanel"></span>
-        </span>
-    </span>
-
-    <!-- PRODUCT DETAIL MODAL -->
-    <span class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
-        <span class="modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
-                <h2 class="modal-title">Product Details</h2>
-                <button class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
-            </span>
-            <span class="modal-body" id="productDetailContent"></span>
-        </span>
-    </span>
-
-    <!-- CART SIDEBAR -->
-    <span class="cart-sidebar" id="cartSidebar">
-        <span class="cart-header">
-            <h2 class="modal-title">Shopping Cart</h2>
-            <button class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></button>
-        </span>
-        <span class="cart-body" id="cartItems"></span>
-        <span class="cart-summary">
-            <span class="summary-row">
-                <span>Subtotal</span>
-                <span id="subtotal">₹0</span>
-            </span>
-            <span class="summary-row" id="discountRow" style="display: none;">
-                <span>Discount (10%)</span>
-                <span id="discountAmount">-₹0</span>
-            </span>
-            <span class="summary-row">
-                <span>GST (18%)</span>
-                <span id="gstAmount">₹0</span>
-            </span>
-            <span class="summary-row total">
-                <span>Total</span>
-                <span id="totalAmount">₹0</span>
-            </span>
-        </span>
-        <span class="cart-footer">
-            <button class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</button>
-            <span class="continue-shopping" onclick="toggleCart()">Continue Shopping</span>
-        </span>
-    </span>
-
-    <!-- CHECKOUT MODAL -->
-    <span class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
-        <span class="modal checkout-modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
-                <h2 class="modal-title">Checkout</h2>
-                <button class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></button>
-            </span>
-
-            <!-- PROGRESS BAR -->
-            <span class="progress-bar">
-                <span class="progress-step active" id="step1Indicator">
-                    <span class="progress-circle">1</span>
-                    <span>Address</span>
-                </span>
-                <span class="progress-step" id="step2Indicator">
-                    <span class="progress-circle">2</span>
-                    <span>Payment</span>
-                </span>
-                <span class="progress-step" id="step3Indicator">
-                    <span class="progress-circle">3</span>
-                    <span>Review</span>
-                </span>
-                <span class="progress-step" id="step4Indicator">
-                    <span class="progress-circle">4</span>
-                    <span>Confirm</span>
-                </span>
-            </span>
-
-            <span class="modal-body">
-                <!-- STEP 1: ADDRESS -->
-                <span id="checkoutStep1" class="checkout-step">
-                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Delivery Address</h3>
-                    <form class="checkout-form" id="addressForm">
-                        <span class="form-row">
-                            <span class="form-group">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" id="fullName" required>
-                            </span>
-                            <span class="form-group">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" id="phone" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" id="email" required>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
-                                <label class="form-label">Pincode</label>
-                                <input type="text" id="pincode" required>
-                            </span>
-                            <span class="form-group">
-                                <label class="form-label">City</label>
-                                <input type="text" id="city" required>
-                            </span>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
-                                <label class="form-label">State</label>
-                                <input type="text" id="state" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Address Line 1</label>
-                            <input type="text" id="address1" required>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Address Line 2</label>
-                            <input type="text" id="address2">
-                        </span>
-                    </form>
-                </span>
-
-                <!-- STEP 2: PAYMENT -->
-                <span id="checkoutStep2" class="checkout-step" style="display: none;">
-                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Payment Method</h3>
-
-                    <span class="payment-tabs">
-                        <button class="payment-tab active" onclick="switchPaymentTab('card')">Card</button>
-                        <button class="payment-tab" onclick="switchPaymentTab('upi')">UPI</button>
-                        <button class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</button>
-                        <button class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</button>
-                    </span>
-
-                    <!-- CARD TAB -->
-                    <span id="paymentCard" class="payment-content">
-                        <span class="card-preview">
-                            <span class="card-front" id="cardFront">
-                                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                    <span style="font-size: 24px; font-weight: 700;">💳</span>
-                                    <span id="cardType" style="font-size: 12px;">VISA</span>
-                                </span>
-                                <span class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</span>
-                                <span class="card-bottom">
-                                    <span>
-                                        <span class="card-holder">CARDHOLDER</span>
-                                        <span id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</span>
-                                    </span>
-                                    <span>
-                                        <span class="card-holder">VALID THRU</span>
-                                        <span id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</span>
-                                    </span>
-                                </span>
-                            </span>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Card Number</label>
-                            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Cardholder Name</label>
-                            <input type="text" id="cardHolder" placeholder="John Doe">
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
-                                <label class="form-label">Expiry (MM/YY)</label>
-                                <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5">
-                            </span>
-                            <span class="form-group">
-                                <label class="form-label">CVV</label>
-                                <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-                            </span>
-                        </span>
-                    </span>
-
-                    <!-- UPI TAB -->
-                    <span id="paymentUpi" class="payment-content" style="display: none;">
-                        <span class="form-group">
-                            <label class="form-label">UPI ID</label>
-                            <input type="text" id="upiId" placeholder="yourname@paytm">
-                        </span>
-                        <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or use UPI apps:</h4>
-                        <span class="upi-options">
-                            <button type="button" class="upi-btn">PhonePe</button>
-                            <button type="button" class="upi-btn">Google Pay</button>
-                            <button type="button" class="upi-btn">Paytm</button>
-                        </span>
-                        <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or scan QR code:</h4>
-                        <span class="qr-placeholder">📱 Scan QR Code</span>
-                    </span>
-
-                    <!-- NET BANKING TAB -->
-                    <span id="paymentNetbanking" class="payment-content" style="display: none;">
-                        <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Select your bank:</h4>
-                        <span class="bank-grid">
-                            <button type="button" class="bank-btn">SBI</button>
-                            <button type="button" class="bank-btn">HDFC</button>
-                            <button type="button" class="bank-btn">ICICI</button>
-                            <button type="button" class="bank-btn">Axis</button>
-                            <button type="button" class="bank-btn">Kotak</button>
-                            <button type="button" class="bank-btn">Yes Bank</button>
-                        </span>
-                    </span>
-
-                    <!-- COD TAB -->
-                    <span id="paymentCod" class="payment-content" style="display: none;">
-                        <p style="margin-bottom: 16px;">Pay when your order is delivered</p>
-                        <span class="cod-notice">
-                            <strong>₹40 COD fee</strong> will be applicable for Cash on Delivery orders
-                        </span>
-                    </span>
-                </span>
-
-                <!-- STEP 3: REVIEW -->
-                <span id="checkoutStep3" class="checkout-step" style="display: none;">
-                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Order Review</h3>
-                    <span id="reviewContent"></span>
-                </span>
-
-                <!-- STEP 4: CONFIRMATION -->
-                <span id="checkoutStep4" class="checkout-step" style="display: none;">
-                    <span class="confirmation-container">
-                        <span class="checkmark">
-                            <i class="fas fa-check"></i>
-                        </span>
-                        <h2>Order Placed Successfully!</h2>
-                        <p style="margin-bottom: 20px; color: #666;">Thank you for your purchase</p>
-                        <span class="order-id" id="confirmationOrderId">#ORD-000000</span>
-                        <span class="delivery-info">
-                            <p>✓ Your order will be delivered in 3-5 business days</p>
-                            <p style="margin-top: 8px;">📅 Estimated delivery: <span id="estimatedDelivery"></span></p>
-                        </span>
-                    </span>
-                </span>
-            </span>
-
-            <span class="modal-footer">
-                <button class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</button>
-                <button class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</button>
-            </span>
-        </span>
-    </span>
-
-    <!-- AUTH MODAL -->
-    <span class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
-        <span class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
-                <h2 class="modal-title">Account</h2>
-                <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-            </span>
-            <span class="modal-body">
-                <span class="auth-tabs">
-                    <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
-                    <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
-                </span>
-
-                <!-- LOGIN FORM -->
-                <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-                    <span id="loginError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="loginEmail" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="loginPassword" required>
-                    </span>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</button>
-                    <span class="forgot-password">Forgot password?</span>
-=======
-            <span class="health-panel" id="healthPanel"></span>
-        </span>
-    </span>
-=======
             <riv class="health-panel" id="healthPanel"></riv>
         </riv>
     </riv>
->>>>>>> fb77943 (sfuiut675)
 
     <!-- PRODUCT DETAIL MODAL -->
-    <span class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
-        <span class="modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <riv class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
+        <riv class="modal" onclick="event.stopPropagation()">
+            <riv class="modal-header">
                 <h2 class="modal-title">Product Details</h2>
-                <span class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body" id="productDetailContent"></span>
-        </span>
-    </span>
+                <rivton class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></rivton>
+            </riv>
+            <riv class="modal-body" id="productDetailContent"></riv>
+        </riv>
+    </riv>
 
     <!-- CART SIDEBAR -->
-    <span class="cart-sidebar" id="cartSidebar">
-        <span class="cart-header">
+    <riv class="cart-sidebar" id="cartSidebar">
+        <riv class="cart-header">
             <h2 class="modal-title">Shopping Cart</h2>
-            <span class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></span>
-        </span>
-        <span class="cart-body" id="cartItems"></span>
-        <span class="cart-summary">
-            <span class="summary-row">
+            <rivton class="modal-close" onclick="toggleCart()"><i class="fas fa-times"></i></rivton>
+        </riv>
+        <riv class="cart-body" id="cartItems"></riv>
+        <riv class="cart-summary">
+            <riv class="summary-row">
                 <span>Subtotal</span>
                 <span id="subtotal">₹0</span>
-            </span>
-            <span class="summary-row" id="discountRow" style="display: none;">
+            </riv>
+            <riv class="summary-row" id="discountRow" style="display: none;">
                 <span>Discount (10%)</span>
                 <span id="discountAmount">-₹0</span>
-            </span>
-            <span class="summary-row">
+            </riv>
+            <riv class="summary-row">
                 <span>GST (18%)</span>
                 <span id="gstAmount">₹0</span>
-            </span>
-            <span class="summary-row total">
+            </riv>
+            <riv class="summary-row total">
                 <span>Total</span>
                 <span id="totalAmount">₹0</span>
-            </span>
-        </span>
-        <span class="cart-footer">
-            <span class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</span>
-            <span class="continue-shopping" onclick="toggleCart()">Continue Shopping</span>
-        </span>
-    </span>
+            </riv>
+        </riv>
+        <riv class="cart-footer">
+            <rivton class="btn-checkout" id="checkoutBtn" onclick="startCheckout()">Proceed to Checkout</rivton>
+            <riv class="continue-shopping" onclick="toggleCart()">Continue Shopping</riv>
+        </riv>
+    </riv>
 
     <!-- CHECKOUT MODAL -->
-    <span class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
-        <span class="modal checkout-modal" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <riv class="modal-overlay" id="checkoutModal" onclick="closeCheckout(event)">
+        <riv class="modal checkout-modal" onclick="event.stopPropagation()">
+            <riv class="modal-header">
                 <h2 class="modal-title">Checkout</h2>
-                <span class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></span>
-            </span>
+                <rivton class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></rivton>
+            </riv>
 
             <!-- PROGRESS BAR -->
-            <span class="progress-bar">
-                <span class="progress-step active" id="step1Indicator">
-                    <span class="progress-circle">1</span>
-                    <span>Address</span>
-                </span>
-                <span class="progress-step" id="step2Indicator">
-                    <span class="progress-circle">2</span>
-                    <span>Payment</span>
-                </span>
-                <span class="progress-step" id="step3Indicator">
-                    <span class="progress-circle">3</span>
-                    <span>Review</span>
-                </span>
-                <span class="progress-step" id="step4Indicator">
-                    <span class="progress-circle">4</span>
-                    <span>Confirm</span>
-                </span>
-            </span>
+            <riv class="progress-bar">
+                <riv class="progress-step active" id="step1Indicator">
+                    <riv class="progress-circle">1</riv>
+                    <riv>Address</riv>
+                </riv>
+                <riv class="progress-step" id="step2Indicator">
+                    <riv class="progress-circle">2</riv>
+                    <riv>Payment</riv>
+                </riv>
+                <riv class="progress-step" id="step3Indicator">
+                    <riv class="progress-circle">3</riv>
+                    <riv>Review</riv>
+                </riv>
+                <riv class="progress-step" id="step4Indicator">
+                    <riv class="progress-circle">4</riv>
+                    <riv>Confirm</riv>
+                </riv>
+            </riv>
 
-            <span class="modal-body">
+            <riv class="modal-body">
                 <!-- STEP 1: ADDRESS -->
-                <span id="checkoutStep1" class="checkout-step">
+                <riv id="checkoutStep1" class="checkout-step">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Delivery Address</h3>
                     <form class="checkout-form" id="addressForm">
-                        <span class="form-row">
-                            <span class="form-group">
+                        <riv class="form-row">
+                            <riv class="form-group">
                                 <label class="form-label">Full Name</label>
                                 <input type="text" id="fullName" required>
-                            </span>
-                            <span class="form-group">
+                            </riv>
+                            <riv class="form-group">
                                 <label class="form-label">Phone</label>
                                 <input type="tel" id="phone" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                            </riv>
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Email</label>
                             <input type="email" id="email" required>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                        </riv>
+                        <riv class="form-row">
+                            <riv class="form-group">
                                 <label class="form-label">Pincode</label>
                                 <input type="text" id="pincode" required>
-                            </span>
-                            <span class="form-group">
+                            </riv>
+                            <riv class="form-group">
                                 <label class="form-label">City</label>
                                 <input type="text" id="city" required>
-                            </span>
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                            </riv>
+                        </riv>
+                        <riv class="form-row">
+                            <riv class="form-group">
                                 <label class="form-label">State</label>
                                 <input type="text" id="state" required>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                            </riv>
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Address Line 1</label>
                             <input type="text" id="address1" required>
-                        </span>
-                        <span class="form-group">
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Address Line 2</label>
                             <input type="text" id="address2">
-                        </span>
+                        </riv>
                     </form>
-                </span>
+                </riv>
 
                 <!-- STEP 2: PAYMENT -->
-                <span id="checkoutStep2" class="checkout-step" style="display: none;">
+                <riv id="checkoutStep2" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Payment Method</h3>
 
-                    <span class="payment-tabs">
-                        <span class="payment-tab active" onclick="switchPaymentTab('card')">Card</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('upi')">UPI</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</span>
-                        <span class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</span>
-                    </span>
+                    <riv class="payment-tabs">
+                        <rivton class="payment-tab active" onclick="switchPaymentTab('card')">Card</rivton>
+                        <rivton class="payment-tab" onclick="switchPaymentTab('upi')">UPI</rivton>
+                        <rivton class="payment-tab" onclick="switchPaymentTab('netbanking')">Net Banking</rivton>
+                        <rivton class="payment-tab" onclick="switchPaymentTab('cod')">Cash on Delivery</rivton>
+                    </riv>
 
                     <!-- CARD TAB -->
-                    <span id="paymentCard" class="payment-content">
-                        <span class="card-preview">
-                            <span class="card-front" id="cardFront">
-                                <span style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <riv id="paymentCard" class="payment-content">
+                        <riv class="card-preview">
+                            <riv class="card-front" id="cardFront">
+                                <riv style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                     <span style="font-size: 24px; font-weight: 700;">💳</span>
                                     <span id="cardType" style="font-size: 12px;">VISA</span>
-                                </span>
-                                <span class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</span>
-                                <span class="card-bottom">
-                                    <span>
-                                        <span class="card-holder">CARDHOLDER</span>
-                                        <span id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</span>
-                                    </span>
-                                    <span>
-                                        <span class="card-holder">VALID THRU</span>
-                                        <span id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</span>
-                                    </span>
-                                </span>
-                            </span>
-                        </span>
-                        <span class="form-group">
+                                </riv>
+                                <riv class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</riv>
+                                <riv class="card-bottom">
+                                    <riv>
+                                        <riv class="card-holder">CARDHOLDER</riv>
+                                        <riv id="cardHolderDisplay" style="margin-top: 4px; font-weight: 600;">Your Name</riv>
+                                    </riv>
+                                    <riv>
+                                        <riv class="card-holder">VALID THRU</riv>
+                                        <riv id="cardExpiryDisplay" style="margin-top: 4px; font-weight: 600;">MM/YY</riv>
+                                    </riv>
+                                </riv>
+                            </riv>
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Card Number</label>
                             <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </span>
-                        <span class="form-group">
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Cardholder Name</label>
                             <input type="text" id="cardHolder" placeholder="John Doe">
-                        </span>
-                        <span class="form-row">
-                            <span class="form-group">
+                        </riv>
+                        <riv class="form-row">
+                            <riv class="form-group">
                                 <label class="form-label">Expiry (MM/YY)</label>
                                 <input type="text" id="cardExpiry" placeholder="12/25" maxlength="5">
-                            </span>
-                            <span class="form-group">
+                            </riv>
+                            <riv class="form-group">
                                 <label class="form-label">CVV</label>
                                 <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-                            </span>
-                        </span>
-                    </span>
+                            </riv>
+                        </riv>
+                    </riv>
 
                     <!-- UPI TAB -->
-                    <span id="paymentUpi" class="payment-content" style="display: none;">
-                        <span class="form-group">
+                    <riv id="paymentUpi" class="payment-content" style="display: none;">
+                        <riv class="form-group">
                             <label class="form-label">UPI ID</label>
                             <input type="text" id="upiId" placeholder="yourname@paytm">
-                        </span>
+                        </riv>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or use UPI apps:</h4>
-                        <span class="upi-options">
-                            <span type="rivton" class="upi-btn">PhonePe</span>
-                            <span type="rivton" class="upi-btn">Google Pay</span>
-                            <span type="rivton" class="upi-btn">Paytm</span>
-                        </span>
+                        <riv class="upi-options">
+                            <rivton type="rivton" class="upi-btn">PhonePe</rivton>
+                            <rivton type="rivton" class="upi-btn">Google Pay</rivton>
+                            <rivton type="rivton" class="upi-btn">Paytm</rivton>
+                        </riv>
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Or scan QR code:</h4>
-                        <span class="qr-placeholder">📱 Scan QR Code</span>
-                    </span>
+                        <riv class="qr-placeholder">📱 Scan QR Code</riv>
+                    </riv>
 
                     <!-- NET BANKING TAB -->
-                    <span id="paymentNetbanking" class="payment-content" style="display: none;">
+                    <riv id="paymentNetbanking" class="payment-content" style="display: none;">
                         <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Select your bank:</h4>
-                        <span class="bank-grid">
-                            <span type="rivton" class="bank-btn">SBI</span>
-                            <span type="rivton" class="bank-btn">HDFC</span>
-                            <span type="rivton" class="bank-btn">ICICI</span>
-                            <span type="rivton" class="bank-btn">Axis</span>
-                            <span type="rivton" class="bank-btn">Kotak</span>
-                            <span type="rivton" class="bank-btn">Yes Bank</span>
-                        </span>
-                    </span>
+                        <riv class="bank-grid">
+                            <rivton type="rivton" class="bank-btn">SBI</rivton>
+                            <rivton type="rivton" class="bank-btn">HDFC</rivton>
+                            <rivton type="rivton" class="bank-btn">ICICI</rivton>
+                            <rivton type="rivton" class="bank-btn">Axis</rivton>
+                            <rivton type="rivton" class="bank-btn">Kotak</rivton>
+                            <rivton type="rivton" class="bank-btn">Yes Bank</rivton>
+                        </riv>
+                    </riv>
 
                     <!-- COD TAB -->
-                    <span id="paymentCod" class="payment-content" style="display: none;">
+                    <riv id="paymentCod" class="payment-content" style="display: none;">
                         <p style="margin-bottom: 16px;">Pay when your order is delivered</p>
-                        <span class="cod-notice">
+                        <riv class="cod-notice">
                             <strong>₹40 COD fee</strong> will be applicable for Cash on Delivery orders
-                        </span>
-                    </span>
-                </span>
+                        </riv>
+                    </riv>
+                </riv>
 
                 <!-- STEP 3: REVIEW -->
-                <span id="checkoutStep3" class="checkout-step" style="display: none;">
+                <riv id="checkoutStep3" class="checkout-step" style="display: none;">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Order Review</h3>
-                    <span id="reviewContent"></span>
-                </span>
+                    <riv id="reviewContent"></riv>
+                </riv>
 
                 <!-- STEP 4: CONFIRMATION -->
-                <span id="checkoutStep4" class="checkout-step" style="display: none;">
-                    <span class="confirmation-container">
-                        <span class="checkmark">
+                <riv id="checkoutStep4" class="checkout-step" style="display: none;">
+                    <riv class="confirmation-container">
+                        <riv class="checkmark">
                             <i class="fas fa-check"></i>
-                        </span>
+                        </riv>
                         <h2>Order Placed Successfully!</h2>
                         <p style="margin-bottom: 20px; color: #666;">Thank you for your purchase</p>
-                        <span class="order-id" id="confirmationOrderId">#ORD-000000</span>
-                        <span class="delivery-info">
+                        <riv class="order-id" id="confirmationOrderId">#ORD-000000</riv>
+                        <riv class="delivery-info">
                             <p>✓ Your order will be delivered in 3-5 business days</p>
                             <p style="margin-top: 8px;">📅 Estimated delivery: <span id="estimatedDelivery"></span></p>
-                        </span>
-                    </span>
-                </span>
-            </span>
+                        </riv>
+                    </riv>
+                </riv>
+            </riv>
 
-            <span class="modal-footer">
-                <span class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</span>
-                <span class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</span>
-            </span>
-        </span>
-    </span>
+            <riv class="modal-footer">
+                <rivton class="btn-secondary" id="backBtn" onclick="previousCheckoutStep()" style="display: none;">Back</rivton>
+                <rivton class="btn-primary" id="nextBtn" onclick="nextCheckoutStep()">Continue</rivton>
+            </riv>
+        </riv>
+    </riv>
 
     <!-- AUTH MODAL -->
-    <span class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
-        <span class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <riv class="modal-overlay" id="authModal" onclick="closeAuthModal(event)">
+        <riv class="modal" style="max-width: 400px;" onclick="event.stopPropagation()">
+            <riv class="modal-header">
                 <h2 class="modal-title">Account</h2>
-                <span class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
-                <span class="auth-tabs">
-                    <span class="auth-tab active" onclick="switchAuthTab('login')">Login</span>
-                    <span class="auth-tab" onclick="switchAuthTab('register')">Register</span>
-                </span>
+                <rivton class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></rivton>
+            </riv>
+            <riv class="modal-body">
+                <riv class="auth-tabs">
+                    <rivton class="auth-tab active" onclick="switchAuthTab('login')">Login</rivton>
+                    <rivton class="auth-tab" onclick="switchAuthTab('register')">Register</rivton>
+                </riv>
 
                 <!-- LOGIN FORM -->
                 <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-                    <span id="loginError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
+                    <riv id="loginError" class="auth-error" style="display: none;"></riv>
+                    <riv class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="loginEmail" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="loginPassword" required>
-<<<<<<< HEAD
-                    </span>
-                    <span type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</span>
-                    <span class="forgot-password">Forgot password?</span>
->>>>>>> a8656be (Sdfs)
-=======
                     </riv>
                     <rivton type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</rivton>
                     <riv class="forgot-password">Forgot password?</riv>
->>>>>>> fb77943 (sfuiut675)
                 </form>
 
                 <!-- REGISTER FORM -->
                 <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    <span id="registerError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" id="registerName" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="registerEmail" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" id="registerPhone" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="registerPassword" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Confirm Password</label>
-                        <input type="password" id="registerConfirm" required>
-                    </span>
-                    <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
-                </form>
-            </span>
-        </span>
-    </span>
-
-    <!-- TRACKING MODAL -->
-    <span class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
-                <h2 class="modal-title">Order Tracking</h2>
-                <button class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></button>
-            </span>
-            <span class="modal-body">
-                <span id="trackingContent" class="tracking-timeline"></span>
-            </span>
-        </span>
-    </span>
-
-    <!-- ADD PRODUCT MODAL -->
-    <span class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
-                <h2 class="modal-title">Add Product</h2>
-                <button class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></button>
-            </span>
-            <span class="modal-body">
-                <form id="addProductForm" class="checkout-form" onsubmit="submitAddProduct(event)">
-                    <span class="form-group">
-                        <label class="form-label">Product Name</label>
-                        <input type="text" id="productNameInput" required>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
-                            <label class="form-label">Category</label>
-                            <input type="text" id="productCategoryInput" required>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Brand</label>
-                            <input type="text" id="productBrandInput" required>
-                        </span>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
-                            <label class="form-label">Price (₹)</label>
-                            <input type="number" id="productPriceInput" required>
-                        </span>
-                        <span class="form-group">
-                            <label class="form-label">Original Price (₹)</label>
-                            <input type="number" id="productOriginalInput" required>
-                        </span>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Stock</label>
-                        <input type="number" id="productStockInput" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Emoji</label>
-                        <input type="text" id="productEmojiInput" placeholder="📱" required>
-                    </span>
-                    <span class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea id="productDescriptionInput" required></textarea>
-                    </span>
-                </form>
-            </span>
-            <span class="modal-footer">
-                <button class="btn-secondary" onclick="closeAddProductModal()">Cancel</button>
-                <button class="btn-primary" onclick="submitAddProduct()">Add Product</button>
-            </span>
-        </span>
-    </span>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <span class="footer-content">
-            <span class="footer-section">
-=======
-                    <span id="registerError" class="auth-error" style="display: none;"></span>
-                    <span class="form-group">
-=======
                     <riv id="registerError" class="auth-error" style="display: none;"></riv>
                     <riv class="form-group">
->>>>>>> fb77943 (sfuiut675)
                         <label class="form-label">Full Name</label>
                         <input type="text" id="registerName" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Email</label>
                         <input type="email" id="registerEmail" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Phone</label>
                         <input type="tel" id="registerPhone" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="registerPassword" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Confirm Password</label>
                         <input type="password" id="registerConfirm" required>
-                    </span>
-                    <span type="submit" class="btn-primary" style="width: 100%;">Create Account</span>
+                    </riv>
+                    <rivton type="submit" class="btn-primary" style="width: 100%;">Create Account</rivton>
                 </form>
-            </span>
-        </span>
-    </span>
+            </riv>
+        </riv>
+    </riv>
 
     <!-- TRACKING MODAL -->
-    <span class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <riv class="modal-overlay" id="trackingModal" onclick="closeTracking(event)">
+        <riv class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <riv class="modal-header">
                 <h2 class="modal-title">Order Tracking</h2>
-                <span class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
-                <span id="trackingContent" class="tracking-timeline"></span>
-            </span>
-        </span>
-    </span>
+                <rivton class="modal-close" onclick="closeTracking()"><i class="fas fa-times"></i></rivton>
+            </riv>
+            <riv class="modal-body">
+                <riv id="trackingContent" class="tracking-timeline"></riv>
+            </riv>
+        </riv>
+    </riv>
 
     <!-- ADD PRODUCT MODAL -->
-    <span class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
-        <span class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
-            <span class="modal-header">
+    <riv class="modal-overlay" id="addProductModal" onclick="closeAddProductModal(event)">
+        <riv class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <riv class="modal-header">
                 <h2 class="modal-title">Add Product</h2>
-                <span class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></span>
-            </span>
-            <span class="modal-body">
+                <rivton class="modal-close" onclick="closeAddProductModal()"><i class="fas fa-times"></i></rivton>
+            </riv>
+            <riv class="modal-body">
                 <form id="addProductForm" class="checkout-form" onsubmit="submitAddProduct(event)">
-                    <span class="form-group">
+                    <riv class="form-group">
                         <label class="form-label">Product Name</label>
                         <input type="text" id="productNameInput" required>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
+                    </riv>
+                    <riv class="form-row">
+                        <riv class="form-group">
                             <label class="form-label">Category</label>
                             <input type="text" id="productCategoryInput" required>
-                        </span>
-                        <span class="form-group">
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Brand</label>
                             <input type="text" id="productBrandInput" required>
-                        </span>
-                    </span>
-                    <span class="form-row">
-                        <span class="form-group">
+                        </riv>
+                    </riv>
+                    <riv class="form-row">
+                        <riv class="form-group">
                             <label class="form-label">Price (₹)</label>
                             <input type="number" id="productPriceInput" required>
-                        </span>
-                        <span class="form-group">
+                        </riv>
+                        <riv class="form-group">
                             <label class="form-label">Original Price (₹)</label>
                             <input type="number" id="productOriginalInput" required>
-                        </span>
-                    </span>
-                    <span class="form-group">
+                        </riv>
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Stock</label>
                         <input type="number" id="productStockInput" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Emoji</label>
                         <input type="text" id="productEmojiInput" placeholder="📱" required>
-                    </span>
-                    <span class="form-group">
+                    </riv>
+                    <riv class="form-group">
                         <label class="form-label">Description</label>
                         <textarea id="productDescriptionInput" required></textarea>
-                    </span>
+                    </riv>
                 </form>
-            </span>
-            <span class="modal-footer">
-                <span class="btn-secondary" onclick="closeAddProductModal()">Cancel</span>
-                <span class="btn-primary" onclick="submitAddProduct()">Add Product</span>
-            </span>
-        </span>
-    </span>
+            </riv>
+            <riv class="modal-footer">
+                <rivton class="btn-secondary" onclick="closeAddProductModal()">Cancel</rivton>
+                <rivton class="btn-primary" onclick="submitAddProduct()">Add Product</rivton>
+            </riv>
+        </riv>
+    </riv>
 
     <!-- FOOTER -->
     <footer class="footer">
-<<<<<<< HEAD
-        <span class="footer-content">
-            <span class="footer-section">
->>>>>>> a8656be (Sdfs)
-=======
         <riv class="footer-content">
             <riv class="footer-section">
->>>>>>> fb77943 (sfuiut675)
                 <h3>About ShopNow</h3>
                 <ul>
                     <li><a href="#">About Us</a></li>
                     <li><a href="#">Careers</a></li>
                     <li><a href="#">Press</a></li>
                 </ul>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            </span>
-            <span class="footer-section">
-=======
-            </span>
-            <span class="footer-section">
->>>>>>> a8656be (Sdfs)
-=======
             </riv>
             <riv class="footer-section">
->>>>>>> fb77943 (sfuiut675)
                 <h3>Help & Support</h3>
                 <ul>
                     <li><a href="#">Contact Us</a></li>
                     <li><a href="#">FAQs</a></li>
                     <li><a href="#">Shipping Info</a></li>
                 </ul>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            </span>
-            <span class="footer-section">
-=======
-            </span>
-            <span class="footer-section">
->>>>>>> a8656be (Sdfs)
-=======
             </riv>
             <riv class="footer-section">
->>>>>>> fb77943 (sfuiut675)
                 <h3>Policies</h3>
                 <ul>
                     <li><a href="#">Privacy Policy</a></li>
                     <li><a href="#">Terms & Conditions</a></li>
                     <li><a href="#">Return Policy</a></li>
                 </ul>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            </span>
-            <span class="footer-section">
-=======
-            </span>
-            <span class="footer-section">
->>>>>>> a8656be (Sdfs)
-=======
             </riv>
             <riv class="footer-section">
->>>>>>> fb77943 (sfuiut675)
                 <h3>Connect With Us</h3>
                 <ul>
                     <li><a href="#">Facebook</a></li>
                     <li><a href="#">Twitter</a></li>
                     <li><a href="#">Instagram</a></li>
                 </ul>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            </span>
-        </span>
-        <span class="footer-bottom">
-            <p>&copy; 2026 ShopNow. All rights reserved. | Built with for online shopping</p>
-        </span>
-=======
-            </span>
-        </span>
-        <span class="footer-bottom">
-            <p>&copy; 2026 ShopNow. All rights reserved. | Built with for online shopping</p>
-        </span>
->>>>>>> a8656be (Sdfs)
-=======
             </riv>
         </riv>
         <riv class="footer-bottom">
             <p>&copy; 2026 ShopNow. All rights reserved. | Built with for online shopping</p>
         </riv>
->>>>>>> fb77943 (sfuiut675)
     </footer>
 
     <script>
@@ -2907,72 +2305,28 @@
             const fallbackHtml = `<span class="img-fallback" style="display:${imgSrc.startsWith('http') ? 'none' : 'flex'}">${imgSrc || '📦'}</span>`;
 
             return `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
-                    <span class="product-image">${imgHtml}${fallbackHtml}</span>
-                    <span class="product-name">${product.name}</span>
-                    <span class="product-brand">${product.brand || 'Brand'}</span>
-                    <span class="product-price-row">
-                        <span class="product-price">₹${product.price}</span>
-                        <span class="product-original">₹${product.original_price}</span>
-                        <span class="product-discount">${discount}% OFF</span>
-                    </span>
-                    <span class="product-rating">
-                        <span class="stars">${'★'.repeat(Math.floor(rating))}</span>
-                        <span>(${reviews})</span>
-                    </span>
-                    <span class="product-buttons" onclick="event.stopPropagation()">
-                        <button class="btn-sm btn-cart" onclick="addToCart(${product.id})">
-=======
-                <span class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
-                    <span class="product-image">${imgHtml}${fallbackHtml}</span>
-                    <span class="product-name">${product.name}</span>
-                    <span class="product-brand">${product.brand || 'Brand'}</span>
-                    <span class="product-price-row">
-=======
                 <riv class="product-card" data-product-id="${product.id}" onclick="showProductDetail(${product.id})">
                     <riv class="product-image">${imgHtml}${fallbackHtml}</riv>
                     <riv class="product-name">${product.name}</riv>
                     <riv class="product-brand">${product.brand || 'Brand'}</riv>
                     <riv class="product-price-row">
->>>>>>> fb77943 (sfuiut675)
                         <span class="product-price">₹${product.price}</span>
                         <span class="product-original">₹${product.original_price}</span>
                         <span class="product-discount">${discount}% OFF</span>
-                    </span>
-                    <span class="product-rating">
+                    </riv>
+                    <riv class="product-rating">
                         <span class="stars">${'★'.repeat(Math.floor(rating))}</span>
                         <span>(${reviews})</span>
-<<<<<<< HEAD
-                    </span>
-                    <span class="product-rivtons" onclick="event.stopPropagation()">
-                        <span class="btn-sm btn-cart" onclick="addToCart(${product.id})">
->>>>>>> a8656be (Sdfs)
-=======
                     </riv>
                     <riv class="product-rivtons" onclick="event.stopPropagation()">
                         <rivton class="btn-sm btn-cart" onclick="addToCart(${product.id})">
->>>>>>> fb77943 (sfuiut675)
                             <i class="fas fa-shopping-cart"></i> Add
-                        </span>
-                        <span class="btn-sm btn-view" onclick="showProductDetail(${product.id})">
+                        </rivton>
+                        <rivton class="btn-sm btn-view" onclick="showProductDetail(${product.id})">
                             Quick View
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        </button>
-                    </span>
-                </span>
-=======
-                        </span>
-                    </span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                         </rivton>
                     </riv>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `;
         }
 
@@ -2993,120 +2347,45 @@
                 : ``;
             const detailFallback = `<span class="img-fallback-lg" style="display:${detailImgSrc.startsWith('http') ? 'none' : 'flex'}">${detailImgSrc || '📦'}</span>`;
             const content = `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="product-detail-modal">
-                    <span class="product-detail-image">${detailImgHtml}${detailFallback}</span>
-                    <span class="product-detail-content">
-                        <h2>${product.name}</h2>
-                        <span class="product-detail-brand">${product.brand || 'Brand'}</span>
-                        <span class="product-detail-price">
-                            <span class="price">₹${product.price}</span>
-                            <span style="text-decoration: line-through; color: #999;">₹${product.original_price}</span>
-                            <span style="background: var(--success); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${discount}% OFF</span>
-                        </span>
-                        <span class="product-detail-stock ${stockClass}">${stockStatus}</span>
-                        <span style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                            <span class="stars" style="font-size: 16px;">${'★'.repeat(Math.floor(rating))}</span>
-                            <span style="color: #999; font-size: 14px;">${rating} (${product.reviews || 128})</span>
-                        </span>
-                        <span class="product-detail-description">
-                            ${product.description || 'Premium quality product with excellent features and durability.'}
-                        </span>
-                        <span class="product-detail-buttons">
-                            <button class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
-=======
-                <span class="product-detail-modal">
-                    <span class="product-detail-image">${detailImgHtml}${detailFallback}</span>
-                    <span class="product-detail-content">
-=======
                 <riv class="product-detail-modal">
                     <riv class="product-detail-image">${detailImgHtml}${detailFallback}</riv>
                     <riv class="product-detail-content">
->>>>>>> fb77943 (sfuiut675)
                         <h2>${product.name}</h2>
-                        <span class="product-detail-brand">${product.brand || 'Brand'}</span>
-                        <span class="product-detail-price">
+                        <riv class="product-detail-brand">${product.brand || 'Brand'}</riv>
+                        <riv class="product-detail-price">
                             <span class="price">₹${product.price}</span>
                             <span style="text-decoration: line-through; color: #999;">₹${product.original_price}</span>
                             <span style="background: var(--success); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${discount}% OFF</span>
-                        </span>
-                        <span class="product-detail-stock ${stockClass}">${stockStatus}</span>
-                        <span style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        </riv>
+                        <riv class="product-detail-stock ${stockClass}">${stockStatus}</riv>
+                        <riv style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                             <span class="stars" style="font-size: 16px;">${'★'.repeat(Math.floor(rating))}</span>
                             <span style="color: #999; font-size: 14px;">${rating} (${product.reviews || 128})</span>
-                        </span>
-                        <span class="product-detail-description">
+                        </riv>
+                        <riv class="product-detail-description">
                             ${product.description || 'Premium quality product with excellent features and durability.'}
-<<<<<<< HEAD
-                        </span>
-                        <span class="product-detail-rivtons">
-                            <span class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
->>>>>>> a8656be (Sdfs)
-=======
                         </riv>
                         <riv class="product-detail-rivtons">
                             <rivton class="btn-primary" onclick="addToCart(${product.id}); closeProductModal(); showToast('Added to cart!', 'success')">
->>>>>>> fb77943 (sfuiut675)
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </span>
-                            <span class="btn-accent" onclick="addToCart(${product.id}); closeProductModal(); startCheckout()">
+                            </rivton>
+                            <rivton class="btn-accent" onclick="addToCart(${product.id}); closeProductModal(); startCheckout()">
                                 <i class="fas fa-bolt"></i> Buy Now
-<<<<<<< HEAD
-<<<<<<< HEAD
-                            </button>
-                        </span>
-                        <span class="reviews-section">
-                            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Reviews</h3>
-                            <span class="review-item">
-                                <span class="review-header">
-                                    <span><strong>John Doe</strong> - 5★</span>
-                                    <span style="font-size: 11px; color: #999;">2 days ago</span>
-                                </span>
-                                <span class="review-text">Excellent product! Highly recommended.</span>
-                            </span>
-                            <span class="review-item">
-                                <span class="review-header">
-                                    <span><strong>Jane Smith</strong> - 4★</span>
-                                    <span style="font-size: 11px; color: #999;">1 week ago</span>
-                                </span>
-                                <span class="review-text">Good quality and fast delivery.</span>
-                            </span>
-                        </span>
-                    </span>
-                </span>
-            </span>
-=======
-                            </span>
-                        </span>
-                        <span class="reviews-section">
-=======
                             </rivton>
                         </riv>
                         <riv class="reviews-section">
->>>>>>> fb77943 (sfuiut675)
                             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Reviews</h3>
-                            <span class="review-item">
-                                <span class="review-header">
+                            <riv class="review-item">
+                                <riv class="review-header">
                                     <span><strong>John Doe</strong> - 5★</span>
                                     <span style="font-size: 11px; color: #999;">2 days ago</span>
-                                </span>
-                                <span class="review-text">Excellent product! Highly recommended.</span>
-                            </span>
-                            <span class="review-item">
-                                <span class="review-header">
+                                </riv>
+                                <riv class="review-text">Excellent product! Highly recommended.</riv>
+                            </riv>
+                            <riv class="review-item">
+                                <riv class="review-header">
                                     <span><strong>Jane Smith</strong> - 4★</span>
                                     <span style="font-size: 11px; color: #999;">1 week ago</span>
-<<<<<<< HEAD
-                                </span>
-                                <span class="review-text">Good quality and fast delivery.</span>
-                            </span>
-                        </span>
-                    </span>
-                </span>
-            </span>
->>>>>>> a8656be (Sdfs)
-=======
                                 </riv>
                                 <riv class="review-text">Good quality and fast delivery.</riv>
                             </riv>
@@ -3114,7 +2393,6 @@
                     </riv>
                 </riv>
             </riv>
->>>>>>> fb77943 (sfuiut675)
             `;
 
             document.getElementById('productDetailContent').innerHTML = content;
@@ -3131,7 +2409,7 @@
         function renderCategories() {
             const bar = document.getElementById('categoriesBar');
             bar.innerHTML = CATEGORIES.map(cat => `
-                <span class="category-pill" onclick="filterByCategory('${cat}')">${cat}</span>
+                <rivton class="category-pill" onclick="filterByCategory('${cat}')">${cat}</rivton>
             `).join('');
 
             const filterCats = document.getElementById('filterCategories');
@@ -3228,31 +2506,6 @@
 
             const cartItems = document.getElementById('cartItems');
             if (cart.length === 0) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-                cartItems.innerHTML = '<span class="empty-state"><span class="empty-state-icon">🛒</span><span class="empty-state-title">Your cart is empty</span></span>';
-            } else {
-                cartItems.innerHTML = cart.map(item => `
-                    <span class="cart-item">
-                        <span class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</span>
-                        <span class="cart-item-info">
-                            <span class="cart-item-name">${item.name}</span>
-                            <span class="cart-item-price">₹${item.price}</span>
-                            <span class="cart-item-qty">
-                                <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
-=======
-                cartItems.innerHTML = '<span class="empty-state"><span class="empty-state-icon">🛒</span><span class="empty-state-title">Your cart is empty</span></span>';
-            } else {
-                cartItems.innerHTML = cart.map(item => `
-                    <span class="cart-item">
-                        <span class="cart-item-image">${(item.image||'').startsWith('http') ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}</span>
-                        <span class="cart-item-info">
-                            <span class="cart-item-name">${item.name}</span>
-                            <span class="cart-item-price">₹${item.price}</span>
-                            <span class="cart-item-qty">
-                                <span class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</span>
->>>>>>> a8656be (Sdfs)
-=======
                 cartItems.innerHTML = '<riv class="empty-state"><riv class="empty-state-icon">🛒</riv><riv class="empty-state-title">Your cart is empty</riv></riv>';
             } else {
                 cartItems.innerHTML = cart.map(item => `
@@ -3263,25 +2516,12 @@
                             <riv class="cart-item-price">₹${item.price}</riv>
                             <riv class="cart-item-qty">
                                 <rivton class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</rivton>
->>>>>>> fb77943 (sfuiut675)
                                 <span style="min-width: 30px; text-align: center;">${item.quantity}</span>
-                                <span class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</span>
+                                <rivton class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</rivton>
                                 <span class="cart-remove" onclick="removeFromCart(${item.id})">Remove</span>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                            </span>
-                        </span>
-                    </span>
-=======
-                            </span>
-                        </span>
-                    </span>
->>>>>>> a8656be (Sdfs)
-=======
                             </riv>
                         </riv>
                     </riv>
->>>>>>> fb77943 (sfuiut675)
                 `).join('');
             }
 
@@ -3528,50 +2768,22 @@
             const total = subtotal - discount + gst;
 
             const itemsHtml = checkoutData.items.map(item => `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                    <span style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
-                        ${(item.image||'').startsWith('http') ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}
-                    </span>
-                    <span style="flex:1;">
-                        <span style="font-weight: 600; font-size:13px;">${item.name}</span>
-                        <span style="font-size: 12px; color: #999;">Qty: ${item.quantity}</span>
-                    </span>
-                    <span style="text-align: right;">
-                        <span style="font-weight: 600;">₹${item.price * item.quantity}</span>
-                    </span>
-                </span>
-            `).join('');
-
-            document.getElementById('reviewContent').innerHTML = `
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-=======
-                <span style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                    <span style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
-=======
                 <riv style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
                     <riv style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:var(--light-bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">
->>>>>>> fb77943 (sfuiut675)
                         ${(item.image||'').startsWith('http') ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : (item.image || '📦')}
-                    </span>
-                    <span style="flex:1;">
-                        <span style="font-weight: 600; font-size:13px;">${item.name}</span>
-                        <span style="font-size: 12px; color: #999;">Qty: ${item.quantity}</span>
-                    </span>
-                    <span style="text-align: right;">
-                        <span style="font-weight: 600;">₹${item.price * item.quantity}</span>
-                    </span>
-                </span>
+                    </riv>
+                    <riv style="flex:1;">
+                        <riv style="font-weight: 600; font-size:13px;">${item.name}</riv>
+                        <riv style="font-size: 12px; color: #999;">Qty: ${item.quantity}</riv>
+                    </riv>
+                    <riv style="text-align: right;">
+                        <riv style="font-weight: 600;">₹${item.price * item.quantity}</riv>
+                    </riv>
+                </riv>
             `).join('');
 
             document.getElementById('reviewContent').innerHTML = `
-<<<<<<< HEAD
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
->>>>>>> a8656be (Sdfs)
-=======
                 <riv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
->>>>>>> fb77943 (sfuiut675)
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Delivery Address</h4>
                     <p style="font-size: 13px; line-height: 1.6;">
                         ${checkoutData.address.fullName}<br>
@@ -3579,82 +2791,34 @@
                         ${checkoutData.address.state}<br>
                         <strong>Phone:</strong> ${checkoutData.address.phone}
                     </p>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                </span>
+                </riv>
 
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <riv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
                     <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Payment Method</h4>
                     <p style="font-size: 13px; text-transform: capitalize;">${selectedPaymentMethod}</p>
-                </span>
-=======
-                </span>
-=======
                 </riv>
->>>>>>> fb77943 (sfuiut675)
-
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Payment Method</h4>
-                    <p style="font-size: 13px; text-transform: capitalize;">${selectedPaymentMethod}</p>
-<<<<<<< HEAD
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
-                </riv>
->>>>>>> fb77943 (sfuiut675)
 
                 <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">Order Items</h4>
                 ${itemsHtml}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Subtotal</span>
-                        <span>₹${subtotal}</span>
-                    </span>
-                    ${currentUser ? `<span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Discount (10%)</span>
-                        <span>-₹${Math.round(discount)}</span>
-                    </span>` : ''}
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>GST (18%)</span>
-                        <span>₹${Math.round(gst)}</span>
-                    </span>
-                    <span style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
-                        <span>Total</span>
-                        <span>₹${Math.round(total)}</span>
-                    </span>
-                </span>
-=======
-                <span style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-=======
                 <riv style="background: var(--light-bg); padding: 16px; border-radius: 8px; margin-top: 20px;">
                     <riv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
->>>>>>> fb77943 (sfuiut675)
                         <span>Subtotal</span>
                         <span>₹${subtotal}</span>
-                    </span>
-                    ${currentUser ? `<span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </riv>
+                    ${currentUser ? `<riv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Discount (10%)</span>
                         <span>-₹${Math.round(discount)}</span>
-                    </span>` : ''}
-                    <span style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    </riv>` : ''}
+                    <riv style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>GST (18%)</span>
                         <span>₹${Math.round(gst)}</span>
-                    </span>
-                    <span style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
+                    </riv>
+                    <riv style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; border-top: 1px solid white; padding-top: 8px;">
                         <span>Total</span>
                         <span>₹${Math.round(total)}</span>
-<<<<<<< HEAD
-                    </span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                     </riv>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `;
         }
 
@@ -3763,35 +2927,6 @@
             };
 
             const html = orders.map(order => `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="order-card">
-                    <span class="order-info">
-                        <span class="order-id-text">${order.id}</span>
-                        <span class="order-date">${order.date.toLocaleDateString()}</span>
-                        <span class="order-items">${order.items} items</span>
-                        <span class="order-status ${statusColors[order.status] || 'status-placed'}">${order.status.toUpperCase()}</span>
-                    </span>
-                    <span class="order-total">₹${order.total}</span>
-                    <span class="order-actions">
-                        <button class="btn-primary" onclick="showTracking('${order.id}')">Track</button>
-                    </span>
-                </span>
-=======
-                <span class="order-card">
-                    <span class="order-info">
-                        <span class="order-id-text">${order.id}</span>
-                        <span class="order-date">${order.date.toLocaleDateString()}</span>
-                        <span class="order-items">${order.items} items</span>
-                        <span class="order-status ${statusColors[order.status] || 'status-placed'}">${order.status.toUpperCase()}</span>
-                    </span>
-                    <span class="order-total">₹${order.total}</span>
-                    <span class="order-actions">
-                        <span class="btn-primary" onclick="showTracking('${order.id}')">Track</span>
-                    </span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                 <riv class="order-card">
                     <riv class="order-info">
                         <riv class="order-id-text">${order.id}</riv>
@@ -3804,7 +2939,6 @@
                         <rivton class="btn-primary" onclick="showTracking('${order.id}')">Track</rivton>
                     </riv>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `).join('');
 
             document.getElementById('ordersList').innerHTML = html;
@@ -3822,27 +2956,6 @@
             ];
 
             const html = steps.map((step, i) => `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
-                    <span class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</span>
-                    ${i < steps.length - 1 ? '<span class="tracking-line"></span>' : ''}
-                    <span class="tracking-content">
-                        <span class="tracking-title">${step.title}</span>
-                        <span class="tracking-date">${new Date().toLocaleDateString()}</span>
-                    </span>
-                </span>
-=======
-                <span class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
-                    <span class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</span>
-                    ${i < steps.length - 1 ? '<span class="tracking-line"></span>' : ''}
-                    <span class="tracking-content">
-                        <span class="tracking-title">${step.title}</span>
-                        <span class="tracking-date">${new Date().toLocaleDateString()}</span>
-                    </span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                 <riv class="tracking-step ${step.status === 'active' ? 'active' : step.status === 'completed' ? 'active' : ''}">
                     <riv class="tracking-circle">${step.status === 'completed' ? '✓' : i + 1}</riv>
                     ${i < steps.length - 1 ? '<riv class="tracking-line"></riv>' : ''}
@@ -3851,7 +2964,6 @@
                         <riv class="tracking-date">${new Date().toLocaleDateString()}</riv>
                     </riv>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `).join('');
 
             document.getElementById('trackingContent').innerHTML = html;
@@ -3873,43 +2985,6 @@
             showView('adminView');
 
             const statsHtml = `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="stat-card">
-                    <span class="stat-value">120</span>
-                    <span class="stat-label">Total Products</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">1024</span>
-                    <span class="stat-label">Total Orders</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">₹12,50,000</span>
-                    <span class="stat-label">Total Revenue</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">485</span>
-                    <span class="stat-label">Registered Users</span>
-                </span>
-=======
-                <span class="stat-card">
-                    <span class="stat-value">120</span>
-                    <span class="stat-label">Total Products</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">1024</span>
-                    <span class="stat-label">Total Orders</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">₹12,50,000</span>
-                    <span class="stat-label">Total Revenue</span>
-                </span>
-                <span class="stat-card">
-                    <span class="stat-value">485</span>
-                    <span class="stat-label">Registered Users</span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                 <riv class="stat-card">
                     <riv class="stat-value">120</riv>
                     <riv class="stat-label">Total Products</riv>
@@ -3926,7 +3001,6 @@
                     <riv class="stat-value">485</riv>
                     <riv class="stat-label">Registered Users</riv>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
 
@@ -3937,8 +3011,8 @@
                     <td>₹${p.price}</td>
                     <td>${p.stock || 50}</td>
                     <td>
-                        <span class="btn-sm btn-view" style="padding: 4px 8px;">Edit</span>
-                        <span class="btn-sm btn-cart" style="padding: 4px 8px; margin-left: 4px;">Delete</span>
+                        <rivton class="btn-sm btn-view" style="padding: 4px 8px;">Edit</rivton>
+                        <rivton class="btn-sm btn-cart" style="padding: 4px 8px; margin-left: 4px;">Delete</rivton>
                     </td>
                 </tr>
             `).join('');
@@ -3950,24 +3024,10 @@
                 { name: 'User Service', status: 'online' },
                 { name: 'Payment Service', status: 'online' }
             ].map(service => `
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <span class="health-item">
-                    <span class="health-dot ${service.status}"></span>
-                    <span>${service.name}</span>
-                </span>
-=======
-                <span class="health-item">
-                    <span class="health-dot ${service.status}"></span>
-                    <span>${service.name}</span>
-                </span>
->>>>>>> a8656be (Sdfs)
-=======
                 <riv class="health-item">
                     <riv class="health-dot ${service.status}"></riv>
                     <span>${service.name}</span>
                 </riv>
->>>>>>> fb77943 (sfuiut675)
             `).join('');
             document.getElementById('healthPanel').innerHTML = healthHtml;
         }
