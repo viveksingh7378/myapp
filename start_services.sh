@@ -35,34 +35,34 @@ echo ""
 cd "$ROOT/services/product-service" && \
   PYTHONPATH="$ROOT/services/product-service" \
   python3 app/app.py > /tmp/product.log 2>&1 &
-echo "  ✅ product-service  → http://localhost:5001   (log: /tmp/product.log)"
+echo "   product-service  → http://localhost:5001   (log: /tmp/product.log)"
 
 cd "$ROOT/services/order-service" && \
   PYTHONPATH="$ROOT/services/order-service" \
   python3 app/app.py > /tmp/order.log 2>&1 &
-echo "  ✅ order-service    → http://localhost:5002   (log: /tmp/order.log)"
+echo "   order-service    → http://localhost:5002   (log: /tmp/order.log)"
 
 cd "$ROOT/services/user-service" && \
   PYTHONPATH="$ROOT/services/user-service" \
   python3 app/app.py > /tmp/user.log 2>&1 &
-echo "  ✅ user-service     → http://localhost:5003   (log: /tmp/user.log)"
+echo "   user-service     → http://localhost:5003   (log: /tmp/user.log)"
 
 cd "$ROOT/services/payment-service" && \
   PYTHONPATH="$ROOT/services/payment-service" \
   python3 app/app.py > /tmp/payment.log 2>&1 &
-echo "  ✅ payment-service  → http://localhost:5004   (log: /tmp/payment.log)"
+echo "   payment-service  → http://localhost:5004   (log: /tmp/payment.log)"
 
 # ── Wait for startup ───────────────────────────────────────────
 sleep 2
 echo ""
 echo "─────────────────────────────────────────────────────────"
-echo "🌐 Open your website:"
+echo " Open your website:"
 echo "   file://$ROOT/frontend/index.html"
 echo ""
-echo "📄 New features demo page:"
+echo " New features demo page:"
 echo "   file://$ROOT/new-features.html"
 echo ""
-echo "🔗 API Endpoints to test:"
+echo " API Endpoints to test:"
 echo "   http://localhost:5001/products             (all products)"
 echo "   http://localhost:5001/products/featured    (NEW - top rated)"
 echo "   http://localhost:5001/health"
@@ -82,7 +82,7 @@ echo ""
 echo "   Jenkins Dashboard → http://localhost:8080"
 echo "─────────────────────────────────────────────────────────"
 echo ""
-echo "⚠️  NOTE: New endpoints have syntax bugs on purpose!"
+echo "  NOTE: New endpoints have syntax bugs on purpose!"
 echo "   Push code → Jenkins detects errors → AI fixes them →"
 echo "   Pull fixed code → restart this script → endpoints work!"
 echo ""

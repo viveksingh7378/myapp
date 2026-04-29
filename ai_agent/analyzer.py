@@ -889,7 +889,7 @@ def git_commit_and_push(fixed_files, summary):
     )
 
     if push.returncode == 0:
-        print("AI Analyzer: ✅ Pushed fix to GitHub ✓")
+        print("AI Analyzer:  Pushed fix to GitHub ✓")
         return True
 
     # Print FULL output so Jenkins console shows the exact HTTP response

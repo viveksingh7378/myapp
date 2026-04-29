@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────────────────────────
 
 echo ""
-echo "🛑 Stopping all ShopEasy services..."
+echo " Stopping all ShopEasy services..."
 echo ""
 
 for PORT in 5001 5002 5003 5004; do
@@ -18,5 +18,5 @@ for PORT in 5001 5002 5003 5004; do
 done
 
 echo ""
-echo "✅ All services stopped."
+echo " All services stopped."
 echo ""

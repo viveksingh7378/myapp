@@ -62,7 +62,7 @@ for entry in "${SERVICES[@]}"; do
     HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${port}/health" 2>/dev/null || echo "000")
 
     if [ "$HTTP" = "200" ]; then
-        log "  ✅ $name → HTTP 200 on port $port"
+        log "   $name → HTTP 200 on port $port"
     else
         warn "  ⚠  $name → HTTP $HTTP on port $port (container status: $STATUS)"
         ALL_OK=false
@@ -76,11 +76,11 @@ echo ""
 if [ "$ALL_OK" = true ]; then
     log "=== Deploy SUCCESSFUL ==="
     echo ""
-    echo "  🌐 Frontend     → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):80"
-    echo "  📦 Products API → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5001"
-    echo "  📋 Orders API   → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5002"
-    echo "  👤 Users API    → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5003"
-    echo "  💳 Payments API → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5004"
+    echo "   Frontend     → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):80"
+    echo "   Products API → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5001"
+    echo "   Orders API   → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5002"
+    echo "   Users API    → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5003"
+    echo "   Payments API → http://$(curl -s ifconfig.me 2>/dev/null || echo 'EC2_PUBLIC_IP'):5004"
 else
     warn "=== Deploy finished with warnings — check logs above ==="
     echo "  Run:  docker compose logs --tail=50  to debug"

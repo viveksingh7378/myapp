@@ -69,7 +69,7 @@ pipeline {
                                    https://api.github.com/repos/viveksingh7378/myapp)
                             echo "  GitHub API   : HTTP ${HTTP}"
                             if [ "${HTTP}" = "200" ]; then
-                                echo "  ✅ Token is VALID — repo is accessible"
+                                echo "   Token is VALID — repo is accessible"
                             elif [ "${HTTP}" = "403" ]; then
                                 echo "  ⚠  HTTP 403 — token lacks write access"
                                 echo "     Fix: GitHub → Settings → Developer settings → Personal access tokens"
@@ -99,11 +99,11 @@ pipeline {
                         sh 'git config --unset http.https://github.com/.extraHeader || true'
 
                         if (code == 0) {
-                            echo "✅ AI analysis complete — no issues found or fixes already applied"
+                            echo " AI analysis complete — no issues found or fixes already applied"
                         } else if (code == 1) {
-                            echo "✅ AI Analyzer fixed and pushed changes to GitHub"
+                            echo " AI Analyzer fixed and pushed changes to GitHub"
                         } else {
-                            echo "⚠️  AI Analyzer exited with code ${code} — Lint and Test will catch real errors"
+                            echo "  AI Analyzer exited with code ${code} — Lint and Test will catch real errors"
                         }
                     }
                 }
@@ -127,7 +127,7 @@ pipeline {
                         script: 'grep -cE "E[0-9]|W[0-9]" lint_output.txt || true',
                         returnStdout: true
                     ).trim().toInteger()
-                    echo count > 0 ? "⚠️  Lint: ${count} warnings — see lint_output.txt" : "✅ Lint: no issues"
+                    echo count > 0 ? "  Lint: ${count} warnings — see lint_output.txt" : " Lint: no issues"
                 }
             }
         }
@@ -144,7 +144,7 @@ pipeline {
                         '''
                         script {
                             def failed = sh(script: 'grep -cE "FAILED|ERROR" test_core.txt || true', returnStdout: true).trim().toInteger()
-                            if (failed > 0) { echo "⚠️  core-app: ${failed} test failures"; } else { echo "✅ core-app: all tests passed"; }
+                            if (failed > 0) { echo "  core-app: ${failed} test failures"; } else { echo " core-app: all tests passed"; }
                         }
                     }
                 }
@@ -157,7 +157,7 @@ pipeline {
                         '''
                         script {
                             def failed = sh(script: 'grep -cE "FAILED|ERROR" test_product.txt || true', returnStdout: true).trim().toInteger()
-                            if (failed > 0) { echo "⚠️  product-service: ${failed} test failures"; } else { echo "✅ product-service: all tests passed"; }
+                            if (failed > 0) { echo "  product-service: ${failed} test failures"; } else { echo " product-service: all tests passed"; }
                         }
                     }
                 }
@@ -170,7 +170,7 @@ pipeline {
                         '''
                         script {
                             def failed = sh(script: 'grep -cE "FAILED|ERROR" test_order.txt || true', returnStdout: true).trim().toInteger()
-                            if (failed > 0) { echo "⚠️  order-service: ${failed} test failures"; } else { echo "✅ order-service: all tests passed"; }
+                            if (failed > 0) { echo "  order-service: ${failed} test failures"; } else { echo " order-service: all tests passed"; }
                         }
                     }
                 }
@@ -183,7 +183,7 @@ pipeline {
                         '''
                         script {
                             def failed = sh(script: 'grep -cE "FAILED|ERROR" test_user.txt || true', returnStdout: true).trim().toInteger()
-                            if (failed > 0) { echo "⚠️  user-service: ${failed} test failures"; } else { echo "✅ user-service: all tests passed"; }
+                            if (failed > 0) { echo "  user-service: ${failed} test failures"; } else { echo " user-service: all tests passed"; }
                         }
                     }
                 }
@@ -196,7 +196,7 @@ pipeline {
                         '''
                         script {
                             def failed = sh(script: 'grep -cE "FAILED|ERROR" test_payment.txt || true', returnStdout: true).trim().toInteger()
-                            if (failed > 0) { echo "⚠️  payment-service: ${failed} test failures"; } else { echo "✅ payment-service: all tests passed"; }
+                            if (failed > 0) { echo "  payment-service: ${failed} test failures"; } else { echo " payment-service: all tests passed"; }
                         }
                     }
                 }
@@ -212,8 +212,8 @@ pipeline {
                     steps {
                         script {
                             def rc = sh(script: "docker build -t ${IMG_PRODUCT}:${GIT_COMMIT_SHORT} services/product-service/", returnStatus: true)
-                            if (rc != 0) { echo "⚠️  Docker build failed for product-service — is Docker Desktop running?" }
-                            echo "✅ Built ${IMG_PRODUCT}:${GIT_COMMIT_SHORT}"
+                            if (rc != 0) { echo "  Docker build failed for product-service — is Docker Desktop running?" }
+                            echo " Built ${IMG_PRODUCT}:${GIT_COMMIT_SHORT}"
                         }
                     }
                 }
@@ -222,8 +222,8 @@ pipeline {
                     steps {
                         script {
                             def rc = sh(script: "docker build -t ${IMG_ORDER}:${GIT_COMMIT_SHORT} services/order-service/", returnStatus: true)
-                            if (rc != 0) { echo "⚠️  Docker build failed for order-service" }
-                            echo "✅ Built ${IMG_ORDER}:${GIT_COMMIT_SHORT}"
+                            if (rc != 0) { echo "  Docker build failed for order-service" }
+                            echo " Built ${IMG_ORDER}:${GIT_COMMIT_SHORT}"
                         }
                     }
                 }
@@ -232,8 +232,8 @@ pipeline {
                     steps {
                         script {
                             def rc = sh(script: "docker build -t ${IMG_USER}:${GIT_COMMIT_SHORT} services/user-service/", returnStatus: true)
-                            if (rc != 0) { echo "⚠️  Docker build failed for user-service" }
-                            echo "✅ Built ${IMG_USER}:${GIT_COMMIT_SHORT}"
+                            if (rc != 0) { echo "  Docker build failed for user-service" }
+                            echo " Built ${IMG_USER}:${GIT_COMMIT_SHORT}"
                         }
                     }
                 }
@@ -242,8 +242,8 @@ pipeline {
                     steps {
                         script {
                             def rc = sh(script: "docker build -t ${IMG_PAYMENT}:${GIT_COMMIT_SHORT} services/payment-service/", returnStatus: true)
-                            if (rc != 0) { echo "⚠️  Docker build failed for payment-service" }
-                            echo "✅ Built ${IMG_PAYMENT}:${GIT_COMMIT_SHORT}"
+                            if (rc != 0) { echo "  Docker build failed for payment-service" }
+                            echo "Built ${IMG_PAYMENT}:${GIT_COMMIT_SHORT}"
                         }
                     }
                 }
@@ -252,8 +252,8 @@ pipeline {
                     steps {
                         script {
                             def rc = sh(script: "docker build -t ${IMG_FRONTEND}:${GIT_COMMIT_SHORT} frontend/", returnStatus: true)
-                            if (rc != 0) { echo "⚠️  Docker build failed for frontend" }
-                            echo "✅ Built ${IMG_FRONTEND}:${GIT_COMMIT_SHORT}"
+                            if (rc != 0) { echo "  Docker build failed for frontend" }
+                            echo " Built ${IMG_FRONTEND}:${GIT_COMMIT_SHORT}"
                         }
                     }
                 }
@@ -299,7 +299,7 @@ pipeline {
                             // Also tag as latest
                             def imgLatest = img.replaceAll(':.*', ':latest')
                             sh "docker tag ${img} ${imgLatest} && docker push ${imgLatest}"
-                            echo "✅ Pushed ${img}"
+                            echo "Pushed ${img}"
                         }
                     }
                 }
@@ -328,20 +328,20 @@ pipeline {
                                 > k8s/${svc.name}-final.yaml
                             kubectl apply -f k8s/${svc.name}-final.yaml
                         """
-                        echo "✅ Applied k8s manifest for ${svc.name}"
+                        echo "Applied k8s manifest for ${svc.name}"
                     }
 
                     // Wait for all rollouts
                     def services = ['product-service', 'order-service', 'user-service', 'payment-service', 'frontend']
                     services.each { svc ->
-                        def rc = sh(
+                        def rc = sh( 
                             script: "kubectl rollout status deployment/${svc} -n ecommerce --timeout=90s",
                             returnStatus: true
                         )
                         if (rc == 0) {
-                            echo "✅ ${svc} rollout complete"
+                            echo " ${svc} rollout complete"
                         } else {
-                            echo "⚠️  ${svc} rollout timeout — check cluster manually"
+                            echo "  ${svc} rollout timeout — check cluster manually"
                         }
                     }
                 }
@@ -365,7 +365,7 @@ pipeline {
             sh 'rm -f ai_agent/.ai_retry_count'
             echo """
 ╔══════════════════════════════════════════════════════╗
-║  ✅  E-Commerce Microservices deployed successfully! ║
+║    E-Commerce Microservices deployed successfully! ║
 ║                                                      ║
 ║  Service URLs (NodePort):                            ║
 ║    Frontend        → http://localhost:30085          ║
